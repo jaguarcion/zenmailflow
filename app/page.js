@@ -1,66 +1,416 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+"use client";
+
+import { useState, useEffect } from "react";
 
 export default function Home() {
-  return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>To get started, edit the page.js file.</h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+  const [token, setToken] = useState("");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  
+  const [activeTab, setActiveTab] = useState("generator"); // 'generator' or 'history'
+  
+  const [count, setCount] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [freshEmails, setFreshEmails] = useState([]);
+  const [history, setHistory] = useState([]);
+  const [error, setError] = useState(null);
+
+  // Selection states
+  const [selectedFresh, setSelectedFresh] = useState([]);
+  const [selectedHistory, setSelectedHistory] = useState([]);
+
+  useEffect(() => {
+    const savedToken = localStorage.getItem("zenmail_token");
+    if (savedToken) {
+      setToken(savedToken);
+      setIsLoggedIn(true);
+      fetchHistory(savedToken);
+    }
+  }, []);
+
+  const handleLogin = (e) => {
+    e.preventDefault();
+    if (token.trim()) {
+      localStorage.setItem("zenmail_token", token);
+      setIsLoggedIn(true);
+      fetchHistory(token);
+      setError(null);
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("zenmail_token");
+    setIsLoggedIn(false);
+    setToken("");
+    setHistory([]);
+    setFreshEmails([]);
+    setSelectedFresh([]);
+    setSelectedHistory([]);
+  };
+
+  const fetchHistory = async (authToken = token) => {
+    try {
+      const res = await fetch("/api/history", {
+        headers: { "Authorization": `Bearer ${authToken}` }
+      });
+      const data = await res.json();
+      if (data.success) {
+        setHistory(data.data);
+        setSelectedHistory([]); // reset selection on refresh
+      } else if (res.status === 401) {
+        handleLogout();
+        setError("Session expired or invalid token.");
+      }
+    } catch (err) {
+      console.error("Failed to fetch history:", err);
+    }
+  };
+
+  const handleGenerate = async (e) => {
+    e.preventDefault();
+    if (count < 1 || count > 100) return;
+    
+    setLoading(true);
+    setError(null);
+    setFreshEmails([]);
+    setSelectedFresh([]);
+
+    try {
+      const res = await fetch("/api/generate", {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ count }),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        setFreshEmails(data.generated);
+        fetchHistory(); // refresh history
+      } else {
+        if (res.status === 401) handleLogout();
+        setError(data.error || "An error occurred");
+      }
+    } catch (err) {
+      setError("Network error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDownloadTxt = (emailsToDownload) => {
+    if (emailsToDownload.length === 0) return;
+    const content = emailsToDownload.map(e => `${e.email}:${e.password}`).join("\n");
+    const blob = new Blob([content], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `migadu-emails-${new Date().toISOString().split("T")[0]}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      const res = await fetch(`/api/history?id=${id}`, { 
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (res.ok) {
+        fetchHistory();
+      } else if (res.status === 401) {
+        handleLogout();
+      }
+    } catch (err) {
+      console.error("Failed to delete email", err);
+    }
+  };
+
+  const handleDeleteSelected = async () => {
+    if (selectedHistory.length === 0) return;
+    if (!confirm(`Are you sure you want to delete ${selectedHistory.length} selected emails?`)) return;
+    
+    // Process sequentially to keep it simple, or use Promise.all
+    try {
+      await Promise.all(selectedHistory.map(id => 
+        fetch(`/api/history?id=${id}`, { 
+          method: "DELETE",
+          headers: { "Authorization": `Bearer ${token}` }
+        })
+      ));
+      fetchHistory();
+    } catch (err) {
+      console.error("Failed to delete selected", err);
+    }
+  };
+
+  const handleClearAll = async () => {
+    if (!confirm("Are you sure you want to delete ALL email history?")) return;
+    try {
+      const res = await fetch(`/api/history?id=all`, { 
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (res.ok) {
+        fetchHistory();
+      }
+    } catch (err) {
+      console.error("Failed to clear history", err);
+    }
+  };
+
+  // Selection helpers
+  const toggleSelectFresh = (idx) => {
+    if (selectedFresh.includes(idx)) {
+      setSelectedFresh(selectedFresh.filter(i => i !== idx));
+    } else {
+      setSelectedFresh([...selectedFresh, idx]);
+    }
+  };
+
+  const toggleSelectAllFresh = () => {
+    if (selectedFresh.length === freshEmails.length) {
+      setSelectedFresh([]);
+    } else {
+      setSelectedFresh(freshEmails.map((_, idx) => idx));
+    }
+  };
+
+  const toggleSelectHistory = (id) => {
+    if (selectedHistory.includes(id)) {
+      setSelectedHistory(selectedHistory.filter(i => i !== id));
+    } else {
+      setSelectedHistory([...selectedHistory, id]);
+    }
+  };
+
+  const toggleSelectAllHistory = () => {
+    if (selectedHistory.length === history.length) {
+      setSelectedHistory([]);
+    } else {
+      setSelectedHistory(history.map(item => item.id));
+    }
+  };
+
+  if (!isLoggedIn) {
+    return (
+      <main className="container login-container">
+        <h1>ZenMailFlow</h1>
+        <p className="subtitle">Secure Access Required</p>
+        <div className="glass-panel">
+          <form onSubmit={handleLogin} className="form-group">
+            <label htmlFor="token">Master Token</label>
+            <input
+              type="password"
+              id="token"
+              value={token}
+              onChange={(e) => setToken(e.target.value)}
+              placeholder="Enter your access token"
+              required
             />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            <button type="submit" className="btn" style={{ marginTop: '1rem' }}>Login</button>
+          </form>
+          {error && <p style={{ color: 'var(--danger-color)', marginTop: '1rem', fontSize: '0.9rem', textAlign: 'center' }}>{error}</p>}
         </div>
       </main>
-    </div>
+    );
+  }
+
+  return (
+    <main className="container">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+        <h1>ZenMailFlow</h1>
+        <button onClick={handleLogout} className="btn btn-secondary btn-sm">Logout</button>
+      </div>
+      
+      <div className="tabs">
+        <button 
+          className={`tab ${activeTab === 'generator' ? 'active' : ''}`}
+          onClick={() => setActiveTab('generator')}
+        >
+          Generator
+        </button>
+        <button 
+          className={`tab ${activeTab === 'history' ? 'active' : ''}`}
+          onClick={() => setActiveTab('history')}
+        >
+          History ({history.length})
+        </button>
+      </div>
+
+      {activeTab === 'generator' && (
+        <>
+          <div className="glass-panel" style={{ padding: '1rem 1.5rem' }}>
+            <form onSubmit={handleGenerate} className="flex-row">
+              <div className="form-group" style={{ margin: 0, flex: 1 }}>
+                <label htmlFor="count">Number of emails to generate (1-100)</label>
+                <input
+                  type="number"
+                  id="count"
+                  min="1"
+                  max="100"
+                  value={count}
+                  onChange={(e) => setCount(parseInt(e.target.value) || 1)}
+                  required
+                />
+              </div>
+              <button type="submit" className="btn" disabled={loading} style={{ marginTop: '1.2rem' }}>
+                {loading ? (
+                  <>
+                    <span className="loader"></span>
+                    Generating
+                  </>
+                ) : (
+                  "Generate"
+                )}
+              </button>
+            </form>
+            {error && <p style={{ color: 'var(--danger-color)', marginTop: '1rem', fontSize: '0.9rem' }}>{error}</p>}
+          </div>
+
+          {freshEmails.length > 0 && (
+            <div className="glass-panel">
+              <div className="section-header">
+                <h3>Freshly Generated ({freshEmails.length})</h3>
+                <div className="flex-row">
+                  <button 
+                    className="btn btn-secondary btn-sm" 
+                    onClick={() => handleDownloadTxt(freshEmails.filter((_, idx) => selectedFresh.includes(idx)))}
+                    disabled={selectedFresh.length === 0}
+                  >
+                    Download Selected
+                  </button>
+                  <button 
+                    className="btn btn-secondary btn-sm" 
+                    onClick={() => handleDownloadTxt(freshEmails)}
+                  >
+                    Download All
+                  </button>
+                </div>
+              </div>
+              
+              <div className="table-container">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th className="checkbox-cell">
+                        <input 
+                          type="checkbox" 
+                          checked={selectedFresh.length === freshEmails.length && freshEmails.length > 0}
+                          onChange={toggleSelectAllFresh}
+                        />
+                      </th>
+                      <th>Email Address</th>
+                      <th>Password</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {freshEmails.map((item, idx) => (
+                      <tr key={idx} className={selectedFresh.includes(idx) ? 'selected' : ''}>
+                        <td className="checkbox-cell">
+                          <input 
+                            type="checkbox" 
+                            checked={selectedFresh.includes(idx)}
+                            onChange={() => toggleSelectFresh(idx)}
+                          />
+                        </td>
+                        <td><span className="email-address">{item.email}</span></td>
+                        <td><span className="email-password">{item.password}</span></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {activeTab === 'history' && (
+        <div className="glass-panel">
+          <div className="section-header">
+            <h3>Stored Emails</h3>
+            <div className="flex-row">
+              <button 
+                className="btn btn-secondary btn-sm" 
+                onClick={() => handleDownloadTxt(history.filter(h => selectedHistory.includes(h.id)))}
+                disabled={selectedHistory.length === 0}
+              >
+                Download Selected
+              </button>
+              <button 
+                className="btn btn-secondary btn-sm" 
+                onClick={() => handleDownloadTxt(history)}
+                disabled={history.length === 0}
+              >
+                Download All
+              </button>
+              <button 
+                className="btn btn-danger btn-sm" 
+                onClick={handleDeleteSelected}
+                disabled={selectedHistory.length === 0}
+              >
+                Delete Selected
+              </button>
+              {history.length > 0 && (
+                <button className="btn btn-danger btn-sm" onClick={handleClearAll}>
+                  Delete All
+                </button>
+              )}
+            </div>
+          </div>
+          
+          {history.length === 0 ? (
+            <div className="empty-state">No emails generated yet.</div>
+          ) : (
+            <div className="table-container">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th className="checkbox-cell">
+                      <input 
+                        type="checkbox" 
+                        checked={selectedHistory.length === history.length && history.length > 0}
+                        onChange={toggleSelectAllHistory}
+                      />
+                    </th>
+                    <th>Email Address</th>
+                    <th>Password</th>
+                    <th className="actions-cell">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {history.map((item) => (
+                    <tr key={item.id} className={selectedHistory.includes(item.id) ? 'selected' : ''}>
+                      <td className="checkbox-cell">
+                        <input 
+                          type="checkbox" 
+                          checked={selectedHistory.includes(item.id)}
+                          onChange={() => toggleSelectHistory(item.id)}
+                        />
+                      </td>
+                      <td><span className="email-address">{item.email}</span></td>
+                      <td><span className="email-password">{item.password}</span></td>
+                      <td className="actions-cell">
+                        <button 
+                          className="btn btn-danger btn-sm" 
+                          onClick={() => handleDelete(item.id)}
+                          title="Delete"
+                        >
+                          ×
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+    </main>
   );
 }
