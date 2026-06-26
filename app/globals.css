@@ -316,3 +316,96 @@ input[type="checkbox"] {
   max-width: 400px;
   margin: 10vh auto;
 }
+
+/* Custom Select */
+.custom-select-container {
+  position: relative;
+  width: 100%;
+}
+
+.custom-select-header {
+  background: rgba(13, 17, 23, 0.8);
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  padding: 0.6rem 0.8rem;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.custom-select-header:hover {
+  border-color: var(--accent-color);
+}
+
+.custom-select-header.open {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 2px var(--accent-glow);
+}
+
+.custom-select-header .arrow {
+  border: solid var(--text-secondary);
+  border-width: 0 2px 2px 0;
+  display: inline-block;
+  padding: 4px;
+  transform: rotate(45deg);
+  transition: transform 0.2s ease;
+  margin-bottom: 4px;
+}
+
+.custom-select-header.open .arrow {
+  transform: rotate(-135deg);
+  margin-bottom: -2px;
+}
+
+.custom-select-list {
+  position: absolute;
+  top: calc(100% + 5px);
+  left: 0;
+  width: 100%;
+  background: var(--panel-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  z-index: 100;
+  list-style: none;
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.custom-select-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-select-list::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.custom-select-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+.custom-select-item {
+  padding: 0.7rem 1rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+}
+
+.custom-select-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.custom-select-item.selected {
+  background: rgba(88, 166, 255, 0.15);
+  color: var(--accent-color);
+  font-weight: 600;
+}

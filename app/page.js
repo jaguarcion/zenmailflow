@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 export default function Home() {
   const [token, setToken] = useState("");
@@ -13,6 +13,20 @@ export default function Home() {
   const [freshEmails, setFreshEmails] = useState([]);
   const [history, setHistory] = useState([]);
   const [error, setError] = useState(null);
+  const [domains, setDomains] = useState([]);
+  const [selectedDomain, setSelectedDomain] = useState("");
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // Selection states
   const [selectedFresh, setSelectedFresh] = useState([]);
@@ -23,6 +37,7 @@ export default function Home() {
     if (savedToken) {
       setToken(savedToken);
       setIsLoggedIn(true);
+      fetchDomains(savedToken);
       fetchHistory(savedToken);
     }
   }, []);
@@ -32,6 +47,7 @@ export default function Home() {
     if (token.trim()) {
       localStorage.setItem("zenmail_token", token);
       setIsLoggedIn(true);
+      fetchDomains(token);
       fetchHistory(token);
       setError(null);
     }
@@ -45,6 +61,25 @@ export default function Home() {
     setFreshEmails([]);
     setSelectedFresh([]);
     setSelectedHistory([]);
+    setDomains([]);
+    setSelectedDomain("");
+  };
+
+  const fetchDomains = async (authToken = token) => {
+    try {
+      const res = await fetch("/api/domains", {
+        headers: { "Authorization": `Bearer ${authToken}` }
+      });
+      const data = await res.json();
+      if (data.success) {
+        setDomains(data.domains);
+        if (data.domains.length > 0) {
+          setSelectedDomain(data.domains[0]);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to fetch domains:", err);
+    }
   };
 
   const fetchHistory = async (authToken = token) => {
@@ -81,7 +116,7 @@ export default function Home() {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`
         },
-        body: JSON.stringify({ count }),
+        body: JSON.stringify({ count, domain: selectedDomain }),
       });
       const data = await res.json();
 
@@ -244,9 +279,37 @@ export default function Home() {
       {activeTab === 'generator' && (
         <>
           <div className="glass-panel" style={{ padding: '1rem 1.5rem' }}>
-            <form onSubmit={handleGenerate} className="flex-row">
+            <form onSubmit={handleGenerate} className="flex-row" style={{ alignItems: 'flex-end', gap: '1rem' }}>
+              <div className="form-group" style={{ margin: 0, flex: 2 }} ref={dropdownRef}>
+                <label>Домен</label>
+                <div className="custom-select-container">
+                  <div 
+                    className={`custom-select-header ${isDropdownOpen ? 'open' : ''}`}
+                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  >
+                    {selectedDomain || "Выберите домен"}
+                    <span className="arrow"></span>
+                  </div>
+                  {isDropdownOpen && (
+                    <ul className="custom-select-list">
+                      {domains.map(d => (
+                        <li 
+                          key={d} 
+                          className={`custom-select-item ${d === selectedDomain ? 'selected' : ''}`}
+                          onClick={() => {
+                            setSelectedDomain(d);
+                            setIsDropdownOpen(false);
+                          }}
+                        >
+                          {d}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
               <div className="form-group" style={{ margin: 0, flex: 1 }}>
-                <label htmlFor="count">Количество почт для генерации (1-100)</label>
+                <label htmlFor="count">Количество (1-100)</label>
                 <input
                   type="number"
                   id="count"

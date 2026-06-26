@@ -32,7 +32,9 @@ export async function POST(request) {
   }
 
   try {
-    const { count } = await request.json();
+    const body = await request.json();
+    const count = body.count;
+    const reqDomain = body.domain;
     const amount = parseInt(count);
 
     if (isNaN(amount) || amount <= 0 || amount > 100) {
@@ -44,7 +46,7 @@ export async function POST(request) {
 
     const email = process.env.MIGADU_EMAIL;
     const apiKey = process.env.MIGADU_API_KEY;
-    const domain = process.env.MIGADU_DOMAIN;
+    const domain = reqDomain || process.env.MIGADU_DOMAIN;
 
     if (!email || !apiKey || !domain) {
       console.error("Missing Migadu credentials in environment variables.");
