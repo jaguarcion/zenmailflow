@@ -22,13 +22,13 @@ function AssignAccountCombobox({ availableAccounts, onAssign }) {
                     variant="outline"
                     role="combobox"
                     aria-expanded={open}
-                    className="w-[200px] justify-between h-8 text-xs px-2"
+                    className="w-full justify-between h-8 text-xs px-2"
                 >
                     <span className="truncate">Привязать аккаунт</span>
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-[200px] p-0">
+            <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
                 <Command>
                     <CommandInput placeholder="Поиск по email..." className="h-9 text-xs" />
                     <CommandList>
