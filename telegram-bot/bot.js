@@ -203,9 +203,9 @@ bot.on('message', async (msg) => {
                     }
                 }
                 
-                const mskDate = m.date ? new Date(m.date).toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' }) : 'Неизвестно';
+                const mskDate = m.date ? `${m.date} МСК` : 'Неизвестно';
                 
-                responseText += `От: ${m.from?.address || m.from || 'Adobe'}\nТема: ${m.subject}\nКод: **${code}**\nВремя: ${mskDate} МСК\n---\n`;
+                responseText += `От: ${m.from?.address || m.from || 'Adobe'}\nТема: ${m.subject}\nКод: **${code}**\nВремя: ${mskDate}\n---\n`;
             }
             return bot.sendMessage(chatId, responseText, { parse_mode: 'Markdown' });
         } catch (e) {

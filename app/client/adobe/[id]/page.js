@@ -218,7 +218,7 @@ export default function ClientAdobePage({ params }) {
                                                     {typeof msg.from === 'string' ? msg.from : (msg.from?.[0]?.address || 'Adobe')}
                                                 </span>
                                                 <span className="text-[11px] text-slate-500">
-                                                    {msg.date ? new Date(msg.date).toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' }) + ' МСК' : ''}
+                                                    {msg.date ? `${msg.date} МСК` : ''}
                                                 </span>
                                             </div>
                                             <div className="flex flex-wrap items-center gap-3">
