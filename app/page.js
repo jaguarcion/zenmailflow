@@ -28,6 +28,8 @@ export default function Home() {
   const [domains, setDomains] = useState([]);
   const [selectedDomain, setSelectedDomain] = useState("");
 
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+
   const [selectedFresh, setSelectedFresh] = useState([]);
   const [selectedHistory, setSelectedHistory] = useState([]);
 
@@ -40,6 +42,7 @@ export default function Home() {
       fetchHistory(savedToken);
       fetchClients(savedToken);
     }
+    setIsCheckingAuth(false);
   }, []);
 
   const handleLogin = (e) => {
@@ -197,6 +200,10 @@ export default function Home() {
   const toggleSelectAllHistory = () => {
     setSelectedHistory(selectedHistory.length === historyItems.length ? [] : historyItems.map(item => item.id));
   };
+
+  if (isCheckingAuth) {
+    return null; // Return null to prevent any flash of login form
+  }
 
   if (!isLoggedIn) {
     return (
