@@ -172,6 +172,12 @@ bot.on('message', async (msg) => {
         try {
             const result = await checkAdobeAccount(acc.email, acc.refresh_token, acc.device_id);
             let codes = [];
+            
+            if (result && result.isBanned && acc.status !== 'banned') {
+                db.prepare("UPDATE adobe_accounts SET status = 'banned' WHERE id = ?").run(acc.id);
+                bot.sendMessage(chatId, '🔴 Внимание: Ваш аккаунт заблокирован из-за обнаруженной мошеннической активности. Пожалуйста, обратитесь в поддержку.');
+            }
+
             if (result && result.messages && Array.isArray(result.messages)) {
                 codes = result.messages.filter(m => {
                     const subj = (m.subject || '').toLowerCase();

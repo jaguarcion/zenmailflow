@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getAdobeAccountByAccessToken } from '@/lib/db';
+import { getAdobeAccountByAccessToken, updateAdobeAccountStatus } from '@/lib/db';
 import { checkAdobeAccount } from '@/lib/dongvanfb';
 
 // [SECURITY] C-01+C-02: Use access_token for lookup instead of sequential ID.
@@ -26,6 +26,11 @@ export async function GET(request, { params }) {
     // Fetch messages dynamically
     const result = await checkAdobeAccount(account.email, account.refresh_token, account.device_id);
     
+    if (result && result.isBanned && account.status !== 'banned') {
+        updateAdobeAccountStatus(account.id, 'banned');
+        account.status = 'banned';
+    }
+
     // Filter verification codes
     let codes = [];
     if (result && result.messages && Array.isArray(result.messages)) {
