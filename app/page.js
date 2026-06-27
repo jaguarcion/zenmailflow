@@ -42,12 +42,23 @@ export default function Home() {
     }
     if (savedToken) {
       setToken(savedToken);
-      setIsLoggedIn(true);
-      fetchDomains(savedToken);
-      fetchHistory(savedToken);
-      fetchClients(savedToken);
+      fetch("/api/history", { headers: { "Authorization": `Bearer ${savedToken}` } })
+        .then(res => {
+          if (res.ok) {
+            setIsLoggedIn(true);
+            fetchDomains(savedToken);
+            fetchHistory(savedToken);
+            fetchClients(savedToken);
+          } else {
+            localStorage.removeItem("zenmail_token");
+            setToken("");
+          }
+          setIsCheckingAuth(false);
+        })
+        .catch(() => setIsCheckingAuth(false));
+    } else {
+      setIsCheckingAuth(false);
     }
-    setIsCheckingAuth(false);
   }, []);
 
   const changeTab = (tabId) => {
@@ -55,15 +66,24 @@ export default function Home() {
     localStorage.setItem("zenmail_active_tab", tabId);
   };
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     if (token.trim()) {
-      localStorage.setItem("zenmail_token", token);
-      setIsLoggedIn(true);
-      fetchDomains(token);
-      fetchHistory(token);
-      fetchClients(token);
-      setError(null);
+      try {
+        const res = await fetch("/api/history", { headers: { "Authorization": `Bearer ${token}` } });
+        if (res.ok) {
+          localStorage.setItem("zenmail_token", token);
+          setIsLoggedIn(true);
+          fetchDomains(token);
+          fetchHistory(token);
+          fetchClients(token);
+          setError(null);
+        } else {
+          setError("Неверный мастер-токен");
+        }
+      } catch (err) {
+        setError("Ошибка сети");
+      }
     }
   };
 
