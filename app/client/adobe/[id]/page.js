@@ -121,7 +121,7 @@ export default function ClientAdobePage({ params }) {
                     <div className="inline-flex justify-center items-center mb-2">
                         <img src="/logo.png" alt="Logo" className="w-32 h-32 object-cover rounded-full shadow-lg ring-1 ring-black/10 dark:ring-white/10" />
                     </div>
-                    <h1 className={`text-3xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-800 to-slate-500`}>
+                    <h1 className={`text-3xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-800 to-slate-500 pb-1`}>
                         Ваш аккаунт Adobe
                     </h1>
                     <p className={`text-sm max-w-lg mx-auto leading-relaxed text-slate-500`}>
