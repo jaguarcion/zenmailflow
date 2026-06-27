@@ -152,6 +152,7 @@ bot.on('message', async (msg) => {
         const baseUrl = process.env.APP_URL || 'https://mail.cdk-gpt.ru';
         const msgText = `👤 **Данные аккаунта:**
         
+📧 Email: ${acc.email}
 🌐 Ссылка на доступ - ${baseUrl}/client/adobe/${acc.access_token}
 📊 Статус: ${acc.status === 'active' ? '🟢 Активен' : '🔴 Заблокирован'}`;
         return bot.sendMessage(chatId, msgText, { parse_mode: 'Markdown' });

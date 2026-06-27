@@ -208,13 +208,14 @@ export default function ClientsTab({ token, clients, onFetchClients }) {
                                     <TableHead>Email (ID)</TableHead>
                                     <TableHead>Telegram Бот</TableHead>
                                     <TableHead>Подписка</TableHead>
+                                    <TableHead>Осталось дней</TableHead>
                                     <TableHead>Привязка Adobe</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {clients.length === 0 && (
                                     <TableRow>
-                                        <TableCell colSpan={4} className="text-center py-10 text-muted-foreground">Нет клиентов</TableCell>
+                                        <TableCell colSpan={5} className="text-center py-10 text-muted-foreground">Нет клиентов</TableCell>
                                     </TableRow>
                                 )}
                                 {clients.map(c => (
@@ -259,6 +260,13 @@ export default function ClientsTab({ token, clients, onFetchClients }) {
                                                 {c.subscription_starts_at && <div>Начало: {formatDate(c.subscription_starts_at)}</div>}
                                                 <div className="font-medium">До: {c.subscription_ends_at ? formatDate(c.subscription_ends_at) : 'Бессрочно'}</div>
                                             </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            {(() => {
+                                                if (!c.subscription_ends_at) return <span className="text-xs text-muted-foreground">Бессрочно</span>;
+                                                const diff = Math.ceil((new Date(c.subscription_ends_at) - new Date()) / (1000 * 60 * 60 * 24));
+                                                return <Badge variant={diff < 0 ? "destructive" : diff <= 3 ? "secondary" : "default"} className={`text-[10px] ${diff < 0 ? "bg-red-500/10 text-red-500 hover:bg-red-500/20" : diff <= 3 ? "bg-orange-500/10 text-orange-500 hover:bg-orange-500/20" : "bg-green-500/10 text-green-500 hover:bg-green-500/20"}`}>{diff < 0 ? 'Закончилась' : `${diff} дн.`}</Badge>;
+                                            })()}
                                         </TableCell>
                                         <TableCell>
                                             {c.adobe_account_email ? (
@@ -316,9 +324,9 @@ export default function ClientsTab({ token, clients, onFetchClients }) {
                                 <label className="text-sm font-medium">Подписка до</label>
                                 <Input type="date" value={editForm.subscription_ends_at} onChange={e => setEditForm({...editForm, subscription_ends_at: e.target.value})} />
                                 <div className="flex gap-2 pt-1">
-                                    <Button type="button" variant="outline" size="sm" className="h-6 text-[10px]" onClick={() => addDaysToSubscription(30)}>+30 дней</Button>
-                                    <Button type="button" variant="outline" size="sm" className="h-6 text-[10px]" onClick={() => addDaysToSubscription(180)}>+180 дней</Button>
-                                    <Button type="button" variant="outline" size="sm" className="h-6 text-[10px]" onClick={() => addDaysToSubscription(365)}>+1 год</Button>
+                                    <Button type="button" variant="outline" size="sm" className="h-6 text-[10px]" onClick={() => addDaysToSubscription(1)}>+1 день</Button>
+                                    <Button type="button" variant="outline" size="sm" className="h-6 text-[10px]" onClick={() => addDaysToSubscription(2)}>+2 дня</Button>
+                                    <Button type="button" variant="outline" size="sm" className="h-6 text-[10px]" onClick={() => addDaysToSubscription(3)}>+3 дня</Button>
                                 </div>
                             </div>
                             <Button type="submit" disabled={loading} className="w-full">

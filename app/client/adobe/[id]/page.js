@@ -49,6 +49,7 @@ export default function ClientAdobePage({ params }) {
     };
 
     useEffect(() => {
+        document.title = "Ваш аккаунт Adobe";
         fetchData();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]);
