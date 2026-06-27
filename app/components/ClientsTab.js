@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { formatDate } from "@/lib/utils";
 
 function AssignAccountCombobox({ availableAccounts, onAssign }) {
     const [open, setOpen] = useState(false);
@@ -42,7 +43,7 @@ function AssignAccountCombobox({ availableAccounts, onAssign }) {
                                         onAssign(acc.id);
                                         setOpen(false);
                                     }}
-                                    className="text-xs"
+                                    className="text-xs cursor-pointer"
                                 >
                                     <span className="truncate">{acc.email}</span>
                                 </CommandItem>
@@ -56,11 +57,11 @@ function AssignAccountCombobox({ availableAccounts, onAssign }) {
 }
 
 export default function ClientsTab({ token, clients, onFetchClients }) {
-    const [form, setForm] = useState({ email: '', telegram: '', subscription_ends_at: '' });
+    const [form, setForm] = useState({ email: '', telegram: '', subscription_starts_at: '', subscription_ends_at: '' });
     const [loading, setLoading] = useState(false);
     const [availableAccounts, setAvailableAccounts] = useState([]);
     const [editClient, setEditClient] = useState(null);
-    const [editForm, setEditForm] = useState({ email: '', telegram: '', subscription_ends_at: '' });
+    const [editForm, setEditForm] = useState({ email: '', telegram: '', subscription_starts_at: '', subscription_ends_at: '' });
 
     const fetchAvailableAccounts = async () => {
         try {
@@ -115,7 +116,7 @@ export default function ClientsTab({ token, clients, onFetchClients }) {
             });
             if (res.ok) {
                 toast.success("Клиент добавлен");
-                setForm({ email: '', telegram: '', subscription_ends_at: '' });
+                setForm({ email: '', telegram: '', subscription_starts_at: '', subscription_ends_at: '' });
                 onFetchClients();
             } else {
                 const err = await res.json();
@@ -153,9 +154,17 @@ export default function ClientsTab({ token, clients, onFetchClients }) {
         setEditClient(client);
         setEditForm({
             email: client.email || '',
-            telegram: client.telegram || '',
+            telegram: client.telegram || client.telegram_username ? `@${client.telegram_username}` : '',
+            subscription_starts_at: client.subscription_starts_at || '',
             subscription_ends_at: client.subscription_ends_at || ''
         });
+    };
+
+    const addDaysToSubscription = (days) => {
+        const currentDateStr = editForm.subscription_ends_at;
+        const d = currentDateStr ? new Date(currentDateStr) : new Date();
+        d.setDate(d.getDate() + days);
+        setEditForm({ ...editForm, subscription_ends_at: d.toISOString().split('T')[0] });
     };
 
     return (
@@ -223,7 +232,13 @@ export default function ClientsTab({ token, clients, onFetchClients }) {
                                             <div className="font-medium">
                                                 {[c.telegram_first_name, c.telegram_last_name].filter(Boolean).join(' ') || c.telegram_username || c.telegram || '-'}
                                             </div>
-                                            {c.telegram_username && <div className="text-xs text-muted-foreground">@{c.telegram_username}</div>}
+                                            {(c.telegram_username || c.telegram) && (
+                                                <div className="text-xs text-muted-foreground">
+                                                    <a href={`https://t.me/${(c.telegram_username || c.telegram).replace('@', '')}`} target="_blank" rel="noreferrer" className="text-blue-500 hover:underline">
+                                                        {c.telegram_username ? `@${c.telegram_username}` : c.telegram}
+                                                    </a>
+                                                </div>
+                                            )}
                                             {c.telegram_chat_id ? (
                                                 <span className="text-xs text-green-600 mt-1 flex items-center gap-1">
                                                     <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span> Подключен
@@ -239,7 +254,12 @@ export default function ClientsTab({ token, clients, onFetchClients }) {
                                                 <span className="text-xs text-muted-foreground mt-1 block">Нет ссылки</span>
                                             )}
                                         </TableCell>
-                                        <TableCell>{c.subscription_ends_at || 'Бессрочно'}</TableCell>
+                                        <TableCell>
+                                            <div className="text-xs space-y-1">
+                                                {c.subscription_starts_at && <div>Начало: {formatDate(c.subscription_starts_at)}</div>}
+                                                <div className="font-medium">До: {c.subscription_ends_at ? formatDate(c.subscription_ends_at) : 'Бессрочно'}</div>
+                                            </div>
+                                        </TableCell>
                                         <TableCell>
                                             {c.adobe_account_email ? (
                                                 <div className="space-y-1">
@@ -255,7 +275,7 @@ export default function ClientsTab({ token, clients, onFetchClients }) {
                                                         </Button>
                                                     </div>
                                                     <Badge variant={c.adobe_account_status === 'active' ? 'outline' : 'destructive'} className={c.adobe_account_status === 'active' ? 'bg-green-500/10 text-green-500 hover:bg-green-500/20 text-[10px]' : 'text-[10px]'}>
-                                                        {c.adobe_account_status}
+                                                        {c.adobe_account_status === 'active' ? 'Активный' : c.adobe_account_status === 'banned' ? 'Забанен' : c.adobe_account_status}
                                                     </Badge>
                                                 </div>
                                             ) : (
@@ -289,8 +309,17 @@ export default function ClientsTab({ token, clients, onFetchClients }) {
                                 <Input type="text" value={editForm.telegram} onChange={e => setEditForm({...editForm, telegram: e.target.value})} placeholder="@username" />
                             </div>
                             <div className="space-y-2">
+                                <label className="text-sm font-medium">Дата начала подписки</label>
+                                <Input type="date" value={editForm.subscription_starts_at} onChange={e => setEditForm({...editForm, subscription_starts_at: e.target.value})} />
+                            </div>
+                            <div className="space-y-2">
                                 <label className="text-sm font-medium">Подписка до</label>
                                 <Input type="date" value={editForm.subscription_ends_at} onChange={e => setEditForm({...editForm, subscription_ends_at: e.target.value})} />
+                                <div className="flex gap-2 pt-1">
+                                    <Button type="button" variant="outline" size="sm" className="h-6 text-[10px]" onClick={() => addDaysToSubscription(30)}>+30 дней</Button>
+                                    <Button type="button" variant="outline" size="sm" className="h-6 text-[10px]" onClick={() => addDaysToSubscription(180)}>+180 дней</Button>
+                                    <Button type="button" variant="outline" size="sm" className="h-6 text-[10px]" onClick={() => addDaysToSubscription(365)}>+1 год</Button>
+                                </div>
                             </div>
                             <Button type="submit" disabled={loading} className="w-full">
                                 {loading ? 'Сохранение...' : 'Сохранить изменения'}

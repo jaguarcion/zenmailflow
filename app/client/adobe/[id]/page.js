@@ -114,8 +114,8 @@ export default function ClientAdobePage({ params }) {
                 
                 {/* Header */}
                 <div className="text-center space-y-4 mb-8">
-                    <div className="inline-flex p-4 rounded-full bg-gradient-to-tr from-purple-500/20 to-blue-500/20 mb-2 shadow-lg shadow-blue-500/10 ring-1 ring-white/10">
-                        <PartyPopper className="w-8 h-8 text-blue-400" />
+                    <div className="inline-flex justify-center items-center mb-2">
+                        <img src="/logo.png" alt="Logo" className="w-16 h-16 object-contain" />
                     </div>
                     <h1 className="text-3xl font-bold tracking-tight text-white bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">
                         Ваш аккаунт Adobe
@@ -152,19 +152,25 @@ export default function ClientAdobePage({ params }) {
                 <Card className="bg-slate-900/60 border-slate-800/60 backdrop-blur-xl shadow-2xl overflow-hidden">
                     <CardContent className="p-6 sm:p-8">
                         <div className="text-xs font-semibold tracking-wider text-slate-500 uppercase mb-5 flex items-center gap-2">
-                            <Mail className="w-4 h-4" /> Данные для входа
+                            <Mail className="w-4 h-4" /> Данные для входа Adobe
                         </div>
                         
                         <div className="space-y-4">
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-black/40 rounded-xl border border-white/5 group hover:border-white/10 transition-colors">
-                                <code className="font-mono text-blue-300 text-sm break-all">{data.email}</code>
+                                <div>
+                                    <div className="text-[10px] text-slate-500 mb-1 uppercase tracking-wider">Логин</div>
+                                    <code className="font-mono text-blue-300 text-sm break-all">{data.email}</code>
+                                </div>
                                 <Button variant="secondary" size="sm" onClick={() => copyToClipboard(data.email)} className="bg-white/5 hover:bg-white/10 border-white/5 text-slate-300">
                                     <Copy className="w-3 h-3 mr-2" /> Копировать
                                 </Button>
                             </div>
                             
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-black/40 rounded-xl border border-white/5 group hover:border-white/10 transition-colors">
-                                <code className="font-mono text-purple-300 text-sm break-all">{data.adobe_password || 'Нет пароля'}</code>
+                                <div>
+                                    <div className="text-[10px] text-slate-500 mb-1 uppercase tracking-wider">Пароль</div>
+                                    <code className="font-mono text-purple-300 text-sm break-all">{data.adobe_password || 'Нет пароля'}</code>
+                                </div>
                                 <Button variant="secondary" size="sm" onClick={() => copyToClipboard(data.adobe_password || '')} className="bg-white/5 hover:bg-white/10 border-white/5 text-slate-300">
                                     <Copy className="w-3 h-3 mr-2" /> Копировать
                                 </Button>
@@ -203,26 +209,34 @@ export default function ClientAdobePage({ params }) {
                                     Письма с кодами пока не приходили.
                                 </div>
                             ) : (
-                                data.messages.map((msg) => (
-                                    <div key={msg.uid} className="p-4 bg-black/30 rounded-xl border border-white/5 hover:border-white/10 transition-colors flex flex-col gap-2">
-                                        <div className="flex justify-between items-start mb-1">
-                                            <span className="text-[11px] font-mono text-slate-500 bg-slate-900/50 px-2 py-0.5 rounded">
-                                                {typeof msg.from === 'string' ? msg.from : (msg.from?.[0]?.address || 'Adobe')}
-                                            </span>
-                                            <span className="text-[11px] text-slate-500">
-                                                {msg.date}
-                                            </span>
+                                data.messages.map((msg) => {
+                                    const code = extractCode(msg);
+                                    return (
+                                        <div key={msg.uid} className="p-4 bg-black/30 rounded-xl border border-white/5 hover:border-white/10 transition-colors flex flex-col gap-2">
+                                            <div className="flex justify-between items-start mb-1">
+                                                <span className="text-[11px] font-mono text-slate-500 bg-slate-900/50 px-2 py-0.5 rounded">
+                                                    {typeof msg.from === 'string' ? msg.from : (msg.from?.[0]?.address || 'Adobe')}
+                                                </span>
+                                                <span className="text-[11px] text-slate-500">
+                                                    {msg.date ? new Date(msg.date).toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' }) + ' МСК' : ''}
+                                                </span>
+                                            </div>
+                                            <div className="flex flex-wrap items-center gap-3">
+                                                <span className="text-sm font-medium text-slate-300">{msg.subject}</span>
+                                                {code !== 'N/A' && (
+                                                    <Badge 
+                                                        variant="destructive" 
+                                                        className="bg-red-500/20 text-red-400 border-red-500/20 font-bold px-3 py-1 text-sm cursor-pointer hover:bg-red-500/30 transition-colors"
+                                                        onClick={() => copyToClipboard(code)}
+                                                        title="Скопировать код"
+                                                    >
+                                                        {code}
+                                                    </Badge>
+                                                )}
+                                            </div>
                                         </div>
-                                        <div className="flex flex-wrap items-center gap-3">
-                                            <span className="text-sm font-medium text-slate-300">{msg.subject}</span>
-                                            {extractCode(msg) !== 'N/A' && (
-                                                <Badge variant="destructive" className="bg-red-500/20 text-red-400 border-red-500/20 font-bold px-2 py-0.5 text-xs">
-                                                    {extractCode(msg)}
-                                                </Badge>
-                                            )}
-                                        </div>
-                                    </div>
-                                ))
+                                    );
+                                })
                             )}
                         </div>
                     </CardContent>

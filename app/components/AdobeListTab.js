@@ -171,7 +171,7 @@ export default function AdobeListTab({ token, clients, onFetchClients }) {
                                         </TableCell>
                                         <TableCell>
                                             <Badge variant={acc.status === 'active' ? 'outline' : 'destructive'} className={acc.status === 'active' ? 'bg-green-500/10 text-green-500 hover:bg-green-500/20' : ''}>
-                                                {acc.status}
+                                                {acc.status === 'active' ? 'Активный' : acc.status === 'banned' ? 'Забанен' : acc.status}
                                             </Badge>
                                         </TableCell>
                                         <TableCell>

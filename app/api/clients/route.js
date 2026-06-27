@@ -38,9 +38,10 @@ export async function POST(request) {
 
     // [SECURITY] M-01: Sanitize optional fields
     const safeTelegram = telegram ? String(telegram).slice(0, 100) : null;
+    const safeSubStartDate = body.subscription_starts_at ? String(body.subscription_starts_at).slice(0, 10) : null;
     const safeSubDate = subscription_ends_at ? String(subscription_ends_at).slice(0, 10) : null;
 
-    const result = insertClient(email, safeTelegram, safeSubDate);
+    const result = insertClient(email, safeTelegram, safeSubStartDate, safeSubDate);
     
     return NextResponse.json({ success: true, id: result.lastInsertRowid });
   } catch (error) {
@@ -63,6 +64,7 @@ export async function PUT(request) {
     }
 
     const safeTelegram = telegram ? String(telegram).slice(0, 100) : null;
+    const safeSubStartDate = body.subscription_starts_at ? String(body.subscription_starts_at).slice(0, 10) : null;
     const safeSubDate = subscription_ends_at ? String(subscription_ends_at).slice(0, 10) : null;
     const safeEmail = email ? String(email) : null;
 
@@ -71,9 +73,10 @@ export async function PUT(request) {
       UPDATE clients 
       SET email = COALESCE(?, email), 
           telegram = COALESCE(?, telegram), 
+          subscription_starts_at = ?,
           subscription_ends_at = ? 
       WHERE id = ?
-    `).run(safeEmail, safeTelegram, safeSubDate, id);
+    `).run(safeEmail, safeTelegram, safeSubStartDate, safeSubDate, id);
 
     return NextResponse.json({ success: true });
   } catch (error) {
