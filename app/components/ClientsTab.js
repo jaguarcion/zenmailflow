@@ -179,7 +179,11 @@ export default function ClientsTab({ token, clients, onFetchClients }) {
                                                 {[c.telegram_first_name, c.telegram_last_name].filter(Boolean).join(' ') || c.telegram_username || c.telegram || '-'}
                                             </div>
                                             {c.telegram_username && <div className="text-xs text-muted-foreground">@{c.telegram_username}</div>}
-                                            {c.bot_link_token ? (
+                                            {c.telegram_chat_id ? (
+                                                <span className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span> Подключен
+                                                </span>
+                                            ) : c.bot_link_token ? (
                                                 <div 
                                                     className="text-xs text-blue-500 cursor-pointer flex items-center gap-1 hover:underline mt-1"
                                                     onClick={() => copyBotLink(c.bot_link_token)}
