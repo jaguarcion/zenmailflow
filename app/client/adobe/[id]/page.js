@@ -115,7 +115,7 @@ export default function ClientAdobePage({ params }) {
                 {/* Header */}
                 <div className="text-center space-y-4 mb-8">
                     <div className="inline-flex justify-center items-center mb-2">
-                        <img src="/logo.png" alt="Logo" className="w-[90px] h-[90px] object-cover rounded-full shadow-lg ring-1 ring-white/10" />
+                        <img src="/logo.png" alt="Logo" className="w-32 h-32 object-cover rounded-full shadow-lg ring-1 ring-white/10" />
                     </div>
                     <h1 className="text-3xl font-bold tracking-tight text-white bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">
                         Ваш аккаунт Adobe
