@@ -4,6 +4,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import Database from 'better-sqlite3';
 import { checkAdobeAccount } from '../lib/dongvanfb.js';
+import crypto from 'crypto';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -73,7 +74,6 @@ bot.onText(/\/start$/, (msg) => {
             return bot.sendMessage(chatId, 'Вы уже зарегистрированы!', KEYBOARD_MENU);
         }
 
-        const crypto = require('crypto');
         const token = crypto.randomUUID();
         db.prepare(`
             INSERT INTO clients (telegram_chat_id, telegram_username, telegram_first_name, telegram_last_name, bot_link_token) 
