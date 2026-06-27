@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Upload, Eye, History } from "lucide-react";
+import { Upload, Eye, History, Copy, Check } from "lucide-react";
 
 export default function AdobeUploadTab({ token }) {
     const [uploadText, setUploadText] = useState("");
@@ -150,7 +150,7 @@ export default function AdobeUploadTab({ token }) {
             </Card>
 
             <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-                <DialogContent className="max-w-4xl max-h-[80vh] flex flex-col">
+                <DialogContent className="max-w-[95vw] max-h-[90vh] flex flex-col">
                     <DialogHeader>
                         <DialogTitle>Аккаунты из загрузки #{selectedUploadId}</DialogTitle>
                     </DialogHeader>
@@ -159,28 +159,48 @@ export default function AdobeUploadTab({ token }) {
                             <TableHeader className="bg-muted/50 sticky top-0">
                                 <TableRow>
                                     <TableHead>Email</TableHead>
-                                    <TableHead>Adobe Password</TableHead>
+                                    <TableHead>Pass Email</TableHead>
+                                    <TableHead>Pass Adobe</TableHead>
+                                    <TableHead>Token</TableHead>
+                                    <TableHead>Device ID</TableHead>
                                     <TableHead>Status</TableHead>
+                                    <TableHead></TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {uploadAccounts.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
+                                        <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                                             Загрузка аккаунтов...
                                         </TableCell>
                                     </TableRow>
                                 ) : (
                                     uploadAccounts.map(acc => (
                                         <TableRow key={acc.id}>
-                                            <TableCell className="font-mono text-sm">{acc.email}</TableCell>
-                                            <TableCell className="font-mono text-sm">{acc.adobe_password}</TableCell>
+                                            <TableCell className="font-mono text-xs max-w-[150px] truncate" title={acc.email}>{acc.email}</TableCell>
+                                            <TableCell className="font-mono text-xs max-w-[100px] truncate" title={acc.password}>{acc.password}</TableCell>
+                                            <TableCell className="font-mono text-xs max-w-[100px] truncate" title={acc.adobe_password}>{acc.adobe_password}</TableCell>
+                                            <TableCell className="font-mono text-xs max-w-[150px] truncate" title={acc.refresh_token}>{acc.refresh_token}</TableCell>
+                                            <TableCell className="font-mono text-xs max-w-[100px] truncate" title={acc.device_id}>{acc.device_id}</TableCell>
                                             <TableCell>
                                                 {acc.status === 'active' ? (
                                                     <span className="text-green-500 font-semibold text-xs">Активен</span>
                                                 ) : (
                                                     <span className="text-red-500 font-semibold text-xs">Блок</span>
                                                 )}
+                                            </TableCell>
+                                            <TableCell className="text-right p-2">
+                                                <Button 
+                                                    variant="ghost" 
+                                                    size="sm" 
+                                                    className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
+                                                    onClick={() => {
+                                                        navigator.clipboard.writeText(`${acc.email} | ${acc.password} | ${acc.adobe_password} | ${acc.refresh_token} | ${acc.device_id}`);
+                                                        alert("Скопировано!");
+                                                    }}
+                                                >
+                                                    <Copy className="w-3 h-3 mr-1" /> Всё
+                                                </Button>
                                             </TableCell>
                                         </TableRow>
                                     ))
