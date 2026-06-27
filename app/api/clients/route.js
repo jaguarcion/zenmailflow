@@ -48,3 +48,36 @@ export async function POST(request) {
     return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
   }
 }
+
+export async function PUT(request) {
+  if (!isAuthenticated(request)) {
+    return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+  }
+
+  try {
+    const body = await request.json();
+    const { id, email, telegram, subscription_ends_at } = body;
+
+    if (!id) {
+      return NextResponse.json({ success: false, error: 'ID is required' }, { status: 400 });
+    }
+
+    const safeTelegram = telegram ? String(telegram).slice(0, 100) : null;
+    const safeSubDate = subscription_ends_at ? String(subscription_ends_at).slice(0, 10) : null;
+    const safeEmail = email ? String(email) : null;
+
+    const _db = require('better-sqlite3')(require('path').resolve(process.cwd(), 'emails.db'));
+    _db.prepare(`
+      UPDATE clients 
+      SET email = COALESCE(?, email), 
+          telegram = COALESCE(?, telegram), 
+          subscription_ends_at = ? 
+      WHERE id = ?
+    `).run(safeEmail, safeTelegram, safeSubDate, id);
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('[Clients PUT]', error);
+    return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
+  }
+}

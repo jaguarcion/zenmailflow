@@ -6,13 +6,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { UserPlus, Copy, Link as LinkIcon } from "lucide-react";
+import { UserPlus, Copy, Link as LinkIcon, Pencil } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export default function ClientsTab({ token, clients, onFetchClients }) {
     const [form, setForm] = useState({ email: '', telegram: '', subscription_ends_at: '' });
     const [loading, setLoading] = useState(false);
     const [availableAccounts, setAvailableAccounts] = useState([]);
+    const [editClient, setEditClient] = useState(null);
+    const [editForm, setEditForm] = useState({ email: '', telegram: '', subscription_ends_at: '' });
 
     const fetchAvailableAccounts = async () => {
         try {
@@ -65,18 +68,49 @@ export default function ClientsTab({ token, clients, onFetchClients }) {
                 headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
                 body: JSON.stringify(form)
             });
-            const data = await res.json();
-            if (data.success) {
-                toast.success("Клиент успешно создан!");
+            if (res.ok) {
+                toast.success("Клиент добавлен");
                 setForm({ email: '', telegram: '', subscription_ends_at: '' });
                 onFetchClients();
             } else {
-                toast.error(data.error || "Ошибка при создании");
+                const err = await res.json();
+                toast.error(err.error || "Ошибка при добавлении");
             }
         } catch (e) {
-            toast.error(e.message || "Произошла ошибка");
+            toast.error("Ошибка сети");
         }
         setLoading(false);
+    };
+
+    const handleEditSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        try {
+            const res = await fetch("/api/clients", {
+                method: "PUT",
+                headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+                body: JSON.stringify({ id: editClient.id, ...editForm })
+            });
+            if (res.ok) {
+                toast.success("Данные клиента обновлены");
+                setEditClient(null);
+                onFetchClients();
+            } else {
+                toast.error("Ошибка при обновлении");
+            }
+        } catch (e) {
+            toast.error("Ошибка сети");
+        }
+        setLoading(false);
+    };
+
+    const openEditModal = (client) => {
+        setEditClient(client);
+        setEditForm({
+            email: client.email || '',
+            telegram: client.telegram || '',
+            subscription_ends_at: client.subscription_ends_at || ''
+        });
     };
 
     return (
@@ -132,11 +166,19 @@ export default function ClientsTab({ token, clients, onFetchClients }) {
                                 {clients.map(c => (
                                     <TableRow key={c.id}>
                                         <TableCell>
-                                            <div className="font-medium text-foreground">{c.email}</div>
+                                            <div className="font-medium text-foreground flex items-center gap-2">
+                                                {c.email || <span className="text-muted-foreground italic">Без Email</span>}
+                                                <Button variant="ghost" size="sm" className="h-6 w-6 p-0 hover:bg-muted" onClick={() => openEditModal(c)}>
+                                                    <Pencil className="w-3 h-3 text-muted-foreground" />
+                                                </Button>
+                                            </div>
                                             <div className="text-xs text-muted-foreground">ID: {c.id}</div>
                                         </TableCell>
                                         <TableCell>
-                                            <div className="font-medium">{c.telegram || '-'}</div>
+                                            <div className="font-medium">
+                                                {[c.telegram_first_name, c.telegram_last_name].filter(Boolean).join(' ') || c.telegram_username || c.telegram || '-'}
+                                            </div>
+                                            {c.telegram_username && <div className="text-xs text-muted-foreground">@{c.telegram_username}</div>}
                                             {c.bot_link_token ? (
                                                 <div 
                                                     className="text-xs text-blue-500 cursor-pointer flex items-center gap-1 hover:underline mt-1"
@@ -191,6 +233,33 @@ export default function ClientsTab({ token, clients, onFetchClients }) {
                     </div>
                 </CardContent>
             </Card>
+
+            <Dialog open={!!editClient} onOpenChange={(open) => !open && setEditClient(null)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Редактирование клиента (ID: {editClient?.id})</DialogTitle>
+                    </DialogHeader>
+                    {editClient && (
+                        <form onSubmit={handleEditSubmit} className="space-y-4">
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">Email</label>
+                                <Input type="email" value={editForm.email} onChange={e => setEditForm({...editForm, email: e.target.value})} placeholder="client@test.com" />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">Telegram</label>
+                                <Input type="text" value={editForm.telegram} onChange={e => setEditForm({...editForm, telegram: e.target.value})} placeholder="@username" />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">Подписка до</label>
+                                <Input type="date" value={editForm.subscription_ends_at} onChange={e => setEditForm({...editForm, subscription_ends_at: e.target.value})} />
+                            </div>
+                            <Button type="submit" disabled={loading} className="w-full">
+                                {loading ? 'Сохранение...' : 'Сохранить изменения'}
+                            </Button>
+                        </form>
+                    )}
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

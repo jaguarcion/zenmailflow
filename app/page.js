@@ -36,6 +36,10 @@ export default function Home() {
 
   useEffect(() => {
     const savedToken = localStorage.getItem("zenmail_token");
+    const savedTab = localStorage.getItem("zenmail_active_tab");
+    if (savedTab) {
+      setActiveTab(savedTab);
+    }
     if (savedToken) {
       setToken(savedToken);
       setIsLoggedIn(true);
@@ -45,6 +49,11 @@ export default function Home() {
     }
     setIsCheckingAuth(false);
   }, []);
+
+  const changeTab = (tabId) => {
+    setActiveTab(tabId);
+    localStorage.setItem("zenmail_active_tab", tabId);
+  };
 
   const handleLogin = (e) => {
     e.preventDefault();
@@ -277,7 +286,7 @@ export default function Home() {
                     <button
                       key={sub.id}
                       onClick={() => {
-                        setActiveTab(sub.id);
+                        changeTab(sub.id);
                         setIsMobileMenuOpen(false);
                       }}
                       className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
@@ -305,10 +314,10 @@ export default function Home() {
           <button
             key={item.id}
             onClick={() => {
-              setActiveTab(item.id);
+              changeTab(item.id);
               setIsMobileMenuOpen(false);
             }}
-            className={`w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-md transition-colors ${
+            className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors mb-1 ${
               isActive 
                 ? "bg-primary text-primary-foreground shadow-sm" 
                 : "text-muted-foreground hover:bg-muted hover:text-foreground"

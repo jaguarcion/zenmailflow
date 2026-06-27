@@ -15,6 +15,16 @@ export default function SupportTab({ token }) {
     const [loading, setLoading] = useState(false);
     const messagesEndRef = useRef(null);
 
+    const getClientName = (c) => {
+        if (c.telegram_first_name || c.telegram_last_name) {
+            return [c.telegram_first_name, c.telegram_last_name].filter(Boolean).join(' ');
+        }
+        if (c.telegram_username) return `@${c.telegram_username}`;
+        if (c.telegram) return c.telegram;
+        if (c.email) return c.email;
+        return `Клиент #${c.id}`;
+    };
+
     const fetchThreads = async () => {
         try {
             const res = await fetch("/api/support", { headers: { "Authorization": `Bearer ${token}` } });
@@ -100,7 +110,7 @@ export default function SupportTab({ token }) {
                                 className={`p-4 border-b cursor-pointer transition-colors hover:bg-muted/50 ${selectedClient?.id === t.id ? 'bg-muted/50' : ''}`}
                             >
                                 <div className="flex justify-between items-center mb-1">
-                                    <span className="font-semibold text-sm truncate">{t.email || t.telegram || `ID: ${t.id}`}</span>
+                                    <span className="font-semibold text-sm truncate">{getClientName(t)}</span>
                                     {t.unread_count > 0 && (
                                         <Badge variant="destructive" className="h-5 px-1.5 text-[10px]">{t.unread_count}</Badge>
                                     )}
@@ -120,7 +130,7 @@ export default function SupportTab({ token }) {
                         <CardHeader className="pb-3 border-b">
                             <CardTitle className="text-lg flex items-center gap-2">
                                 <User className="w-5 h-5" />
-                                {selectedClient.email || selectedClient.telegram || `Клиент #${selectedClient.id}`}
+                                {getClientName(selectedClient)}
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="flex-1 p-0 flex flex-col overflow-hidden relative">

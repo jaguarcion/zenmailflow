@@ -23,7 +23,7 @@ export async function GET(request) {
 
     // Get summary of all clients with messages
     const stmt = _db.prepare(`
-      SELECT c.id, c.email, c.telegram, 
+      SELECT c.id, c.email, c.telegram, c.telegram_username, c.telegram_first_name, c.telegram_last_name,
              MAX(sm.created_at) as last_message_time,
              SUM(CASE WHEN sm.is_read = 0 AND sm.sender = 'client' THEN 1 ELSE 0 END) as unread_count
       FROM clients c
