@@ -200,16 +200,18 @@ export default function ClientAdobePage({ params }) {
                                 data.messages.map((msg) => (
                                     <div key={msg.uid} className="p-4 bg-black/30 rounded-xl border border-white/5 hover:border-white/10 transition-colors flex flex-col gap-2">
                                         <div className="flex justify-between items-start mb-1">
-                                            <span className="text-[11px] font-mono text-slate-500 bg-slate-900/50 px-2 py-0.5 rounded">{msg.from[0]?.address}</span>
+                                            <span className="text-[11px] font-mono text-slate-500 bg-slate-900/50 px-2 py-0.5 rounded">
+                                                {typeof msg.from === 'string' ? msg.from : (msg.from?.[0]?.address || 'Adobe')}
+                                            </span>
                                             <span className="text-[11px] text-slate-500">
-                                                {new Date(msg.date).toLocaleString('ru-RU', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: '2-digit' })}
+                                                {msg.date}
                                             </span>
                                         </div>
                                         <div className="flex flex-wrap items-center gap-3">
                                             <span className="text-sm font-medium text-slate-300">{msg.subject}</span>
-                                            {extractCode(msg.subject) !== 'N/A' && (
+                                            {(msg.code || extractCode(msg.subject) !== 'N/A') && (
                                                 <Badge variant="destructive" className="bg-red-500/20 text-red-400 border-red-500/20 font-bold px-2 py-0.5 text-xs">
-                                                    {extractCode(msg.subject)}
+                                                    {msg.code || extractCode(msg.subject)}
                                                 </Badge>
                                             )}
                                         </div>
