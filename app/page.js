@@ -232,9 +232,16 @@ export default function Home() {
         { id: 'adobe-upload', label: 'Загрузка аккаунтов' }
       ] 
     },
-    { id: 'clients', label: 'Клиенты', icon: Users },
-    { id: 'generator', label: 'Генерация', icon: Zap },
-    { id: 'history', label: 'История', icon: History, badge: historyItems.length }
+    { 
+      id: 'email-group', 
+      label: 'Email', 
+      icon: Mail, 
+      subItems: [
+        { id: 'generator', label: 'Генерация' },
+        { id: 'history', label: 'История', badge: historyItems.length }
+      ] 
+    },
+    { id: 'clients', label: 'Клиенты', icon: Users }
   ];
 
   return (
@@ -276,6 +283,11 @@ export default function Home() {
                           }`}
                         >
                           {sub.label}
+                          {sub.badge !== undefined && (
+                            <span className={`ml-auto text-xs py-0.5 px-2 rounded-full ${isSubActive ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-muted-foreground/20 text-muted-foreground'}`}>
+                              {sub.badge}
+                            </span>
+                          )}
                         </button>
                       )
                     })}
