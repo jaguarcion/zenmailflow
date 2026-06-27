@@ -10,7 +10,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { LogOut, Download, Trash2, Mail, Users, Monitor, Zap, History } from "lucide-react";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { LogOut, Download, Trash2, Mail, Users, Monitor, Zap, History, Menu } from "lucide-react";
 
 export default function Home() {
   const [token, setToken] = useState("");
