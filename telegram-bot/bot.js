@@ -152,11 +152,8 @@ bot.on('message', async (msg) => {
         const baseUrl = process.env.APP_URL || 'https://keysoft.store';
         const msgText = `👤 **Данные аккаунта:**
         
-📧 Email: ${acc.email}
-🔑 Пароль: ${acc.password || 'Нет'}
-🔐 Пароль Adobe: ${acc.adobe_password || 'Нет'}
-📊 Статус: ${acc.status === 'active' ? '🟢 Активен' : '🔴 Заблокирован'}
-🌐 Ссылка на доступ: ${baseUrl}/client/adobe/${acc.access_token}`;
+🌐 Ссылка на доступ - ${baseUrl}/client/adobe/${acc.access_token}
+📊 Статус: ${acc.status === 'active' ? '🟢 Активен' : '🔴 Заблокирован'}`;
         return bot.sendMessage(chatId, msgText, { parse_mode: 'Markdown' });
     }
 
