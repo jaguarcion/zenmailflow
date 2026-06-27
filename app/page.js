@@ -1,34 +1,31 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
+import AdobeListTab from "./components/AdobeListTab";
+import AdobeUploadTab from "./components/AdobeUploadTab";
+import ClientsTab from "./components/ClientsTab";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { LogOut, Download, Trash2, Mail, Users, Monitor, Zap, History } from "lucide-react";
 
 export default function Home() {
   const [token, setToken] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  
-  const [activeTab, setActiveTab] = useState("generator"); // 'generator' or 'history'
-  
+  const [activeTab, setActiveTab] = useState("adobe-list");
+
   const [count, setCount] = useState(1);
   const [loading, setLoading] = useState(false);
   const [freshEmails, setFreshEmails] = useState([]);
-  const [history, setHistory] = useState([]);
+  const [historyItems, setHistoryItems] = useState([]);
+  const [clientsList, setClientsList] = useState([]);
   const [error, setError] = useState(null);
   const [domains, setDomains] = useState([]);
   const [selectedDomain, setSelectedDomain] = useState("");
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const dropdownRef = useRef(null);
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsDropdownOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  // Selection states
   const [selectedFresh, setSelectedFresh] = useState([]);
   const [selectedHistory, setSelectedHistory] = useState([]);
 
@@ -39,6 +36,7 @@ export default function Home() {
       setIsLoggedIn(true);
       fetchDomains(savedToken);
       fetchHistory(savedToken);
+      fetchClients(savedToken);
     }
   }, []);
 
@@ -49,6 +47,7 @@ export default function Home() {
       setIsLoggedIn(true);
       fetchDomains(token);
       fetchHistory(token);
+      fetchClients(token);
       setError(null);
     }
   };
@@ -57,25 +56,22 @@ export default function Home() {
     localStorage.removeItem("zenmail_token");
     setIsLoggedIn(false);
     setToken("");
-    setHistory([]);
+    setHistoryItems([]);
     setFreshEmails([]);
     setSelectedFresh([]);
     setSelectedHistory([]);
     setDomains([]);
     setSelectedDomain("");
+    setClientsList([]);
   };
 
   const fetchDomains = async (authToken = token) => {
     try {
-      const res = await fetch("/api/domains", {
-        headers: { "Authorization": `Bearer ${authToken}` }
-      });
+      const res = await fetch("/api/domains", { headers: { "Authorization": `Bearer ${authToken}` } });
       const data = await res.json();
       if (data.success) {
         setDomains(data.domains);
-        if (data.domains.length > 0) {
-          setSelectedDomain(data.domains[0]);
-        }
+        if (data.domains.length > 0) setSelectedDomain(data.domains[0]);
       }
     } catch (err) {
       console.error("Failed to fetch domains:", err);
@@ -84,19 +80,27 @@ export default function Home() {
 
   const fetchHistory = async (authToken = token) => {
     try {
-      const res = await fetch("/api/history", {
-        headers: { "Authorization": `Bearer ${authToken}` }
-      });
+      const res = await fetch("/api/history", { headers: { "Authorization": `Bearer ${authToken}` } });
       const data = await res.json();
       if (data.success) {
-        setHistory(data.data);
-        setSelectedHistory([]); // reset selection on refresh
+        setHistoryItems(data.data);
+        setSelectedHistory([]);
       } else if (res.status === 401) {
         handleLogout();
         setError("Сессия истекла или неверный токен.");
       }
     } catch (err) {
       console.error("Failed to fetch history:", err);
+    }
+  };
+
+  const fetchClients = async (authToken = token) => {
+    try {
+      const res = await fetch("/api/clients", { headers: { "Authorization": `Bearer ${authToken}` } });
+      const data = await res.json();
+      if (data.success) setClientsList(data.data);
+    } catch (err) {
+      console.error("Failed to fetch clients:", err);
     }
   };
 
@@ -112,17 +116,14 @@ export default function Home() {
     try {
       const res = await fetch("/api/generate", {
         method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
         body: JSON.stringify({ count, domain: selectedDomain }),
       });
       const data = await res.json();
 
       if (data.success) {
         setFreshEmails(data.generated);
-        fetchHistory(); // refresh history
+        fetchHistory();
       } else {
         if (res.status === 401) handleLogout();
         setError(data.error || "Произошла ошибка");
@@ -141,7 +142,7 @@ export default function Home() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `migadu-emails-${new Date().toISOString().split("T")[0]}.txt`;
+    a.download = `emails-${new Date().toISOString().split("T")[0]}.txt`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -150,15 +151,9 @@ export default function Home() {
 
   const handleDelete = async (id) => {
     try {
-      const res = await fetch(`/api/history?id=${id}`, { 
-        method: "DELETE",
-        headers: { "Authorization": `Bearer ${token}` }
-      });
-      if (res.ok) {
-        fetchHistory();
-      } else if (res.status === 401) {
-        handleLogout();
-      }
+      const res = await fetch(`/api/history?id=${id}`, { method: "DELETE", headers: { "Authorization": `Bearer ${token}` } });
+      if (res.ok) fetchHistory();
+      else if (res.status === 401) handleLogout();
     } catch (err) {
       console.error("Failed to delete email", err);
     }
@@ -168,13 +163,9 @@ export default function Home() {
     if (selectedHistory.length === 0) return;
     if (!confirm(`Вы уверены, что хотите удалить ${selectedHistory.length} выбранных почт?`)) return;
     
-    // Process sequentially to keep it simple, or use Promise.all
     try {
       await Promise.all(selectedHistory.map(id => 
-        fetch(`/api/history?id=${id}`, { 
-          method: "DELETE",
-          headers: { "Authorization": `Bearer ${token}` }
-        })
+        fetch(`/api/history?id=${id}`, { method: "DELETE", headers: { "Authorization": `Bearer ${token}` } })
       ));
       fetchHistory();
     } catch (err) {
@@ -185,295 +176,324 @@ export default function Home() {
   const handleClearAll = async () => {
     if (!confirm("Вы уверены, что хотите удалить ВСЮ историю почт?")) return;
     try {
-      const res = await fetch(`/api/history?id=all`, { 
-        method: "DELETE",
-        headers: { "Authorization": `Bearer ${token}` }
-      });
-      if (res.ok) {
-        fetchHistory();
-      }
+      const res = await fetch(`/api/history?id=all`, { method: "DELETE", headers: { "Authorization": `Bearer ${token}` } });
+      if (res.ok) fetchHistory();
     } catch (err) {
       console.error("Failed to clear history", err);
     }
   };
 
-  // Selection helpers
   const toggleSelectFresh = (idx) => {
-    if (selectedFresh.includes(idx)) {
-      setSelectedFresh(selectedFresh.filter(i => i !== idx));
-    } else {
-      setSelectedFresh([...selectedFresh, idx]);
-    }
+    setSelectedFresh(prev => prev.includes(idx) ? prev.filter(i => i !== idx) : [...prev, idx]);
   };
-
   const toggleSelectAllFresh = () => {
-    if (selectedFresh.length === freshEmails.length) {
-      setSelectedFresh([]);
-    } else {
-      setSelectedFresh(freshEmails.map((_, idx) => idx));
-    }
+    setSelectedFresh(selectedFresh.length === freshEmails.length ? [] : freshEmails.map((_, idx) => idx));
   };
-
   const toggleSelectHistory = (id) => {
-    if (selectedHistory.includes(id)) {
-      setSelectedHistory(selectedHistory.filter(i => i !== id));
-    } else {
-      setSelectedHistory([...selectedHistory, id]);
-    }
+    setSelectedHistory(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
   };
-
   const toggleSelectAllHistory = () => {
-    if (selectedHistory.length === history.length) {
-      setSelectedHistory([]);
-    } else {
-      setSelectedHistory(history.map(item => item.id));
-    }
+    setSelectedHistory(selectedHistory.length === historyItems.length ? [] : historyItems.map(item => item.id));
   };
 
   if (!isLoggedIn) {
     return (
-      <main className="container login-container">
-        <h1>ZenMailFlow</h1>
-        <p className="subtitle">Требуется авторизация</p>
-        <div className="glass-panel">
-          <form onSubmit={handleLogin} className="form-group">
-            <label htmlFor="token">Мастер-токен</label>
-            <input
-              type="password"
-              id="token"
-              value={token}
-              onChange={(e) => setToken(e.target.value)}
-              placeholder="Введите ваш токен доступа"
-              required
-            />
-            <button type="submit" className="btn" style={{ marginTop: '1rem' }}>Войти</button>
-          </form>
-          {error && <p style={{ color: 'var(--danger-color)', marginTop: '1rem', fontSize: '0.9rem', textAlign: 'center' }}>{error}</p>}
-        </div>
-      </main>
+      <div className="min-h-screen flex items-center justify-center bg-muted/40 p-4">
+        <Card className="w-full max-w-md shadow-lg border-muted">
+          <CardHeader className="space-y-1 items-center">
+            <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+              <Mail className="w-6 h-6 text-primary" />
+            </div>
+            <CardTitle className="text-2xl font-bold tracking-tight">ZenMailFlow</CardTitle>
+            <CardDescription>Требуется авторизация для доступа к панели</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Мастер-токен</label>
+                <Input type="password" value={token} onChange={(e) => setToken(e.target.value)} placeholder="Введите токен" required />
+              </div>
+              <Button type="submit" className="w-full">Войти</Button>
+            </form>
+            {error && <p className="text-destructive text-sm mt-4 text-center">{error}</p>}
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
-  return (
-    <main className="container">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-        <h1>ZenMailFlow</h1>
-        <button onClick={handleLogout} className="btn btn-secondary btn-sm">Выйти</button>
-      </div>
-      
-      <div className="tabs">
-        <button 
-          className={`tab ${activeTab === 'generator' ? 'active' : ''}`}
-          onClick={() => setActiveTab('generator')}
-        >
-          Генерация
-        </button>
-        <button 
-          className={`tab ${activeTab === 'history' ? 'active' : ''}`}
-          onClick={() => setActiveTab('history')}
-        >
-          История ({history.length})
-        </button>
-      </div>
+  const navItems = [
+    { 
+      id: 'adobe-group', 
+      label: 'Adobe', 
+      icon: Monitor, 
+      subItems: [
+        { id: 'adobe-list', label: 'Список аккаунтов' },
+        { id: 'adobe-upload', label: 'Загрузка аккаунтов' }
+      ] 
+    },
+    { id: 'clients', label: 'Клиенты', icon: Users },
+    { id: 'generator', label: 'Генерация', icon: Zap },
+    { id: 'history', label: 'История', icon: History, badge: historyItems.length }
+  ];
 
-      {activeTab === 'generator' && (
-        <>
-          <div className="glass-panel" style={{ padding: '1rem 1.5rem' }}>
-            <form onSubmit={handleGenerate} className="flex-row" style={{ alignItems: 'flex-end', gap: '1rem' }}>
-              <div className="form-group" style={{ margin: 0, flex: 2 }} ref={dropdownRef}>
-                <label>Домен</label>
-                <div className="custom-select-container">
-                  <div 
-                    className={`custom-select-header ${isDropdownOpen ? 'open' : ''}`}
-                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  >
-                    {selectedDomain || "Выберите домен"}
-                    <span className="arrow"></span>
+  return (
+    <div className="flex h-screen bg-muted/30 overflow-hidden font-sans">
+      {/* Sidebar */}
+      <aside className="w-64 bg-background border-r flex flex-col shrink-0 shadow-sm z-20">
+        <div className="h-16 flex items-center px-6 border-b">
+          <div className="bg-primary/10 p-1.5 rounded-md mr-3">
+            <Mail className="w-5 h-5 text-primary" />
+          </div>
+          <span className="font-bold text-lg tracking-tight">ZenMailFlow</span>
+        </div>
+        
+        <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-1.5">
+          <div className="px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">
+            Навигация
+          </div>
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            
+            if (item.subItems) {
+              return (
+                <div key={item.id} className="mb-2">
+                  <div className="w-full flex items-center px-3 py-2 text-sm font-semibold text-foreground">
+                    <Icon className="w-4 h-4 mr-3 text-primary" />
+                    {item.label}
                   </div>
-                  {isDropdownOpen && (
-                    <ul className="custom-select-list">
-                      {domains.map(d => (
-                        <li 
-                          key={d} 
-                          className={`custom-select-item ${d === selectedDomain ? 'selected' : ''}`}
-                          onClick={() => {
-                            setSelectedDomain(d);
-                            setIsDropdownOpen(false);
-                          }}
+                  <div className="ml-7 space-y-1 mt-1 border-l pl-2">
+                    {item.subItems.map(sub => {
+                      const isSubActive = activeTab === sub.id;
+                      return (
+                        <button
+                          key={sub.id}
+                          onClick={() => setActiveTab(sub.id)}
+                          className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                            isSubActive 
+                              ? "bg-primary text-primary-foreground shadow-sm" 
+                              : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                          }`}
                         >
-                          {d}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
+                          {sub.label}
+                        </button>
+                      )
+                    })}
+                  </div>
                 </div>
-              </div>
-              <div className="form-group" style={{ margin: 0, flex: 1 }}>
-                <label htmlFor="count">Количество (1-100)</label>
-                <input
-                  type="number"
-                  id="count"
-                  min="1"
-                  max="100"
-                  value={count}
-                  onChange={(e) => setCount(parseInt(e.target.value) || 1)}
-                  required
-                />
-              </div>
-              <button type="submit" className="btn" disabled={loading} style={{ marginTop: '1.2rem' }}>
-                {loading ? (
-                  <>
-                    <span className="loader"></span>
-                    Генерация...
-                  </>
-                ) : (
-                  "Сгенерировать"
+              );
+            }
+
+            const isActive = activeTab === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                className={`w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-md transition-colors ${
+                  isActive 
+                    ? "bg-primary text-primary-foreground shadow-sm" 
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                }`}
+              >
+                <Icon className={`w-4 h-4 mr-3 ${isActive ? 'text-primary-foreground' : 'text-muted-foreground'}`} />
+                {item.label}
+                {item.badge !== undefined && (
+                  <span className={`ml-auto text-xs py-0.5 px-2 rounded-full ${isActive ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-muted-foreground/20 text-muted-foreground'}`}>
+                    {item.badge}
+                  </span>
                 )}
               </button>
-            </form>
-            {error && <p style={{ color: 'var(--danger-color)', marginTop: '1rem', fontSize: '0.9rem' }}>{error}</p>}
+            );
+          })}
+        </nav>
+        
+        <div className="p-4 border-t">
+          <Button variant="ghost" className="w-full justify-start text-muted-foreground hover:text-foreground" onClick={handleLogout}>
+            <LogOut className="w-4 h-4 mr-3" /> Выйти
+          </Button>
+        </div>
+      </aside>
+
+      {/* Main Content Area */}
+      <main className="flex-1 overflow-y-auto">
+        <div className="p-6 md:p-8 max-w-6xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          
+          {/* Header */}
+          <div className="flex flex-col space-y-1">
+            <h1 className="text-3xl font-bold tracking-tight">
+              {activeTab === 'adobe-list' && 'Список аккаунтов Adobe'}
+              {activeTab === 'adobe-upload' && 'Загрузка аккаунтов Adobe'}
+              {navItems.find(n => n.id === activeTab)?.label}
+            </h1>
+            <p className="text-muted-foreground">
+              {activeTab === 'adobe-list' && 'Управление пулом аккаунтов Adobe и проверка статусов'}
+              {activeTab === 'adobe-upload' && 'Массовая загрузка аккаунтов и история загрузок'}
+              {activeTab === 'clients' && 'Управление клиентской базой и привязками'}
+              {activeTab === 'generator' && 'Массовая генерация почтовых ящиков через Migadu'}
+              {activeTab === 'history' && 'Управление базой данных сгенерированных почт'}
+            </p>
           </div>
 
-          {freshEmails.length > 0 && (
-            <div className="glass-panel">
-              <div className="section-header">
-                <h3>Сгенерированные почты ({freshEmails.length})</h3>
-                <div className="flex-row">
-                  <button 
-                    className="btn btn-secondary btn-sm" 
-                    onClick={() => handleDownloadTxt(freshEmails.filter((_, idx) => selectedFresh.includes(idx)))}
-                    disabled={selectedFresh.length === 0}
-                  >
-                    Скачать выбранные
-                  </button>
-                  <button 
-                    className="btn btn-secondary btn-sm" 
-                    onClick={() => handleDownloadTxt(freshEmails)}
-                  >
-                    Скачать все
-                  </button>
-                </div>
-              </div>
-              
-              <div className="table-container">
-                <table className="data-table">
-                  <thead>
-                    <tr>
-                      <th className="checkbox-cell">
-                        <input 
-                          type="checkbox" 
-                          checked={selectedFresh.length === freshEmails.length && freshEmails.length > 0}
-                          onChange={toggleSelectAllFresh}
-                        />
-                      </th>
-                      <th>Адрес почты</th>
-                      <th>Пароль</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {freshEmails.map((item, idx) => (
-                      <tr key={idx} className={selectedFresh.includes(idx) ? 'selected' : ''}>
-                        <td className="checkbox-cell">
-                          <input 
-                            type="checkbox" 
-                            checked={selectedFresh.includes(idx)}
-                            onChange={() => toggleSelectFresh(idx)}
-                          />
-                        </td>
-                        <td><span className="email-address">{item.email}</span></td>
-                        <td><span className="email-password">{item.password}</span></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-        </>
-      )}
+          {/* Render Active Tab */}
+          {activeTab === 'generator' && (
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Создание корпоративных почт</CardTitle>
+                  <CardDescription>Запустите процесс создания новых ящиков</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleGenerate} className="flex flex-col sm:flex-row items-end gap-4">
+                    <div className="space-y-2 flex-1">
+                      <label className="text-sm font-medium">Домен</label>
+                      <Select value={selectedDomain} onValueChange={setSelectedDomain}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Выберите домен" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {domains.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2 flex-1 sm:max-w-[200px]">
+                      <label className="text-sm font-medium">Количество</label>
+                      <Input type="number" min="1" max="100" value={count} onChange={(e) => setCount(parseInt(e.target.value) || 1)} required />
+                    </div>
+                    <Button type="submit" disabled={loading} className="w-full sm:w-auto">
+                      <Zap className="w-4 h-4 mr-2" />
+                      {loading ? "Генерация..." : "Сгенерировать"}
+                    </Button>
+                  </form>
+                  {error && <p className="text-destructive text-sm mt-4">{error}</p>}
+                </CardContent>
+              </Card>
 
-      {activeTab === 'history' && (
-        <div className="glass-panel">
-          <div className="section-header">
-            <h3>Сохраненные почты</h3>
-            <div className="flex-row">
-              <button 
-                className="btn btn-secondary btn-sm" 
-                onClick={() => handleDownloadTxt(history.filter(h => selectedHistory.includes(h.id)))}
-                disabled={selectedHistory.length === 0}
-              >
-                Скачать выбранные
-              </button>
-              <button 
-                className="btn btn-secondary btn-sm" 
-                onClick={() => handleDownloadTxt(history)}
-                disabled={history.length === 0}
-              >
-                Скачать все
-              </button>
-              <button 
-                className="btn btn-danger btn-sm" 
-                onClick={handleDeleteSelected}
-                disabled={selectedHistory.length === 0}
-              >
-                Удалить выбранные
-              </button>
-              {history.length > 0 && (
-                <button className="btn btn-danger btn-sm" onClick={handleClearAll}>
-                  Удалить все
-                </button>
+              {freshEmails.length > 0 && (
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b mb-4">
+                    <div>
+                      <CardTitle className="text-lg">Результат генерации ({freshEmails.length})</CardTitle>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button variant="secondary" size="sm" onClick={() => handleDownloadTxt(freshEmails.filter((_, idx) => selectedFresh.includes(idx)))} disabled={selectedFresh.length === 0}>
+                        <Download className="w-4 h-4 mr-2" /> Скачать выбранные
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => handleDownloadTxt(freshEmails)}>
+                        <Download className="w-4 h-4 mr-2" /> Скачать все
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="rounded-md border shadow-sm">
+                      <Table>
+                        <TableHeader className="bg-muted/50">
+                          <TableRow>
+                            <TableHead className="w-[50px]">
+                              <Checkbox checked={selectedFresh.length === freshEmails.length && freshEmails.length > 0} onCheckedChange={toggleSelectAllFresh} />
+                            </TableHead>
+                            <TableHead>Email</TableHead>
+                            <TableHead>Password</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {freshEmails.map((item, idx) => (
+                            <TableRow key={idx} className={selectedFresh.includes(idx) ? 'bg-muted/30' : ''}>
+                              <TableCell>
+                                <Checkbox checked={selectedFresh.includes(idx)} onCheckedChange={() => toggleSelectFresh(idx)} />
+                              </TableCell>
+                              <TableCell className="font-mono text-primary font-medium">{item.email}</TableCell>
+                              <TableCell className="font-mono text-sm"><span className="bg-muted px-2 py-1 rounded-md">{item.password}</span></TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </CardContent>
+                </Card>
               )}
             </div>
-          </div>
-          
-          {history.length === 0 ? (
-            <div className="empty-state">Почты еще не сгенерированы.</div>
-          ) : (
-            <div className="table-container">
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th className="checkbox-cell">
-                      <input 
-                        type="checkbox" 
-                        checked={selectedHistory.length === history.length && history.length > 0}
-                        onChange={toggleSelectAllHistory}
-                      />
-                    </th>
-                    <th>Адрес почты</th>
-                    <th>Пароль</th>
-                    <th className="actions-cell">Действия</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {history.map((item) => (
-                    <tr key={item.id} className={selectedHistory.includes(item.id) ? 'selected' : ''}>
-                      <td className="checkbox-cell">
-                        <input 
-                          type="checkbox" 
-                          checked={selectedHistory.includes(item.id)}
-                          onChange={() => toggleSelectHistory(item.id)}
-                        />
-                      </td>
-                      <td><span className="email-address">{item.email}</span></td>
-                      <td><span className="email-password">{item.password}</span></td>
-                      <td className="actions-cell">
-                        <button 
-                          className="btn btn-danger btn-sm" 
-                          onClick={() => handleDelete(item.id)}
-                          title="Удалить"
-                        >
-                          ×
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
           )}
+
+          {activeTab === 'history' && (
+            <Card>
+              <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-2 sm:space-y-0 pb-4 border-b mb-4">
+                <div>
+                  <CardTitle className="text-lg">Сохраненные почты</CardTitle>
+                  <CardDescription>База данных всех сгенерированных email</CardDescription>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button variant="secondary" size="sm" onClick={() => handleDownloadTxt(historyItems.filter(h => selectedHistory.includes(h.id)))} disabled={selectedHistory.length === 0}>
+                    <Download className="w-4 h-4 mr-2" /> Скачать выбранные
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => handleDownloadTxt(historyItems)} disabled={historyItems.length === 0}>
+                    <Download className="w-4 h-4 mr-2" /> Скачать все
+                  </Button>
+                  <Button variant="destructive" size="sm" onClick={handleDeleteSelected} disabled={selectedHistory.length === 0}>
+                    <Trash2 className="w-4 h-4 mr-2" /> Удалить выбранные
+                  </Button>
+                  {historyItems.length > 0 && (
+                    <Button variant="destructive" size="sm" onClick={handleClearAll} className="bg-red-900 hover:bg-red-800">
+                      Удалить все
+                    </Button>
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent>
+                {historyItems.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground border rounded-md border-dashed bg-muted/10">
+                    <History className="w-10 h-10 mx-auto text-muted-foreground/30 mb-3" />
+                    <p>Почты еще не сгенерированы.</p>
+                  </div>
+                ) : (
+                  <div className="rounded-md border h-[550px] overflow-auto shadow-sm">
+                    <Table>
+                      <TableHeader className="sticky top-0 bg-background z-10 shadow-sm">
+                        <TableRow>
+                          <TableHead className="w-[50px]">
+                            <Checkbox checked={selectedHistory.length === historyItems.length && historyItems.length > 0} onCheckedChange={toggleSelectAllHistory} />
+                          </TableHead>
+                          <TableHead>Email</TableHead>
+                          <TableHead>Password</TableHead>
+                          <TableHead className="text-right">Действия</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {historyItems.map((item) => (
+                          <TableRow key={item.id} className={selectedHistory.includes(item.id) ? 'bg-muted/30' : ''}>
+                            <TableCell>
+                              <Checkbox checked={selectedHistory.includes(item.id)} onCheckedChange={() => toggleSelectHistory(item.id)} />
+                            </TableCell>
+                            <TableCell className="font-mono text-primary font-medium">{item.email}</TableCell>
+                            <TableCell className="font-mono text-sm"><span className="bg-muted px-2 py-1 rounded-md">{item.password}</span></TableCell>
+                            <TableCell className="text-right">
+                              <Button variant="ghost" size="sm" onClick={() => handleDelete(item.id)} className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 w-8 p-0">
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {activeTab === 'adobe-list' && (
+            <AdobeListTab token={token} clients={clientsList} onFetchClients={() => fetchClients(token)} />
+          )}
+
+          {activeTab === 'adobe-upload' && (
+            <AdobeUploadTab token={token} onFetchClients={() => fetchClients(token)} />
+          )}
+          
+          {activeTab === 'clients' && (
+            <ClientsTab token={token} clients={clientsList} onFetchClients={() => fetchClients(token)} />
+          )}
+
         </div>
-      )}
-    </main>
+      </main>
+    </div>
   );
 }
