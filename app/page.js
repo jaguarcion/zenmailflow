@@ -16,6 +16,7 @@ export default function Home() {
   const [token, setToken] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [activeTab, setActiveTab] = useState("adobe-list");
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const [count, setCount] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -244,82 +245,91 @@ export default function Home() {
     { id: 'clients', label: 'Клиенты', icon: Users }
   ];
 
+  const renderNav = () => (
+    <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-1.5">
+      <div className="px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">
+        Навигация
+      </div>
+      {navItems.map((item) => {
+        const Icon = item.icon;
+        
+        if (item.subItems) {
+          return (
+            <div key={item.id} className="mb-2">
+              <div className="w-full flex items-center px-3 py-2 text-sm font-semibold text-foreground">
+                <Icon className="w-4 h-4 mr-3 text-primary" />
+                {item.label}
+              </div>
+              <div className="ml-7 space-y-1 mt-1 border-l pl-2">
+                {item.subItems.map(sub => {
+                  const isSubActive = activeTab === sub.id;
+                  return (
+                    <button
+                      key={sub.id}
+                      onClick={() => {
+                        setActiveTab(sub.id);
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                        isSubActive 
+                          ? "bg-primary text-primary-foreground shadow-sm" 
+                          : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                      }`}
+                    >
+                      {sub.label}
+                      {sub.badge !== undefined && (
+                        <span className={`ml-auto text-xs py-0.5 px-2 rounded-full ${isSubActive ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-muted-foreground/20 text-muted-foreground'}`}>
+                          {sub.badge}
+                        </span>
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          );
+        }
+
+        const isActive = activeTab === item.id;
+        return (
+          <button
+            key={item.id}
+            onClick={() => {
+              setActiveTab(item.id);
+              setIsMobileMenuOpen(false);
+            }}
+            className={`w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-md transition-colors ${
+              isActive 
+                ? "bg-primary text-primary-foreground shadow-sm" 
+                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+            }`}
+          >
+            <Icon className={`w-4 h-4 mr-3 ${isActive ? 'text-primary-foreground' : 'text-muted-foreground'}`} />
+            {item.label}
+            {item.badge !== undefined && (
+              <span className={`ml-auto text-xs py-0.5 px-2 rounded-full ${isActive ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-muted-foreground/20 text-muted-foreground'}`}>
+                {item.badge}
+              </span>
+            )}
+          </button>
+        );
+      })}
+    </nav>
+  );
+
   return (
     <div className="flex h-screen bg-muted/30 overflow-hidden font-sans">
-      {/* Sidebar */}
-      <aside className="w-64 bg-background border-r flex flex-col shrink-0 shadow-sm z-20">
-        <div className="h-16 flex items-center px-6 border-b">
+      {/* Sidebar for Desktop */}
+      <aside className="hidden md:flex w-64 bg-background border-r flex-col shrink-0 shadow-sm z-20">
+        <div className="h-16 flex items-center px-6 border-b shrink-0">
           <div className="bg-primary/10 p-1.5 rounded-md mr-3">
             <Mail className="w-5 h-5 text-primary" />
           </div>
           <span className="font-bold text-lg tracking-tight">ZenMailFlow</span>
         </div>
+        {renderNav()}
         
-        <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-1.5">
-          <div className="px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">
-            Навигация
-          </div>
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            
-            if (item.subItems) {
-              return (
-                <div key={item.id} className="mb-2">
-                  <div className="w-full flex items-center px-3 py-2 text-sm font-semibold text-foreground">
-                    <Icon className="w-4 h-4 mr-3 text-primary" />
-                    {item.label}
-                  </div>
-                  <div className="ml-7 space-y-1 mt-1 border-l pl-2">
-                    {item.subItems.map(sub => {
-                      const isSubActive = activeTab === sub.id;
-                      return (
-                        <button
-                          key={sub.id}
-                          onClick={() => setActiveTab(sub.id)}
-                          className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                            isSubActive 
-                              ? "bg-primary text-primary-foreground shadow-sm" 
-                              : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                          }`}
-                        >
-                          {sub.label}
-                          {sub.badge !== undefined && (
-                            <span className={`ml-auto text-xs py-0.5 px-2 rounded-full ${isSubActive ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-muted-foreground/20 text-muted-foreground'}`}>
-                              {sub.badge}
-                            </span>
-                          )}
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
-              );
-            }
-
-            const isActive = activeTab === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => setActiveTab(item.id)}
-                className={`w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-md transition-colors ${
-                  isActive 
-                    ? "bg-primary text-primary-foreground shadow-sm" 
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                }`}
-              >
-                <Icon className={`w-4 h-4 mr-3 ${isActive ? 'text-primary-foreground' : 'text-muted-foreground'}`} />
-                {item.label}
-                {item.badge !== undefined && (
-                  <span className={`ml-auto text-xs py-0.5 px-2 rounded-full ${isActive ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-muted-foreground/20 text-muted-foreground'}`}>
-                    {item.badge}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </nav>
-        
-        <div className="p-4 border-t">
+        <div className="p-4 border-t shrink-0">
           <Button variant="ghost" className="w-full justify-start text-muted-foreground hover:text-foreground" onClick={handleLogout}>
             <LogOut className="w-4 h-4 mr-3" /> Выйти
           </Button>
@@ -327,8 +337,42 @@ export default function Home() {
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 overflow-y-auto">
-        <div className="p-6 md:p-8 max-w-6xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="flex-1 flex flex-col h-screen overflow-hidden">
+        
+        {/* Mobile Header */}
+        <header className="md:hidden flex items-center justify-between px-4 py-3 bg-background border-b shadow-sm shrink-0 z-10">
+          <div className="flex items-center gap-2">
+            <div className="bg-primary/10 p-1.5 rounded-md">
+              <Mail className="w-5 h-5 text-primary" />
+            </div>
+            <span className="font-bold tracking-tight">ZenMailFlow</span>
+          </div>
+          
+          <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="shrink-0">
+                <Menu className="w-6 h-6" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="p-0 w-72 flex flex-col">
+              <div className="h-16 flex items-center px-6 border-b shrink-0">
+                <div className="bg-primary/10 p-1.5 rounded-md mr-3">
+                  <Mail className="w-5 h-5 text-primary" />
+                </div>
+                <span className="font-bold text-lg tracking-tight">ZenMailFlow</span>
+              </div>
+              {renderNav()}
+              <div className="p-4 border-t shrink-0">
+                <Button variant="ghost" className="w-full justify-start text-muted-foreground hover:text-foreground" onClick={handleLogout}>
+                  <LogOut className="w-4 h-4 mr-3" /> Выйти
+                </Button>
+              </div>
+            </SheetContent>
+          </Sheet>
+        </header>
+
+        <main className="flex-1 overflow-y-auto">
+          <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
           
           {/* Header */}
           <div className="flex flex-col space-y-1">
@@ -506,6 +550,7 @@ export default function Home() {
 
         </div>
       </main>
+      </div>
     </div>
   );
 }
