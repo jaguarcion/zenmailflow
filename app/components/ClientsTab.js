@@ -218,7 +218,12 @@ export default function ClientsTab({ token, clients, onFetchClients }) {
                                         <TableCell colSpan={5} className="text-center py-10 text-muted-foreground">Нет клиентов</TableCell>
                                     </TableRow>
                                 )}
-                                {clients.map(c => (
+                                {[...clients].sort((a, b) => {
+                                    if (!a.subscription_ends_at && !b.subscription_ends_at) return 0;
+                                    if (!a.subscription_ends_at) return 1;
+                                    if (!b.subscription_ends_at) return -1;
+                                    return new Date(a.subscription_ends_at) - new Date(b.subscription_ends_at);
+                                }).map(c => (
                                     <TableRow key={c.id}>
                                         <TableCell>
                                             <div className="font-medium text-foreground flex items-center gap-2">
@@ -257,7 +262,7 @@ export default function ClientsTab({ token, clients, onFetchClients }) {
                                         </TableCell>
                                         <TableCell>
                                             <div className="text-xs space-y-1">
-                                                {c.subscription_starts_at && <div>Начало: {formatDate(c.subscription_starts_at)}</div>}
+                                                {c.subscription_starts_at && <div><span className="font-bold">С:</span> {formatDate(c.subscription_starts_at)}</div>}
                                                 <div className="font-medium">До: {c.subscription_ends_at ? formatDate(c.subscription_ends_at) : 'Бессрочно'}</div>
                                             </div>
                                         </TableCell>
@@ -265,7 +270,7 @@ export default function ClientsTab({ token, clients, onFetchClients }) {
                                             {(() => {
                                                 if (!c.subscription_ends_at) return <span className="text-xs text-muted-foreground">Бессрочно</span>;
                                                 const diff = Math.ceil((new Date(c.subscription_ends_at) - new Date()) / (1000 * 60 * 60 * 24));
-                                                return <Badge variant={diff < 0 ? "destructive" : diff <= 3 ? "secondary" : "default"} className={`text-[10px] ${diff < 0 ? "bg-red-500/10 text-red-500 hover:bg-red-500/20" : diff <= 3 ? "bg-orange-500/10 text-orange-500 hover:bg-orange-500/20" : "bg-green-500/10 text-green-500 hover:bg-green-500/20"}`}>{diff < 0 ? 'Закончилась' : `${diff} дн.`}</Badge>;
+                                                return <Badge variant="outline" className={`text-[10px] ${diff <= 3 ? "bg-red-500/10 text-red-600 border-red-500/20 hover:bg-red-500/20" : diff <= 15 ? "bg-yellow-500/10 text-yellow-600 border-yellow-500/20 hover:bg-yellow-500/20" : "bg-green-500/10 text-green-600 border-green-500/20 hover:bg-green-500/20"}`}>{diff < 0 ? 'Закончилась' : `${diff} дн.`}</Badge>;
                                             })()}
                                         </TableCell>
                                         <TableCell>
