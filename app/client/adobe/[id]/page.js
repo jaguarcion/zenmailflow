@@ -93,9 +93,13 @@ export default function ClientAdobePage({ params }) {
         );
     }
 
-    const extractCode = (subject) => {
-        const codeMatch = subject.match(/\b\d{6}\b/);
-        return codeMatch ? codeMatch[0] : 'N/A';
+    const extractCode = (msg) => {
+        if (msg.code) return msg.code;
+        const subjectMatch = msg.subject?.match(/\b\d{6}\b/);
+        if (subjectMatch) return subjectMatch[0];
+        const htmlMatch = msg.message?.match(/>(\d{6})</);
+        if (htmlMatch) return htmlMatch[1];
+        return 'N/A';
     };
 
     return (
@@ -209,9 +213,9 @@ export default function ClientAdobePage({ params }) {
                                         </div>
                                         <div className="flex flex-wrap items-center gap-3">
                                             <span className="text-sm font-medium text-slate-300">{msg.subject}</span>
-                                            {(msg.code || extractCode(msg.subject) !== 'N/A') && (
+                                            {extractCode(msg) !== 'N/A' && (
                                                 <Badge variant="destructive" className="bg-red-500/20 text-red-400 border-red-500/20 font-bold px-2 py-0.5 text-xs">
-                                                    {msg.code || extractCode(msg.subject)}
+                                                    {extractCode(msg)}
                                                 </Badge>
                                             )}
                                         </div>
