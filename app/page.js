@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import AdobeListTab from "./components/AdobeListTab";
 import AdobeUploadTab from "./components/AdobeUploadTab";
 import ClientsTab from "./components/ClientsTab";
-import SupportTab from "./components/SupportTab";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { LogOut, Download, Trash2, Mail, Users, Monitor, Zap, History, Menu, MessageCircle } from "lucide-react";
+import { LogOut, Download, Trash2, Mail, Users, Monitor, Zap, History, Menu } from "lucide-react";
 
 export default function Home() {
   const [token, setToken] = useState("");
@@ -280,8 +279,7 @@ export default function Home() {
         { id: 'history', label: 'История', badge: historyItems.length }
       ] 
     },
-    { id: 'clients', label: 'Клиенты', icon: Users },
-    { id: 'support', label: 'Поддержка', icon: MessageCircle }
+    { id: 'clients', label: 'Клиенты', icon: Users }
   ];
 
   const renderNav = () => (
@@ -424,7 +422,6 @@ export default function Home() {
               {activeTab === 'adobe-list' && 'Управление пулом аккаунтов Adobe и проверка статусов'}
               {activeTab === 'adobe-upload' && 'Массовая загрузка аккаунтов и история загрузок'}
               {activeTab === 'clients' && 'Управление клиентской базой и привязками'}
-              {activeTab === 'support' && 'Общение с клиентами через Telegram-бота'}
               {activeTab === 'generator' && 'Массовая генерация почтовых ящиков через Migadu'}
               {activeTab === 'history' && 'Управление базой данных сгенерированных почт'}
             </p>
@@ -586,10 +583,6 @@ export default function Home() {
           
           {activeTab === 'clients' && (
             <ClientsTab token={token} clients={clientsList} onFetchClients={() => fetchClients(token)} />
-          )}
-
-          {activeTab === 'support' && (
-            <SupportTab token={token} />
           )}
 
         </div>
