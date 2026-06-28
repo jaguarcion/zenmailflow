@@ -76,7 +76,7 @@ export default function GlobalSearch({ token, onSelectResult }) {
         </kbd>
       </Button>
       <CommandDialog open={open} onOpenChange={setOpen}>
-        <Command>
+        <Command shouldFilter={false}>
           <CommandInput 
               placeholder="Введите email, telegram или имя..." 
               value={query}
