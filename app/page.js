@@ -6,6 +6,7 @@ import AdobeUploadTab from "./components/AdobeUploadTab";
 import ClientsTab from "./components/ClientsTab";
 import DashboardTab from "./components/DashboardTab";
 import AuditLogsTab from "./components/AuditLogsTab";
+import KeysCheckerTab from "./components/keys-checker";
 import GlobalSearch from "./components/GlobalSearch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -272,6 +273,7 @@ export default function Home() {
       subItems: [
         { id: 'adobe-list', label: 'Список аккаунтов' },
         { id: 'adobe-upload', label: 'Загрузка аккаунтов' },
+        { id: 'keys-checker', label: 'Чекер ключей' },
         { id: 'audit-logs', label: 'Журнал логов' }
       ] 
     },
@@ -423,6 +425,7 @@ export default function Home() {
                 {activeTab === 'adobe-list' && 'Список аккаунтов Adobe'}
                 {activeTab === 'adobe-upload' && 'Загрузка аккаунтов Adobe'}
                 {activeTab === 'audit-logs' && 'Журнал логов'}
+                {activeTab === 'keys-checker' && 'Чекер ключей'}
                 {navItems.find(n => n.id === activeTab)?.label}
               </h1>
               <p className="text-muted-foreground">
@@ -430,6 +433,7 @@ export default function Home() {
                 {activeTab === 'adobe-list' && 'Управление пулом аккаунтов Adobe и проверка статусов'}
                 {activeTab === 'adobe-upload' && 'Массовая загрузка аккаунтов и история загрузок'}
                 {activeTab === 'audit-logs' && 'История действий и системных событий'}
+                {activeTab === 'keys-checker' && 'Массовая проверка валидности redemption-кодов'}
                 {activeTab === 'clients' && 'Управление клиентской базой и привязками'}
                 {activeTab === 'generator' && 'Массовая генерация почтовых ящиков через Migadu'}
                 {activeTab === 'history' && 'Управление базой данных сгенерированных почт'}
@@ -614,6 +618,10 @@ export default function Home() {
 
           {activeTab === 'audit-logs' && (
             <AuditLogsTab token={token} />
+          )}
+
+          {activeTab === 'keys-checker' && (
+            <KeysCheckerTab token={token} />
           )}
 
         </div>
