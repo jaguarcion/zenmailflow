@@ -66,6 +66,13 @@ export async function PATCH(request) {
       }
       return NextResponse.json({ success: true });
     }
+    
+    if (action === 'comment') {
+      const { comment } = body;
+      const db = require('@/lib/db');
+      db.updateAdobeAccountComment(id, comment || null);
+      return NextResponse.json({ success: true });
+    }
 
     return NextResponse.json({ success: false, error: 'Invalid action' }, { status: 400 });
   } catch (error) {

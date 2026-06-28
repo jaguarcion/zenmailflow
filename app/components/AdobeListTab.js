@@ -14,6 +14,7 @@ export default function AdobeListTab({ token, clients, onFetchClients }) {
     const [accounts, setAccounts] = useState([]);
     const [loading, setLoading] = useState(false);
     const [checking, setChecking] = useState(false);
+    const [checkingIds, setCheckingIds] = useState(new Set());
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedIds, setSelectedIds] = useState(new Set());
 
@@ -59,29 +60,59 @@ export default function AdobeListTab({ token, clients, onFetchClients }) {
         }
     };
 
+    const handleCommentBlur = async (id, comment) => {
+        try {
+            await fetch(`/api/adobe`, {
+                method: "PATCH",
+                headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+                body: JSON.stringify({ id, action: "comment", comment })
+            });
+            setAccounts(prev => prev.map(acc => acc.id === id ? { ...acc, comment } : acc));
+            toast.success("Комментарий сохранен");
+        } catch (e) {
+            console.error(e);
+            toast.error("Ошибка сохранения комментария");
+        }
+    };
+
     const handleCheckStatus = async (idsToCheck = null) => {
         const ids = idsToCheck || Array.from(selectedIds);
         if (ids.length === 0) return;
         
         setChecking(true);
-        const toastId = toast.loading(`Проверка статуса аккаунтов (${ids.length})...`);
-        try {
-            const res = await fetch("/api/adobe/check", {
-                method: "POST",
-                headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
-                body: JSON.stringify({ accountIds: ids })
-            });
-            const data = await res.json();
-            if (data.success) {
-                toast.success("Проверка завершена", { id: toastId });
-                fetchAccounts();
-                setSelectedIds(new Set());
-            } else {
-                toast.error("Ошибка при проверке", { id: toastId });
+        const toastId = toast.loading(`Проверка статусов (0/${ids.length})...`);
+        
+        setCheckingIds(prev => new Set([...prev, ...ids]));
+        
+        let completed = 0;
+
+        for (const id of ids) {
+            try {
+                const res = await fetch("/api/adobe/check", {
+                    method: "POST",
+                    headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+                    body: JSON.stringify({ accountIds: [id] })
+                });
+                const data = await res.json();
+                if (data.success && data.results && data.results.length > 0) {
+                    setAccounts(prev => prev.map(acc => acc.id === id ? { ...acc, status: data.results[0].status } : acc));
+                }
+            } catch (e) {
+                console.error(e);
             }
-        } catch (e) {
-            toast.error("Ошибка сети", { id: toastId });
+            completed++;
+            toast.loading(`Проверка статусов (${completed}/${ids.length})...`, { id: toastId });
+            
+            setCheckingIds(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(id);
+                return newSet;
+            });
         }
+        
+        toast.success("Проверка завершена", { id: toastId });
+        fetchAccounts();
+        setSelectedIds(new Set());
         setChecking(false);
     };
 
@@ -146,6 +177,7 @@ export default function AdobeListTab({ token, clients, onFetchClients }) {
                                     <TableHead>Email</TableHead>
                                     <TableHead>Статус</TableHead>
                                     <TableHead>Привязка</TableHead>
+                                    <TableHead>Комментарий</TableHead>
                                     <TableHead className="text-right">Действия</TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -179,19 +211,31 @@ export default function AdobeListTab({ token, clients, onFetchClients }) {
                                                 value={acc.assigned_client_id ? "busy" : "free"} 
                                                 onValueChange={(val) => handleAssign(acc.id, val)}
                                             >
-                                                <SelectTrigger className={`w-[130px] h-8 text-xs ${acc.assigned_client_id ? "bg-amber-500/10 text-amber-500 border-amber-500/20" : "bg-green-500/10 text-green-500 border-green-500/20"}`}>
+                                                <SelectTrigger className={`w-[200px] h-8 text-xs ${acc.assigned_client_id ? "bg-amber-500/10 text-amber-500 border-amber-500/20" : "bg-green-500/10 text-green-500 border-green-500/20"}`}>
                                                     <SelectValue />
                                                 </SelectTrigger>
                                                 <SelectContent>
                                                     <SelectItem value="free">Свободен</SelectItem>
-                                                    <SelectItem value="busy">Занят</SelectItem>
+                                                    <SelectItem value="busy">{acc.client_email ? `Занят (${acc.client_email})` : "Занят"}</SelectItem>
                                                 </SelectContent>
                                             </Select>
                                         </TableCell>
+                                        <TableCell>
+                                            <Input 
+                                                defaultValue={acc.comment || ""}
+                                                onBlur={(e) => {
+                                                    if (e.target.value !== (acc.comment || "")) {
+                                                        handleCommentBlur(acc.id, e.target.value);
+                                                    }
+                                                }}
+                                                className="h-8 text-xs w-[150px] bg-slate-50 border-slate-200"
+                                                placeholder="Комментарий..."
+                                            />
+                                        </TableCell>
                                         <TableCell className="text-right">
                                             <div className="flex justify-end gap-2">
-                                                <Button variant="ghost" size="sm" onClick={() => handleCheckStatus([acc.id])} disabled={checking} title="Проверить статус" className="h-8 w-8 p-0">
-                                                    <RefreshCw className={`w-4 h-4 ${checking ? 'animate-spin' : ''}`} />
+                                                <Button variant="ghost" size="sm" onClick={() => handleCheckStatus([acc.id])} disabled={checkingIds.has(acc.id)} title="Проверить статус" className="h-8 w-8 p-0">
+                                                    <RefreshCw className={`w-4 h-4 ${checkingIds.has(acc.id) ? 'animate-spin text-blue-500' : ''}`} />
                                                 </Button>
                                                 <Button variant="ghost" size="sm" onClick={() => handleDelete(acc.id)} className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 w-8 p-0">
                                                     <Trash2 className="w-4 h-4" />
