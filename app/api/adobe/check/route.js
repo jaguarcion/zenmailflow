@@ -33,6 +33,9 @@ export async function POST(request) {
         if (checkRes && checkRes.isBanned && account.status !== 'banned') {
             updateAdobeAccountStatus(account.id, 'banned');
             newStatus = 'banned';
+            
+            const { insertLog } = require('@/lib/db');
+            insertLog('BAN_ACCOUNT', `Внимание! Чекер обнаружил блокировку аккаунта ${account.email}`);
         }
 
         results.push({ id, status: newStatus, error: checkRes.error });

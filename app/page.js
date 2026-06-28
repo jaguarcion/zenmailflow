@@ -5,6 +5,7 @@ import AdobeListTab from "./components/AdobeListTab";
 import AdobeUploadTab from "./components/AdobeUploadTab";
 import ClientsTab from "./components/ClientsTab";
 import DashboardTab from "./components/DashboardTab";
+import AuditLogsTab from "./components/AuditLogsTab";
 import GlobalSearch from "./components/GlobalSearch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { LogOut, Download, Trash2, Mail, Users, Monitor, Zap, History, Menu, LayoutDashboard } from "lucide-react";
+import { LogOut, Download, Trash2, Mail, Users, Monitor, Zap, History, Menu, LayoutDashboard, ScrollText } from "lucide-react";
 
 export default function Home() {
   const [token, setToken] = useState("");
@@ -270,7 +271,8 @@ export default function Home() {
       icon: Monitor, 
       subItems: [
         { id: 'adobe-list', label: 'Список аккаунтов' },
-        { id: 'adobe-upload', label: 'Загрузка аккаунтов' }
+        { id: 'adobe-upload', label: 'Загрузка аккаунтов' },
+        { id: 'audit-logs', label: 'Журнал логов' }
       ] 
     },
     { 
@@ -421,12 +423,14 @@ export default function Home() {
                 {activeTab === 'dashboard' && 'Дашборд'}
                 {activeTab === 'adobe-list' && 'Список аккаунтов Adobe'}
                 {activeTab === 'adobe-upload' && 'Загрузка аккаунтов Adobe'}
+                {activeTab === 'audit-logs' && 'Журнал логов'}
                 {navItems.find(n => n.id === activeTab)?.label}
               </h1>
               <p className="text-muted-foreground">
                 {activeTab === 'dashboard' && 'Статистика и аналитика вашей платформы'}
                 {activeTab === 'adobe-list' && 'Управление пулом аккаунтов Adobe и проверка статусов'}
                 {activeTab === 'adobe-upload' && 'Массовая загрузка аккаунтов и история загрузок'}
+                {activeTab === 'audit-logs' && 'История действий и системных событий'}
                 {activeTab === 'clients' && 'Управление клиентской базой и привязками'}
                 {activeTab === 'generator' && 'Массовая генерация почтовых ящиков через Migadu'}
                 {activeTab === 'history' && 'Управление базой данных сгенерированных почт'}
@@ -439,7 +443,6 @@ export default function Home() {
                 onSelectResult={(type, item) => {
                   if (type === 'client') {
                     setActiveTab('clients');
-                    // We could also pass a search term to ClientsTab if we stored it in a global state, but switching tabs is fine for now
                   } else if (type === 'account') {
                     setActiveTab('adobe-list');
                   }
@@ -608,6 +611,10 @@ export default function Home() {
           
           {activeTab === 'clients' && (
             <ClientsTab token={token} clients={clientsList} onFetchClients={() => fetchClients(token)} />
+          )}
+
+          {activeTab === 'audit-logs' && (
+            <AuditLogsTab token={token} />
           )}
 
         </div>

@@ -46,6 +46,11 @@ export async function POST(request) {
       }
     }
 
+    const { insertLog } = require('@/lib/db');
+    if (added > 0) {
+      insertLog('UPLOAD_ACCOUNTS', `Загружено ${added} новых аккаунтов Adobe в пул (сборка #${uploadId})`);
+    }
+
     return NextResponse.json({ success: true, added, errors, upload_id: uploadId });
   } catch (error) {
     console.error('[Adobe Upload]', error);

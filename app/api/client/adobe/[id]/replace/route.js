@@ -36,6 +36,10 @@ export async function POST(request, { params }) {
     // Unassign old account
     updateAdobeAccountClient(oldAccount.id, null);
     
+    // Log replacement
+    const { insertLog } = require('@/lib/db');
+    insertLog('REPLACE_ACCOUNT', `Произведена замена аккаунта для клиента ${clientId}. Снят: ${oldAccount.email}, Выдан: ${newAccount.email}`);
+    
     // Notify client via Telegram
     try {
         const client = getClientById(clientId);
