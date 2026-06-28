@@ -411,7 +411,7 @@ export default function Home() {
         </header>
 
         <main className="flex-1 overflow-y-auto">
-          <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="p-4 md:p-8 max-w-[1400px] mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
           
           {/* Header */}
           <div className="flex flex-col space-y-1">

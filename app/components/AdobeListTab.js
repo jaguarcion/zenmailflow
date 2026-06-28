@@ -177,6 +177,7 @@ export default function AdobeListTab({ token, clients, onFetchClients }) {
                                     <TableHead>Email</TableHead>
                                     <TableHead>Статус</TableHead>
                                     <TableHead>Привязка</TableHead>
+                                    <TableHead>Клиент</TableHead>
                                     <TableHead>Комментарий</TableHead>
                                     <TableHead className="text-right">Действия</TableHead>
                                 </TableRow>
@@ -211,14 +212,32 @@ export default function AdobeListTab({ token, clients, onFetchClients }) {
                                                 value={acc.assigned_client_id ? "busy" : "free"} 
                                                 onValueChange={(val) => handleAssign(acc.id, val)}
                                             >
-                                                <SelectTrigger className={`w-[200px] h-8 text-xs ${acc.assigned_client_id ? "bg-amber-500/10 text-amber-500 border-amber-500/20" : "bg-green-500/10 text-green-500 border-green-500/20"}`}>
+                                                <SelectTrigger className={`w-[130px] h-8 text-xs ${acc.assigned_client_id ? "bg-amber-500/10 text-amber-500 border-amber-500/20" : "bg-green-500/10 text-green-500 border-green-500/20"}`}>
                                                     <SelectValue />
                                                 </SelectTrigger>
                                                 <SelectContent>
                                                     <SelectItem value="free">Свободен</SelectItem>
-                                                    <SelectItem value="busy">{acc.client_email ? `Занят (${acc.client_email})` : "Занят"}</SelectItem>
+                                                    <SelectItem value="busy">Занят</SelectItem>
                                                 </SelectContent>
                                             </Select>
+                                        </TableCell>
+                                        <TableCell>
+                                            {acc.assigned_client_id ? (
+                                                <div className="flex flex-col gap-0.5">
+                                                    <span className="font-medium text-sm text-slate-800">
+                                                        {[acc.client_first_name, acc.client_last_name].filter(Boolean).join(" ") || "Без имени"}
+                                                    </span>
+                                                    {acc.client_telegram ? (
+                                                        <span className="text-xs text-blue-500">
+                                                            {acc.client_telegram.startsWith('@') ? acc.client_telegram : `@${acc.client_telegram}`}
+                                                        </span>
+                                                    ) : acc.client_email ? (
+                                                        <span className="text-xs text-slate-500">{acc.client_email}</span>
+                                                    ) : null}
+                                                </div>
+                                            ) : (
+                                                <span className="text-xs text-slate-400">—</span>
+                                            )}
                                         </TableCell>
                                         <TableCell>
                                             <Input 
