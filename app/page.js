@@ -420,7 +420,6 @@ export default function Home() {
           <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
             <div className="flex flex-col space-y-1">
               <h1 className="text-3xl font-bold tracking-tight">
-                {activeTab === 'dashboard' && 'Дашборд'}
                 {activeTab === 'adobe-list' && 'Список аккаунтов Adobe'}
                 {activeTab === 'adobe-upload' && 'Загрузка аккаунтов Adobe'}
                 {activeTab === 'audit-logs' && 'Журнал логов'}
