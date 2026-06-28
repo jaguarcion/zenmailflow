@@ -181,7 +181,7 @@ bot.on('message', async (msg) => {
             if (result && result.messages && Array.isArray(result.messages)) {
                 codes = result.messages.filter(m => {
                     const subj = (m.subject || '').toLowerCase();
-                    return subj.includes('verification code') || subj.includes('email address changed') || subj.includes('suspended');
+                    return subj.includes('verification code') || subj.includes('email address changed') || subj.includes('suspended') || subj.includes('fraudulent activity detected') || subj.includes('fraudulent behavior');
                 }).slice(0, 5);
             }
             

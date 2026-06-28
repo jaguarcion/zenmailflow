@@ -36,7 +36,7 @@ export async function GET(request, { params }) {
     if (result && result.messages && Array.isArray(result.messages)) {
         codes = result.messages.filter(msg => {
             const subj = (msg.subject || '').toLowerCase();
-            return subj.includes('verification code') || subj.includes('email address changed') || subj.includes('suspended');
+            return subj.includes('verification code') || subj.includes('email address changed') || subj.includes('suspended') || subj.includes('fraudulent activity detected') || subj.includes('fraudulent behavior');
         });
         codes = codes.slice(0, 5); // top 5
     }
