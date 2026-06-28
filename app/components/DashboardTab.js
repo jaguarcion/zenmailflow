@@ -115,7 +115,7 @@ export default function DashboardTab({ token }) {
             <CardTitle>Динамика новых клиентов</CardTitle>
             <CardDescription>Количество новых регистраций по дням (за 30 дней)</CardDescription>
           </CardHeader>
-          <CardContent className="h-[300px]">
+          <CardContent className="h-[350px]">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={growthData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
@@ -142,17 +142,17 @@ export default function DashboardTab({ token }) {
           <CardHeader>
             <CardTitle>Состояние пула аккаунтов</CardTitle>
           </CardHeader>
-          <CardContent className="h-[300px] flex flex-col justify-around">
-            <div className="flex-1 flex items-center justify-center relative">
-              <span className="absolute top-0 text-xs font-semibold text-muted-foreground uppercase">Статус</span>
+          <CardContent className="h-[350px] flex flex-col gap-4">
+            <div className="flex-1 w-full relative">
+              <span className="absolute top-0 left-0 text-xs font-semibold text-muted-foreground uppercase z-10">Статус</span>
               <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
+                <PieChart margin={{ top: 15, right: 0, bottom: 0, left: 0 }}>
                   <Pie
                     data={statusData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={40}
-                    outerRadius={60}
+                    innerRadius={30}
+                    outerRadius={50}
                     paddingAngle={5}
                     dataKey="value"
                   >
@@ -161,21 +161,21 @@ export default function DashboardTab({ token }) {
                     ))}
                   </Pie>
                   <Tooltip />
-                  <Legend verticalAlign="bottom" height={36} iconType="circle" />
+                  <Legend verticalAlign="bottom" height={24} iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
             
-            <div className="flex-1 flex items-center justify-center relative mt-4 border-t pt-4">
-              <span className="absolute top-2 text-xs font-semibold text-muted-foreground uppercase">Распределение</span>
+            <div className="flex-1 w-full relative border-t pt-2">
+              <span className="absolute top-2 left-0 text-xs font-semibold text-muted-foreground uppercase z-10">Распределение</span>
               <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
+                <PieChart margin={{ top: 15, right: 0, bottom: 0, left: 0 }}>
                   <Pie
                     data={usageData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={40}
-                    outerRadius={60}
+                    innerRadius={30}
+                    outerRadius={50}
                     paddingAngle={5}
                     dataKey="value"
                   >
@@ -184,7 +184,7 @@ export default function DashboardTab({ token }) {
                     ))}
                   </Pie>
                   <Tooltip />
-                  <Legend verticalAlign="bottom" height={36} iconType="circle" />
+                  <Legend verticalAlign="bottom" height={24} iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
