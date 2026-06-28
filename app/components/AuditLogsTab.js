@@ -96,11 +96,7 @@ export default function AuditLogsTab({ token }) {
 
   return (
     <div className="space-y-4 animate-in fade-in duration-500">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Журнал действий</h2>
-          <p className="text-muted-foreground">История операций с аккаунтами и клиентами</p>
-        </div>
+      <div className="flex justify-end">
         <Button variant="outline" size="icon" onClick={fetchLogs} disabled={loading}>
           <RefreshCcw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
         </Button>
