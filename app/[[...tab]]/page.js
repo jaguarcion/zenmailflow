@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import AdobeListTab from "./components/AdobeListTab";
-import AdobeUploadTab from "./components/AdobeUploadTab";
-import ClientsTab from "./components/ClientsTab";
-import DashboardTab from "./components/DashboardTab";
-import AuditLogsTab from "./components/AuditLogsTab";
-import KeysCheckerTab from "./components/keys-checker";
-import GlobalSearch from "./components/GlobalSearch";
+import { useParams, useRouter } from 'next/navigation';
+import AdobeListTab from "../components/AdobeListTab";
+import AdobeUploadTab from "../components/AdobeUploadTab";
+import ClientsTab from "../components/ClientsTab";
+import DashboardTab from "../components/DashboardTab";
+import AuditLogsTab from "../components/AuditLogsTab";
+import KeysCheckerTab from "../components/keys-checker";
+import GlobalSearch from "../components/GlobalSearch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,7 +21,10 @@ import { LogOut, Download, Trash2, Mail, Users, Monitor, Zap, History, Menu, Lay
 export default function Home() {
   const [token, setToken] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const params = useParams();
+  const router = useRouter();
+  const tabParam = params?.tab?.[0] || "dashboard";
+  const [activeTab, setActiveTab] = useState(tabParam);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const [count, setCount] = useState(1);
@@ -53,11 +57,14 @@ export default function Home() {
   }, [activeTab]);
 
   useEffect(() => {
-    const savedToken = localStorage.getItem("zenmail_token");
-    const savedTab = localStorage.getItem("zenmail_active_tab");
-    if (savedTab) {
-      setActiveTab(savedTab);
+    const tabParam = params?.tab?.[0] || "dashboard";
+    if (tabParam !== activeTab) {
+      setActiveTab(tabParam);
     }
+  }, [params?.tab]);
+
+  useEffect(() => {
+    const savedToken = localStorage.getItem("zenmail_token");
     if (savedToken) {
       setToken(savedToken);
       fetch("/api/history", { headers: { "Authorization": `Bearer ${savedToken}` } })
@@ -81,7 +88,7 @@ export default function Home() {
 
   const changeTab = (tabId) => {
     setActiveTab(tabId);
-    localStorage.setItem("zenmail_active_tab", tabId);
+    router.push(`/${tabId}`);
   };
 
   const handleLogin = async (e) => {
