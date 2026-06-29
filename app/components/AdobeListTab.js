@@ -17,7 +17,7 @@ export default function AdobeListTab({ token, clients, onFetchClients }) {
     const [checkingIds, setCheckingIds] = useState(new Set());
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedIds, setSelectedIds] = useState(new Set());
-    const [sortConfig, setSortConfig] = useState({ key: 'email', direction: 'asc' });
+    const [sortConfig, setSortConfig] = useState({ key: 'id', direction: 'desc' });
 
     const fetchAccounts = async () => {
         try {
