@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "ZenMailFlow — Admin Panel",
-  description: "Mail management dashboard",
+  title: "Keysoft panel",
+  description: "Mail and Key management dashboard",
 };
 
 export default function RootLayout({ children }) {

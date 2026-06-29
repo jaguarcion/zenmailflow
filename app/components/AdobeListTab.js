@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Trash2, ExternalLink, Search, RefreshCw } from "lucide-react";
+import { Trash2, ExternalLink, Search, RefreshCw, ArrowUpDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
@@ -17,6 +17,7 @@ export default function AdobeListTab({ token, clients, onFetchClients }) {
     const [checkingIds, setCheckingIds] = useState(new Set());
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedIds, setSelectedIds] = useState(new Set());
+    const [sortConfig, setSortConfig] = useState({ key: 'email', direction: 'asc' });
 
     const fetchAccounts = async () => {
         try {
@@ -131,9 +132,30 @@ export default function AdobeListTab({ token, clients, onFetchClients }) {
         }
     };
 
+    const handleSort = (key) => {
+        let direction = 'asc';
+        if (sortConfig.key === key && sortConfig.direction === 'asc') {
+            direction = 'desc';
+        }
+        setSortConfig({ key, direction });
+    };
+
     const filteredAccounts = accounts.filter(acc => 
-        acc.email.toLowerCase().includes(searchQuery.toLowerCase())
+        acc.email.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        (acc.client_telegram && acc.client_telegram.toLowerCase().includes(searchQuery.toLowerCase()))
     );
+
+    const sortedAccounts = [...filteredAccounts].sort((a, b) => {
+        let valA = a[sortConfig.key] || '';
+        let valB = b[sortConfig.key] || '';
+        
+        if (typeof valA === 'string') valA = valA.toLowerCase();
+        if (typeof valB === 'string') valB = valB.toLowerCase();
+
+        if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
+        return 0;
+    });
 
     return (
         <div className="space-y-6 h-full flex flex-col">
@@ -174,10 +196,18 @@ export default function AdobeListTab({ token, clients, onFetchClients }) {
                                             onCheckedChange={toggleSelectAll}
                                         />
                                     </TableHead>
-                                    <TableHead>Email</TableHead>
-                                    <TableHead>Статус</TableHead>
-                                    <TableHead>Привязка</TableHead>
-                                    <TableHead>Клиент</TableHead>
+                                    <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort('email')}>
+                                        <div className="flex items-center gap-1">Email <ArrowUpDown className="w-3 h-3" /></div>
+                                    </TableHead>
+                                    <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort('status')}>
+                                        <div className="flex items-center gap-1">Статус <ArrowUpDown className="w-3 h-3" /></div>
+                                    </TableHead>
+                                    <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort('assigned_client_id')}>
+                                        <div className="flex items-center gap-1">Привязка <ArrowUpDown className="w-3 h-3" /></div>
+                                    </TableHead>
+                                    <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort('client_telegram')}>
+                                        <div className="flex items-center gap-1">Клиент <ArrowUpDown className="w-3 h-3" /></div>
+                                    </TableHead>
                                     <TableHead>Комментарий</TableHead>
                                     <TableHead className="text-right">Действия</TableHead>
                                 </TableRow>
@@ -188,7 +218,7 @@ export default function AdobeListTab({ token, clients, onFetchClients }) {
                                         <TableCell colSpan={4} className="text-center py-10 text-muted-foreground">Нет аккаунтов</TableCell>
                                     </TableRow>
                                 )}
-                                {filteredAccounts.map(acc => (
+                                {sortedAccounts.map(acc => (
                                     <TableRow key={acc.id} className={selectedIds.has(acc.id) ? 'bg-muted/50' : ''}>
                                         <TableCell>
                                             <Checkbox 

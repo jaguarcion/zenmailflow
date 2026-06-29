@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { formatDate } from "@/lib/utils";
+import { ArrowUpDown } from "lucide-react";
 
 function AssignAccountCombobox({ availableAccounts, onAssign }) {
     const [open, setOpen] = useState(false);
@@ -62,6 +63,37 @@ export default function ClientsTab({ token, clients, onFetchClients }) {
     const [availableAccounts, setAvailableAccounts] = useState([]);
     const [editClient, setEditClient] = useState(null);
     const [editForm, setEditForm] = useState({ email: '', telegram: '', subscription_starts_at: '', subscription_ends_at: '' });
+    const [sortConfig, setSortConfig] = useState({ key: 'id', direction: 'asc' });
+
+    const handleSort = (key) => {
+        let direction = 'asc';
+        if (sortConfig.key === key && sortConfig.direction === 'asc') {
+            direction = 'desc';
+        }
+        setSortConfig({ key, direction });
+    };
+
+    const sortedClients = [...clients].sort((a, b) => {
+        let valA = a[sortConfig.key];
+        let valB = b[sortConfig.key];
+        
+        if (sortConfig.key === 'subscription_ends_at') {
+            if (!valA && !valB) return 0;
+            if (!valA) return 1;
+            if (!valB) return -1;
+            valA = new Date(valA).getTime();
+            valB = new Date(valB).getTime();
+        } else {
+            valA = valA || '';
+            valB = valB || '';
+            if (typeof valA === 'string') valA = valA.toLowerCase();
+            if (typeof valB === 'string') valB = valB.toLowerCase();
+        }
+
+        if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
+        return 0;
+    });
 
     const fetchAvailableAccounts = async () => {
         try {
@@ -205,11 +237,19 @@ export default function ClientsTab({ token, clients, onFetchClients }) {
                         <Table>
                             <TableHeader className="sticky top-0 bg-background z-10 shadow-sm">
                                 <TableRow>
-                                    <TableHead>Email (ID)</TableHead>
-                                    <TableHead>Telegram Бот</TableHead>
-                                    <TableHead>Подписка</TableHead>
+                                    <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort('email')}>
+                                        <div className="flex items-center gap-1">Email (ID) <ArrowUpDown className="w-3 h-3" /></div>
+                                    </TableHead>
+                                    <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort('telegram')}>
+                                        <div className="flex items-center gap-1">Telegram Бот <ArrowUpDown className="w-3 h-3" /></div>
+                                    </TableHead>
+                                    <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort('subscription_ends_at')}>
+                                        <div className="flex items-center gap-1">Подписка <ArrowUpDown className="w-3 h-3" /></div>
+                                    </TableHead>
                                     <TableHead>Осталось дней</TableHead>
-                                    <TableHead>Привязка Adobe</TableHead>
+                                    <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort('adobe_account_email')}>
+                                        <div className="flex items-center gap-1">Привязка Adobe <ArrowUpDown className="w-3 h-3" /></div>
+                                    </TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -218,12 +258,7 @@ export default function ClientsTab({ token, clients, onFetchClients }) {
                                         <TableCell colSpan={5} className="text-center py-10 text-muted-foreground">Нет клиентов</TableCell>
                                     </TableRow>
                                 )}
-                                {[...clients].sort((a, b) => {
-                                    if (!a.subscription_ends_at && !b.subscription_ends_at) return 0;
-                                    if (!a.subscription_ends_at) return 1;
-                                    if (!b.subscription_ends_at) return -1;
-                                    return new Date(a.subscription_ends_at) - new Date(b.subscription_ends_at);
-                                }).map(c => (
+                                {sortedClients.map(c => (
                                     <TableRow key={c.id}>
                                         <TableCell>
                                             <div className="font-medium text-foreground flex items-center gap-2">

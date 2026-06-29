@@ -38,6 +38,21 @@ export default function Home() {
   const [selectedHistory, setSelectedHistory] = useState([]);
 
   useEffect(() => {
+    const titles = {
+      'dashboard': 'Дашборд',
+      'adobe-list': 'Список аккаунтов',
+      'adobe-upload': 'Загрузка аккаунтов',
+      'keys-checker': 'Чекер ключей',
+      'audit-logs': 'Журнал логов',
+      'generator': 'Генерация почт',
+      'history': 'История',
+      'clients': 'Клиенты'
+    };
+    const section = titles[activeTab] || 'Дашборд';
+    document.title = `${section} - Keysoft panel`;
+  }, [activeTab]);
+
+  useEffect(() => {
     const savedToken = localStorage.getItem("zenmail_token");
     const savedTab = localStorage.getItem("zenmail_active_tab");
     if (savedTab) {
@@ -246,7 +261,7 @@ export default function Home() {
             <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
               <Mail className="w-6 h-6 text-primary" />
             </div>
-            <CardTitle className="text-2xl font-bold tracking-tight">ZenMailFlow</CardTitle>
+            <CardTitle className="text-2xl font-bold tracking-tight">Keysoft panel</CardTitle>
             <CardDescription>Требуется авторизация для доступа к панели</CardDescription>
           </CardHeader>
           <CardContent>
@@ -369,7 +384,7 @@ export default function Home() {
           <div className="bg-primary/10 p-1.5 rounded-md mr-3">
             <Mail className="w-5 h-5 text-primary" />
           </div>
-          <span className="font-bold text-lg tracking-tight">ZenMailFlow</span>
+          <span className="font-bold text-lg tracking-tight">Keysoft panel</span>
         </div>
         {renderNav()}
         
@@ -389,7 +404,7 @@ export default function Home() {
             <div className="bg-primary/10 p-1.5 rounded-md">
               <Mail className="w-5 h-5 text-primary" />
             </div>
-            <span className="font-bold tracking-tight">ZenMailFlow</span>
+            <span className="font-bold tracking-tight">Keysoft panel</span>
           </div>
           
           <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
