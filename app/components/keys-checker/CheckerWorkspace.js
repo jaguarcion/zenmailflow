@@ -22,26 +22,26 @@ export function CheckerWorkspace() {
   const lineNumbers = Array.from({ length: lineCount || 1 }, (_, i) => i + 1);
 
   return (
-    <Card className="h-full min-h-[400px] bg-white/70 backdrop-blur-xl border-slate-200 hover:shadow-lg transition-all duration-300">
+    <Card className="flex flex-col h-[500px] bg-white/80 backdrop-blur-xl border-slate-200 shadow-sm transition-all duration-300">
       <CardContent className="p-4 flex flex-col h-full gap-4">
         <div className="flex justify-between items-end">
           <div className="text-xs font-medium text-slate-500">Список ключей</div>
           <div className="text-[10px] text-slate-400 font-mono">Всего строк: {keys ? keys.split('\n').filter(l => l.trim()).length : 0}</div>
         </div>
 
-        <div className="relative flex-1 flex border border-slate-200 rounded-md overflow-hidden bg-white/50 backdrop-blur-sm shadow-inner">
+        <div className="relative flex-1 flex border border-slate-200 rounded-lg overflow-hidden bg-white shadow-inner">
           <div 
             ref={lineNumbersRef}
-            className="w-10 bg-slate-50 text-slate-400 text-right pr-2 py-3 text-xs font-mono select-none overflow-hidden"
-            style={{ lineHeight: '1.25rem' }}
+            className="w-12 bg-slate-50 text-slate-400 text-right pr-3 py-3 text-[13px] font-mono select-none overflow-hidden border-r border-slate-100"
+            style={{ lineHeight: '1.5rem' }}
           >
             {lineNumbers.map(n => <div key={n}>{n}</div>)}
           </div>
           <textarea 
             ref={textareaRef}
             placeholder="Вставьте ключи здесь...&#10;XXXX-XXXX-XXXX-XXXX-XXXX-XXXX"
-            className="flex-1 w-full p-3 text-xs font-mono resize-none focus:outline-none bg-transparent"
-            style={{ lineHeight: '1.25rem', whiteSpace: 'pre' }}
+            className="flex-1 w-full p-3 text-[13px] font-mono resize-none focus:outline-none bg-transparent"
+            style={{ lineHeight: '1.5rem', whiteSpace: 'pre' }}
             value={keys}
             onChange={e => setKeys(e.target.value)}
             onScroll={handleScroll}
@@ -64,9 +64,9 @@ export function CheckerWorkspace() {
           </div>
         )}
 
-        <div className="flex gap-2 mt-auto">
+        <div className="flex gap-3 mt-4">
           <Button 
-            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white shadow-[0_0_10px_rgba(37,99,235,0.3)] hover:shadow-[0_0_15px_rgba(37,99,235,0.5)] transition-all" 
+            className="flex-1 h-10 bg-indigo-600 hover:bg-indigo-700 text-white font-medium shadow-md transition-all" 
             onClick={startCheck} 
             disabled={running || !keys.trim()}
           >
@@ -75,7 +75,7 @@ export function CheckerWorkspace() {
           </Button>
           <Button 
             variant="destructive" 
-            className="px-4"
+            className="h-10 w-12 px-0 shadow-md"
             onClick={stopCheck} 
             disabled={!running}
           >
