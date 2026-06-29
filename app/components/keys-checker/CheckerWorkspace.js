@@ -22,17 +22,17 @@ export function CheckerWorkspace() {
   const lineNumbers = Array.from({ length: lineCount || 1 }, (_, i) => i + 1);
 
   return (
-    <Card className="flex flex-col h-[500px] bg-white/80 backdrop-blur-xl border-slate-200 shadow-sm transition-all duration-300">
-      <CardContent className="p-4 flex flex-col h-full gap-4">
+    <Card className="flex flex-col bg-white/70 backdrop-blur-xl border-slate-200 shadow-sm transition-all duration-300 rounded-2xl">
+      <CardContent className="p-5 flex flex-col gap-4">
         <div className="flex justify-between items-end">
-          <div className="text-xs font-medium text-slate-500">Список ключей</div>
+          <div className="text-sm font-semibold text-slate-500">Список ключей</div>
           <div className="text-[10px] text-slate-400 font-mono">Всего строк: {keys ? keys.split('\n').filter(l => l.trim()).length : 0}</div>
         </div>
 
-        <div className="relative flex-1 flex border border-slate-200 rounded-lg overflow-hidden bg-white shadow-inner">
+        <div className="relative flex border border-slate-200/60 rounded-xl overflow-hidden bg-white shadow-sm h-32">
           <div 
             ref={lineNumbersRef}
-            className="w-12 bg-slate-50 text-slate-400 text-right pr-3 py-3 text-[13px] font-mono select-none overflow-hidden border-r border-slate-100"
+            className="w-12 bg-slate-50/50 text-slate-400 text-right pr-3 py-3 text-[13px] font-mono select-none overflow-hidden"
             style={{ lineHeight: '1.5rem' }}
           >
             {lineNumbers.map(n => <div key={n}>{n}</div>)}
@@ -64,22 +64,22 @@ export function CheckerWorkspace() {
           </div>
         )}
 
-        <div className="flex gap-3 mt-4">
+        <div className="flex gap-3 mt-1">
           <Button 
-            className="flex-1 h-10 bg-indigo-600 hover:bg-indigo-700 text-white font-medium shadow-md transition-all" 
+            className="flex-1 h-12 bg-[#8ba4ff] hover:bg-[#7a95fc] text-white font-medium rounded-xl transition-all" 
             onClick={startCheck} 
             disabled={running || !keys.trim()}
           >
-            <Play className="w-4 h-4 mr-2" />
-            Запустить проверку
+            <Play className="w-5 h-5 mr-2" />
+            <span className="text-[15px]">Запустить проверку</span>
           </Button>
           <Button 
-            variant="destructive" 
-            className="h-10 w-12 px-0 shadow-md"
+            variant="ghost" 
+            className="h-12 w-14 px-0 bg-red-50 hover:bg-red-100 text-red-400 hover:text-red-500 rounded-xl transition-all"
             onClick={stopCheck} 
             disabled={!running}
           >
-            <Square className="w-4 h-4" />
+            <Square className="w-5 h-5" />
           </Button>
         </div>
       </CardContent>
