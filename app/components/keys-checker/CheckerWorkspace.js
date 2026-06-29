@@ -18,30 +18,30 @@ export function CheckerWorkspace() {
     }
   };
 
-  const lineCount = keys ? keys.split('\n').length : 0;
+  const lineCount = keys.split('\n').length;
   const lineNumbers = Array.from({ length: lineCount || 1 }, (_, i) => i + 1);
 
   return (
-    <Card className="flex flex-col bg-white/70 backdrop-blur-xl border-slate-200 shadow-sm transition-all duration-300 rounded-2xl">
-      <CardContent className="p-5 flex flex-col gap-4">
+    <Card className="h-full bg-white/70 backdrop-blur-xl border-slate-200 hover:shadow-lg transition-all duration-300">
+      <CardContent className="p-4 flex flex-col h-full gap-4">
         <div className="flex justify-between items-end">
-          <div className="text-sm font-semibold text-slate-500">Список ключей</div>
+          <div className="text-xs font-medium text-slate-500">Список ключей</div>
           <div className="text-[10px] text-slate-400 font-mono">Всего строк: {keys ? keys.split('\n').filter(l => l.trim()).length : 0}</div>
         </div>
 
-        <div className="relative flex border border-slate-200/60 rounded-xl overflow-hidden bg-white shadow-sm h-32">
+        <div className="relative flex-1 flex border border-slate-200 rounded-md overflow-hidden bg-white/50 backdrop-blur-sm shadow-inner">
           <div 
             ref={lineNumbersRef}
-            className="w-12 bg-slate-50/50 text-slate-400 text-right pr-3 py-3 text-[13px] font-mono select-none overflow-hidden"
-            style={{ lineHeight: '1.5rem' }}
+            className="w-10 bg-slate-50 text-slate-400 text-right pr-2 py-3 text-xs font-mono select-none overflow-hidden"
+            style={{ lineHeight: '1.25rem' }}
           >
             {lineNumbers.map(n => <div key={n}>{n}</div>)}
           </div>
           <textarea 
             ref={textareaRef}
             placeholder="Вставьте ключи здесь...&#10;XXXX-XXXX-XXXX-XXXX-XXXX-XXXX"
-            className="flex-1 w-full p-3 text-[13px] font-mono resize-none focus:outline-none bg-transparent"
-            style={{ lineHeight: '1.5rem', whiteSpace: 'pre' }}
+            className="flex-1 w-full p-3 text-xs font-mono resize-none focus:outline-none bg-transparent"
+            style={{ lineHeight: '1.25rem', whiteSpace: 'pre' }}
             value={keys}
             onChange={e => setKeys(e.target.value)}
             onScroll={handleScroll}
@@ -64,22 +64,22 @@ export function CheckerWorkspace() {
           </div>
         )}
 
-        <div className="flex gap-3 mt-1">
+        <div className="flex gap-2">
           <Button 
-            className="flex-1 h-12 bg-[#8ba4ff] hover:bg-[#7a95fc] text-white font-medium rounded-xl transition-all" 
+            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white shadow-[0_0_10px_rgba(37,99,235,0.3)] hover:shadow-[0_0_15px_rgba(37,99,235,0.5)] transition-all" 
             onClick={startCheck} 
             disabled={running || !keys.trim()}
           >
-            <Play className="w-5 h-5 mr-2" />
-            <span className="text-[15px]">Запустить проверку</span>
+            <Play className="w-4 h-4 mr-2" />
+            Запустить проверку
           </Button>
           <Button 
-            variant="ghost" 
-            className="h-12 w-14 px-0 bg-red-50 hover:bg-red-100 text-red-400 hover:text-red-500 rounded-xl transition-all"
+            variant="destructive" 
+            className="px-4"
             onClick={stopCheck} 
             disabled={!running}
           >
-            <Square className="w-5 h-5" />
+            <Square className="w-4 h-4" />
           </Button>
         </div>
       </CardContent>
