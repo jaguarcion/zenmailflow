@@ -67,7 +67,8 @@ export async function PATCH(request) {
       if (client_id && client_id !== -1) {
         updateClientAdobeAccount(client_id, id);
         const client = db.getClientById(client_id);
-        db.insertLog('ASSIGN_ACCOUNT', `Назначен аккаунт ${account?.email} клиенту ${client?.email || `ID ${client_id}`}`);
+        const clientDisplay = client ? (client.telegram ? client.telegram : (client.email || `ID ${client_id}`)) : `ID ${client_id}`;
+        db.insertLog('ASSIGN_ACCOUNT', `Назначен аккаунт ${account?.email} клиенту ${clientDisplay}`);
         
         // Notify client via Telegram
         try {
@@ -97,7 +98,8 @@ export async function PATCH(request) {
       } else if (!client_id && account && account.assigned_client_id) {
         updateClientAdobeAccount(account.assigned_client_id, null);
         const client = db.getClientById(account.assigned_client_id);
-        db.insertLog('UNASSIGN_ACCOUNT', `Отвязан аккаунт ${account?.email} от клиента ${client?.email || `ID ${account.assigned_client_id}`}`);
+        const clientDisplay = client ? (client.telegram ? client.telegram : (client.email || `ID ${account.assigned_client_id}`)) : `ID ${account.assigned_client_id}`;
+        db.insertLog('UNASSIGN_ACCOUNT', `Отвязан аккаунт ${account?.email} от клиента ${clientDisplay}`);
       }
       return NextResponse.json({ success: true });
     }

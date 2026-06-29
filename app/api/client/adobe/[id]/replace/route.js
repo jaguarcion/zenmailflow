@@ -38,7 +38,9 @@ export async function POST(request, { params }) {
     
     // Log replacement
     const { insertLog } = require('@/lib/db');
-    insertLog('REPLACE_ACCOUNT', `Произведена замена аккаунта для клиента ${clientId}. Снят: ${oldAccount.email}, Выдан: ${newAccount.email}`);
+    const client = db.getClientById(clientId);
+    const clientDisplay = client ? (client.telegram ? client.telegram : (client.email || `ID ${clientId}`)) : `ID ${clientId}`;
+    insertLog('REPLACE_ACCOUNT', `Произведена замена аккаунта для клиента ${clientDisplay}. Снят: ${oldAccount.email}, Выдан: ${newAccount.email}`);
     
     // Notify client via Telegram
     try {

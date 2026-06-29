@@ -62,6 +62,34 @@ const ActionBadge = ({ type }) => {
   }
 };
 
+const renderDescription = (text) => {
+  if (!text) return text;
+  const regex = /(@[a-zA-Z0-9_]+|(?:https?:\/\/)?t\.me\/[a-zA-Z0-9_]+)/g;
+  const parts = text.split(regex);
+  return parts.map((part, i) => {
+    if (part.match(regex)) {
+      let username = part;
+      if (part.startsWith('@')) {
+        username = part.substring(1);
+      } else {
+        username = part.split('t.me/')[1];
+      }
+      return (
+        <a 
+          key={i} 
+          href={`https://t.me/${username}`} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="text-blue-600 hover:underline font-medium"
+        >
+          {part.startsWith('@') ? part : `@${username}`}
+        </a>
+      );
+    }
+    return <span key={i}>{part}</span>;
+  });
+};
+
 export default function AuditLogsTab({ token }) {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -133,7 +161,7 @@ export default function AuditLogsTab({ token }) {
                         <ActionBadge type={log.action_type} />
                       </TableCell>
                       <TableCell className="text-sm">
-                        {log.description}
+                        {renderDescription(log.description)}
                       </TableCell>
                     </TableRow>
                   ))}
