@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 const ActionIcon = ({ type }) => {
   switch (type) {
@@ -113,26 +114,31 @@ export default function AuditLogsTab({ token }) {
               Журнал пока пуст
             </div>
           ) : (
-            <div className="space-y-4 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-300 before:to-transparent">
-              {logs.map((log) => (
-                <div key={log.id} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
-                  <div className="flex items-center justify-center w-10 h-10 rounded-full border border-white bg-slate-100 group-[.is-active]:bg-white group-[.is-active]:border-slate-200 shadow-sm shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
-                    <ActionIcon type={log.action_type} />
-                  </div>
-                  
-                  <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                    <div className="flex items-center justify-between mb-2">
-                      <ActionBadge type={log.action_type} />
-                      <time className="text-xs font-medium text-slate-500">
-                        {format(new Date(log.created_at), "dd MMM yyyy, HH:mm", { locale: ru })}
-                      </time>
-                    </div>
-                    <div className="text-sm text-slate-700 leading-relaxed">
-                      {log.description}
-                    </div>
-                  </div>
-                </div>
-              ))}
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[180px]">Дата и время</TableHead>
+                    <TableHead className="w-[150px]">Событие</TableHead>
+                    <TableHead>Описание</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {logs.map((log) => (
+                    <TableRow key={log.id}>
+                      <TableCell className="text-muted-foreground text-xs whitespace-nowrap">
+                        {format(new Date(log.created_at), "dd.MM.yyyy, HH:mm", { locale: ru })}
+                      </TableCell>
+                      <TableCell>
+                        <ActionBadge type={log.action_type} />
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {log.description}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
           )}
         </CardContent>
