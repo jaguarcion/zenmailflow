@@ -20,16 +20,7 @@ export default function KeysCheckerTab({ token }) {
     <CheckerProvider token={token}>
       <div className="space-y-6 animate-in fade-in duration-500">
         
-        {/* Header */}
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">
-            <KeyRound className="w-5 h-5" />
-          </div>
-          <div>
-            <h2 className="text-2xl font-bold tracking-tight text-slate-800">Чекер Adobe ключей</h2>
-            <p className="text-sm text-slate-500">Массовая проверка валидности redemption-кодов</p>
-          </div>
-        </div>
+
 
         {/* Top Widgets */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

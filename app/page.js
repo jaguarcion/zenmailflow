@@ -15,7 +15,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { LogOut, Download, Trash2, Mail, Users, Monitor, Zap, History, Menu, LayoutDashboard, ScrollText, Key } from "lucide-react";
+import { LogOut, Download, Trash2, Mail, Users, Monitor, Zap, History, Menu, LayoutDashboard, ScrollText, Key, KeyRound } from "lucide-react";
 
 export default function Home() {
   const [token, setToken] = useState("");
@@ -427,8 +427,8 @@ export default function Home() {
                 {activeTab === 'audit-logs' && 'Журнал логов'}
                 {activeTab === 'keys-checker' && (
                   <>
-                    <div className="bg-[#e9f0ff] p-2.5 rounded-2xl text-[#1e4ed8] flex items-center justify-center">
-                      <Key className="w-6 h-6" />
+                    <div className="p-2 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center">
+                      <KeyRound className="w-5 h-5" />
                     </div>
                     <span>Чекер Adobe ключей</span>
                   </>
