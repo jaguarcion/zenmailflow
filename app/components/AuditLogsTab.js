@@ -64,10 +64,12 @@ const ActionBadge = ({ type }) => {
 
 const renderDescription = (text) => {
   if (!text) return text;
-  const regex = /(@[a-zA-Z0-9_]+|(?:https?:\/\/)?t\.me\/[a-zA-Z0-9_]+)/g;
+  // Use lookbehind to ensure @username is preceded by space or start of string,
+  // preventing it from matching the domain part of email addresses (like @hotmail.com)
+  const regex = /(?<=\s|^)(@[a-zA-Z0-9_]+|(?:https?:\/\/)?t\.me\/[a-zA-Z0-9_]+)/g;
   const parts = text.split(regex);
   return parts.map((part, i) => {
-    if (part.match(regex)) {
+    if (part && part.match(/^(@[a-zA-Z0-9_]+|(?:https?:\/\/)?t\.me\/[a-zA-Z0-9_]+)$/)) {
       let username = part;
       if (part.startsWith('@')) {
         username = part.substring(1);
