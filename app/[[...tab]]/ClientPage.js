@@ -8,6 +8,8 @@ import ClientsTab from "../components/ClientsTab";
 import DashboardTab from "../components/DashboardTab";
 import AuditLogsTab from "../components/AuditLogsTab";
 import KeysCheckerTab from "../components/keys-checker";
+import AutodeskInviterTab from "../components/AutodeskInviterTab";
+import YopmailGrabberTab from "../components/YopmailGrabberTab";
 import GlobalSearch from "../components/GlobalSearch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +18,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { LogOut, Download, Trash2, Mail, Users, Monitor, Zap, History, Menu, LayoutDashboard, ScrollText, Key, KeyRound } from "lucide-react";
+import { LogOut, Download, Trash2, Mail, Users, Monitor, Zap, History, Menu, LayoutDashboard, ScrollText, Key, KeyRound, Box } from "lucide-react";
 
 export default function ClientPage({ initialTab }) {
   const [token, setToken] = useState("");
@@ -299,6 +301,15 @@ export default function ClientPage({ initialTab }) {
         { id: 'history', label: 'История', badge: historyItems.length }
       ] 
     },
+    { 
+      id: 'autodesk-group', 
+      label: 'Autodesk', 
+      icon: Box, 
+      subItems: [
+        { id: 'autodesk-upload', label: 'Загрузка аккаунтов' },
+        { id: 'autodesk-yopmail', label: 'Получение почт' }
+      ] 
+    },
     { id: 'clients', label: 'Клиенты', icon: Users }
   ];
 
@@ -454,6 +465,8 @@ export default function ClientPage({ initialTab }) {
                 {activeTab === 'adobe-upload' && 'Массовая загрузка аккаунтов и история загрузок'}
                 {activeTab === 'audit-logs' && 'История действий и системных событий'}
                 {activeTab === 'keys-checker' && 'Массовая проверка валидности redemption-кодов'}
+                {activeTab === 'autodesk-upload' && 'Массовое добавление пользователей через API Autodesk'}
+                {activeTab === 'autodesk-yopmail' && 'Извлечение алиасов для одноразовых почт YOPmail'}
                 {activeTab === 'clients' && 'Управление клиентской базой и привязками'}
                 {activeTab === 'generator' && 'Массовая генерация почтовых ящиков через Migadu'}
                 {activeTab === 'history' && 'Управление базой данных сгенерированных почт'}
@@ -642,6 +655,14 @@ export default function ClientPage({ initialTab }) {
 
           {activeTab === 'keys-checker' && (
             <KeysCheckerTab token={token} />
+          )}
+
+          {activeTab === 'autodesk-upload' && (
+            <AutodeskInviterTab token={token} />
+          )}
+
+          {activeTab === 'autodesk-yopmail' && (
+            <YopmailGrabberTab token={token} />
           )}
 
         </div>
