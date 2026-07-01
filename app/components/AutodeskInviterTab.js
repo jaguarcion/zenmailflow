@@ -252,16 +252,16 @@ export default function AutodeskInviterTab({ token }) {
                 <CardHeader className="py-3">
                     <CardTitle className="text-sm font-medium">Журнал операций (Logs)</CardTitle>
                 </CardHeader>
-                <CardContent className="flex-1 overflow-auto bg-slate-950 p-4 font-mono text-xs text-slate-300 rounded-b-xl">
+                <CardContent className="flex-1 overflow-auto bg-muted/50 p-4 font-mono text-xs text-foreground rounded-b-xl border-t">
                     {logs.length === 0 ? (
-                        <span className="text-slate-500">Ожидание запуска...</span>
+                        <span className="text-muted-foreground">Ожидание запуска...</span>
                     ) : (
                         logs.map((log, i) => (
                             <div key={i} className="mb-1">
-                                <span className="text-slate-500 mr-2">[{log.time}]</span>
+                                <span className="text-muted-foreground mr-2">[{log.time}]</span>
                                 <span className={
-                                    log.type === 'error' ? 'text-red-400' : 
-                                    log.type === 'success' ? 'text-green-400' : 'text-blue-300'
+                                    log.type === 'error' ? 'text-red-600 font-medium' : 
+                                    log.type === 'success' ? 'text-green-600 font-medium' : 'text-blue-600 font-medium'
                                 }>
                                     {log.message}
                                 </span>
