@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,7 @@ export default function AutodeskInviterTab({ token }) {
         authToken: "",
         cookieString: ""
     });
+    const [isConfigLoaded, setIsConfigLoaded] = useState(false);
     
     const [users, setUsers] = useState([]);
     const [emailsInput, setEmailsInput] = useState("");
@@ -30,6 +31,24 @@ export default function AutodeskInviterTab({ token }) {
     const [isInviting, setIsInviting] = useState(false);
     const [stats, setStats] = useState({ success: 0, error: 0 });
     const logsEndRef = useRef(null);
+
+    useEffect(() => {
+        const savedConfig = localStorage.getItem('autodesk_config');
+        if (savedConfig) {
+            try {
+                setConfig(JSON.parse(savedConfig));
+            } catch (e) {
+                console.error("Failed to parse saved config", e);
+            }
+        }
+        setIsConfigLoaded(true);
+    }, []);
+
+    useEffect(() => {
+        if (isConfigLoaded) {
+            localStorage.setItem('autodesk_config', JSON.stringify(config));
+        }
+    }, [config, isConfigLoaded]);
 
     const handleConfigChange = (e) => {
         setConfig({ ...config, [e.target.name]: e.target.value });
