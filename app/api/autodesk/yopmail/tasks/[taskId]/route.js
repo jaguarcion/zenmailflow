@@ -1,9 +1,6 @@
 import { NextResponse } from 'next/server';
-import Database from 'better-sqlite3';
-import path from 'path';
+import db from '@/lib/db';
 import { isAuthenticated } from '@/lib/auth';
-
-const dbPath = path.resolve(process.cwd(), 'emails.db');
 
 export async function PUT(request, { params }) {
     if (!isAuthenticated(request)) {
@@ -15,7 +12,6 @@ export async function PUT(request, { params }) {
         const body = await request.json();
         const { success, error, status, items } = body;
 
-        const db = new Database(dbPath);
         
         const stmt = db.prepare(`
             UPDATE yopmail_tasks 
@@ -31,8 +27,7 @@ export async function PUT(request, { params }) {
             taskId
         );
 
-        db.close();
-
+        
         return NextResponse.json({ status: 'success' });
     } catch (err) {
         return NextResponse.json({ status: 'error', error: err.message }, { status: 500 });
@@ -47,13 +42,11 @@ export async function DELETE(request, { params }) {
     try {
         const taskId = params.taskId;
         
-        const db = new Database(dbPath);
         
         const stmt = db.prepare(`DELETE FROM yopmail_tasks WHERE id = ?`);
         stmt.run(taskId);
 
-        db.close();
-
+        
         return NextResponse.json({ status: 'success' });
     } catch (err) {
         return NextResponse.json({ status: 'error', error: err.message }, { status: 500 });

@@ -11,6 +11,7 @@ export default function YopmailGrabberTab({ token }) {
     const [tasks, setTasks] = useState([]);
     const [isLoaded, setIsLoaded] = useState(false);
     const [expandedTasks, setExpandedTasks] = useState({});
+    const cancelledTasksRef = useRef(new Set());
 
     // Load tasks from API on mount
     useEffect(() => {
@@ -116,12 +117,16 @@ export default function YopmailGrabberTab({ token }) {
         };
 
         while (currentCycleTasks.length > 0 && cycleCount < maxGlobalRetries) {
+            if (cancelledTasksRef.current.has(taskId)) break;
+            
             let queue = [...currentCycleTasks];
             currentCycleTasks = [];
             let currentIndex = 0;
 
             async function worker() {
                 while (currentIndex < queue.length) {
+                    if (cancelledTasksRef.current.has(taskId)) return;
+                    
                     const task = queue[currentIndex++];
                     updateItem(task.id, { status: 'processing' });
 
@@ -150,9 +155,11 @@ export default function YopmailGrabberTab({ token }) {
         }
 
         // Finalize errors
-        currentCycleTasks.forEach(task => {
-            updateItem(task.id, { status: 'error', error: 'Не удалось получить алиас' });
-        });
+        if (!cancelledTasksRef.current.has(taskId)) {
+            currentCycleTasks.forEach(task => {
+                updateItem(task.id, { status: 'error', error: 'Не удалось получить алиас' });
+            });
+        }
     };
 
     const handleExtract = () => {
@@ -176,6 +183,7 @@ export default function YopmailGrabberTab({ token }) {
     };
 
     const handleDeleteTask = async (taskId) => {
+        cancelledTasksRef.current.add(taskId);
         setTasks(prev => prev.filter(t => t.id !== taskId));
         try {
             await fetch(`/api/autodesk/yopmail/tasks/${taskId}`, {

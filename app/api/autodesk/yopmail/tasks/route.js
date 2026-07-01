@@ -1,9 +1,6 @@
 import { NextResponse } from 'next/server';
-import Database from 'better-sqlite3';
-import path from 'path';
+import db from '@/lib/db';
 import { isAuthenticated } from '@/lib/auth';
-
-const dbPath = path.resolve(process.cwd(), 'emails.db');
 
 export async function GET(request) {
     if (!isAuthenticated(request)) {
@@ -11,9 +8,7 @@ export async function GET(request) {
     }
 
     try {
-        const db = new Database(dbPath);
         const tasks = db.prepare('SELECT * FROM yopmail_tasks ORDER BY created_at DESC').all();
-        db.close();
 
         // Parse items_json back to array
         const parsedTasks = tasks.map(task => ({
@@ -41,7 +36,6 @@ export async function POST(request) {
         const body = await request.json();
         const { id, date, total, success, error, status, items } = body;
 
-        const db = new Database(dbPath);
         
         const stmt = db.prepare(`
             INSERT INTO yopmail_tasks (id, created_at, total, success, error, status, items_json)
@@ -58,7 +52,7 @@ export async function POST(request) {
             JSON.stringify(items || [])
         );
 
-        db.close();
+
 
         return NextResponse.json({ status: 'success' });
     } catch (err) {
