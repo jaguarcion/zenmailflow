@@ -10,6 +10,9 @@ import AuditLogsTab from "../components/AuditLogsTab";
 import KeysCheckerTab from "../components/keys-checker";
 import AutodeskInviterTab from "../components/AutodeskInviterTab";
 import YopmailGrabberTab from "../components/YopmailGrabberTab";
+import EsetGeneratorTab from "../components/EsetGeneratorTab";
+import EsetHistoryTab from "../components/EsetHistoryTab";
+import EsetSettingsTab from "../components/EsetSettingsTab";
 import GlobalSearch from "../components/GlobalSearch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,7 +21,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { LogOut, Download, Trash2, Mail, Users, Monitor, Zap, History, Menu, LayoutDashboard, ScrollText, Key, KeyRound, Box } from "lucide-react";
+import { LogOut, Download, Trash2, Mail, Users, Monitor, Zap, History, Menu, LayoutDashboard, ScrollText, Key, KeyRound, Box, ShieldCheck } from "lucide-react";
 
 export default function ClientPage({ initialTab }) {
   const [token, setToken] = useState("");
@@ -288,6 +291,7 @@ export default function ClientPage({ initialTab }) {
       subItems: [
         { id: 'adobe-list', label: 'Список аккаунтов' },
         { id: 'adobe-upload', label: 'Загрузка аккаунтов' },
+        { id: 'clients', label: 'Клиенты' },
         { id: 'keys-checker', label: 'Чекер ключей' },
         { id: 'audit-logs', label: 'Журнал логов' }
       ] 
@@ -310,7 +314,16 @@ export default function ClientPage({ initialTab }) {
         { id: 'autodesk-yopmail', label: 'Получение почт' }
       ] 
     },
-    { id: 'clients', label: 'Клиенты', icon: Users }
+    { 
+      id: 'eset-group', 
+      label: 'ESET', 
+      icon: ShieldCheck, 
+      subItems: [
+        { id: 'eset-generator', label: 'Генерация' },
+        { id: 'eset-history', label: 'История' },
+        { id: 'eset-settings', label: 'Настройки' }
+      ] 
+    }
   ];
 
   const renderNav = () => (
@@ -457,7 +470,10 @@ export default function ClientPage({ initialTab }) {
                     <span>Чекер Adobe ключей</span>
                   </>
                 )}
-                {activeTab !== 'adobe-list' && activeTab !== 'adobe-upload' && activeTab !== 'audit-logs' && activeTab !== 'keys-checker' && navItems.find(n => n.id === activeTab)?.label}
+                {activeTab === 'eset-generator' && 'Генератор ключей ESET'}
+                {activeTab === 'eset-history' && 'История генераций ESET'}
+                {activeTab === 'eset-settings' && 'Настройки ESET'}
+                {activeTab !== 'adobe-list' && activeTab !== 'adobe-upload' && activeTab !== 'audit-logs' && activeTab !== 'keys-checker' && !activeTab.startsWith('eset-') && navItems.find(n => n.id === activeTab)?.label}
               </h1>
               <p className="text-muted-foreground">
                 {activeTab === 'dashboard' && 'Статистика и аналитика вашей платформы'}
@@ -470,6 +486,9 @@ export default function ClientPage({ initialTab }) {
                 {activeTab === 'clients' && 'Управление клиентской базой и привязками'}
                 {activeTab === 'generator' && 'Массовая генерация почтовых ящиков через Migadu'}
                 {activeTab === 'history' && 'Управление базой данных сгенерированных почт'}
+                {activeTab === 'eset-generator' && 'Массовая генерация триальных ключей'}
+                {activeTab === 'eset-history' && 'Архив сгенерированных пачек ESET'}
+                {activeTab === 'eset-settings' && 'Конфигурация прокси и почтового провайдера ESET'}
               </p>
             </div>
             
@@ -663,6 +682,16 @@ export default function ClientPage({ initialTab }) {
 
           {activeTab === 'autodesk-yopmail' && (
             <YopmailGrabberTab token={token} />
+          )}
+
+          {activeTab === 'eset-generator' && (
+            <EsetGeneratorTab token={token} />
+          )}
+          {activeTab === 'eset-history' && (
+            <EsetHistoryTab token={token} />
+          )}
+          {activeTab === 'eset-settings' && (
+            <EsetSettingsTab token={token} />
           )}
 
         </div>
