@@ -76,6 +76,25 @@ export function ProxyCard({ count, setCount, token: zenToken }) {
     setLoadingPrx(false)
   }
 
+  const clearProxies = async () => {
+    setLoadingPrx(true)
+    try {
+      const res = await fetch('/api/checker/proxies', {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${zenToken}` }
+      })
+      const data = await res.json()
+      if (data.ok) {
+        setCount(0)
+        setUrl('')
+        toast.success('Прокси очищены. Используется IP сервера')
+      }
+    } catch(e) {
+      toast.error('Ошибка очистки')
+    }
+    setLoadingPrx(false)
+  }
+
   const testProxy = async () => {
     setLoading(true)
     try {
@@ -120,8 +139,11 @@ export function ProxyCard({ count, setCount, token: zenToken }) {
             placeholder="URL или сами прокси" 
             className="font-mono text-xs flex-1"
           />
-          <Button onClick={loadProxies} disabled={loadingPrx} variant="outline" className="text-xs bg-purple-50 text-purple-600 border-purple-200 hover:bg-purple-100 hover:text-purple-700 transition-colors w-[90px]">
+          <Button onClick={loadProxies} disabled={loadingPrx} variant="outline" className="text-xs bg-purple-50 text-purple-600 border-purple-200 hover:bg-purple-100 hover:text-purple-700 transition-colors">
             {loadingPrx ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Загрузить'}
+          </Button>
+          <Button onClick={clearProxies} disabled={loadingPrx || count === 0} variant="outline" className="text-xs bg-rose-50 text-rose-600 border-rose-200 hover:bg-rose-100 hover:text-rose-700 transition-colors">
+            Очистить
           </Button>
         </div>
       </CardContent>
