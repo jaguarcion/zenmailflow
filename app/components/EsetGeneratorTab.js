@@ -13,13 +13,33 @@ export default function EsetGeneratorTab({ token }) {
     const [activeTaskId, setActiveTaskId] = useState(null);
     const [activeTask, setActiveTask] = useState(null);
 
-    // Load active task from local storage if exists
+    // Load active task from local storage if exists, otherwise check server for running tasks
     useEffect(() => {
+        const checkActiveTasks = async () => {
+            try {
+                const res = await fetch('/api/eset/tasks', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if (data.success && data.tasks && data.tasks.length > 0) {
+                    const latestTask = data.tasks[0];
+                    if (latestTask.status === 'processing') {
+                        setActiveTaskId(latestTask.id);
+                        localStorage.setItem('eset_active_task', latestTask.id);
+                    }
+                }
+            } catch (err) {
+                console.error("Failed to check active tasks", err);
+            }
+        };
+
         const savedTask = localStorage.getItem('eset_active_task');
         if (savedTask) {
             setActiveTaskId(savedTask);
+        } else if (token) {
+            checkActiveTasks();
         }
-    }, []);
+    }, [token]);
 
     useEffect(() => {
         let interval;
