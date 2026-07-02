@@ -281,7 +281,7 @@ async function testRandomProxy() {
             }
         }
         
-        const res = await axios.get('https://api.myip.com', {
+        const res = await axios.get('https://api.ipify.org/?format=json', {
             httpsAgent: agent,
             timeout: 15000
         });
