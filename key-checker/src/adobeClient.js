@@ -102,7 +102,7 @@ async function checkKey(data) {
     const tokens = config_auth_token.split('\n').map(t=>t.trim()).filter(Boolean);
     const cookie_val = (data.cookie || '').trim();
     const code = (data.code || '').trim();
-    const clean_code = code.replace(/ /g, '').toUpperCase();
+    const clean_code = code.replace(/-/g, '').replace(/ /g, '').toUpperCase();
     
     if (tokens.length === 0) {
         return { code, http_code: 400, adobe_status: '', body: { message: 'Токен не указан' } };
