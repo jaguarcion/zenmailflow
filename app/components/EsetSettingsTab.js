@@ -13,7 +13,8 @@ export default function EsetSettingsTab({ token }) {
         emailProvider: "migadu",
         migaduUser: "",
         migaduToken: "",
-        migaduDomain: ""
+        migaduDomain: "",
+        concurrency: 2
     });
     const [loading, setLoading] = useState(false);
     const [isConfigLoaded, setIsConfigLoaded] = useState(false);
@@ -31,7 +32,8 @@ export default function EsetSettingsTab({ token }) {
                         emailProvider: data.config.emailProvider || "migadu",
                         migaduUser: data.config.migaduUser || "",
                         migaduToken: data.config.migaduToken || "",
-                        migaduDomain: data.config.migaduDomain || ""
+                        migaduDomain: data.config.migaduDomain || "",
+                        concurrency: data.config.concurrency || 2
                     });
                 }
             } catch (err) {
@@ -96,6 +98,19 @@ export default function EsetSettingsTab({ token }) {
                                     placeholder="http://user:pass@1.2.3.4:443[https://url-for-ip-change]" 
                                 />
                                 <p className="text-xs text-muted-foreground">Формат: <code>протокол://логин:пароль@хост:порт[URL_СМЕНЫ_IP]</code>. Либо через запятую несколько прокси.</p>
+                            </div>
+                            <div className="space-y-2 max-w-[200px]">
+                                <label className="text-sm font-medium">Потоки генерации</label>
+                                <Input 
+                                    type="number"
+                                    name="concurrency" 
+                                    min="1"
+                                    max="20"
+                                    value={config.concurrency} 
+                                    onChange={handleConfigChange} 
+                                    placeholder="2" 
+                                />
+                                <p className="text-xs text-muted-foreground">Количество одновременно создаваемых аккаунтов (1-20).</p>
                             </div>
                         </div>
                     </div>

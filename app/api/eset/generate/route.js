@@ -3,6 +3,7 @@ import { isAuthenticated } from '@/lib/auth';
 import db from '@/lib/db';
 import crypto from 'crypto';
 import { startBatchEsetActivate } from '@/lib/eset/batchEsetActivate';
+import { getSetting } from '@/lib/db';
 
 export async function POST(request) {
     if (!isAuthenticated(request)) {
@@ -26,7 +27,8 @@ export async function POST(request) {
         `).run(taskId, count, 'processing', '[]');
 
         // Start background process
-        startBatchEsetActivate(taskId, count, 2).catch(console.error);
+        const concurrency = parseInt(getSetting('eset_concurrency'), 10) || 2;
+        startBatchEsetActivate(taskId, count, concurrency).catch(console.error);
 
         return NextResponse.json({ success: true, taskId });
     } catch (err) {

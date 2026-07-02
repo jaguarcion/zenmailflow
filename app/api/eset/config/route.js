@@ -14,6 +14,7 @@ export async function GET(request) {
             migaduUser: getSetting('eset_migadu_user') || '',
             migaduToken: getSetting('eset_migadu_token') || '',
             migaduDomain: getSetting('eset_migadu_domain') || '',
+            concurrency: parseInt(getSetting('eset_concurrency'), 10) || 2,
         };
         return NextResponse.json({ status: 'success', config });
     } catch (err) {
@@ -34,6 +35,7 @@ export async function POST(request) {
         if (body.migaduUser !== undefined) setSetting('eset_migadu_user', body.migaduUser);
         if (body.migaduToken !== undefined) setSetting('eset_migadu_token', body.migaduToken);
         if (body.migaduDomain !== undefined) setSetting('eset_migadu_domain', body.migaduDomain);
+        if (body.concurrency !== undefined) setSetting('eset_concurrency', body.concurrency.toString());
 
         return NextResponse.json({ status: 'success' });
     } catch (err) {
