@@ -53,3 +53,26 @@ export async function POST(request, { params }) {
     return NextResponse.json({ success: false, error: 'Checker service is not available' }, { status: 502 });
   }
 }
+
+export async function DELETE(request, { params }) {
+  if (!isAuthenticated(request)) {
+    return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const { path } = await params;
+  const targetPath = '/' + (path ? path.join('/') : '');
+  const searchParams = new URL(request.url).searchParams;
+  const queryString = searchParams.toString();
+  const fullTargetUrl = `${CHECKER_URL}${targetPath}${queryString ? '?' + queryString : ''}`;
+
+  try {
+    const res = await fetch(fullTargetUrl, {
+      method: 'DELETE',
+    });
+    const data = await res.json();
+    return NextResponse.json(data);
+  } catch (err) {
+    console.error('Checker Proxy DELETE Error:', err);
+    return NextResponse.json({ success: false, error: 'Checker service is not available' }, { status: 502 });
+  }
+}
