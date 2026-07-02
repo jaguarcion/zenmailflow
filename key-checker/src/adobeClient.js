@@ -19,7 +19,7 @@ function isProxyError(result) {
     return false;
 }
 
-async function doAdobeRequest(authToken, cleanCode, proxy, reqCookies) {
+async function doAdobeRequest(authToken, fingerprintToken, cleanCode, proxy, reqCookies) {
     let token = authToken;
     if (token.toLowerCase().startsWith('bearer ')) {
         token = token.slice(7);
@@ -37,6 +37,7 @@ async function doAdobeRequest(authToken, cleanCode, proxy, reqCookies) {
     };
     
     if (token) headers["Authorization"] = token;
+    if (fingerprintToken) headers["x-adobe-fingerprint-token"] = fingerprintToken;
     
     if (reqCookies && Object.keys(reqCookies).length > 0) {
         headers["Cookie"] = Object.entries(reqCookies).map(([k, v]) => `${k}=${v}`).join('; ');
@@ -101,6 +102,7 @@ async function checkKey(data) {
     const config_auth_token = (data.auth_token || '').trim();
     const tokens = config_auth_token.split('\n').map(t=>t.trim()).filter(Boolean);
     const cookie_val = (data.cookie || '').trim();
+    const fingerprint_token = (data.fingerprint_token || '').trim();
     const code = (data.code || '').trim();
     const clean_code = code.replace(/-/g, '').replace(/ /g, '').toUpperCase();
     
@@ -141,7 +143,7 @@ async function checkKey(data) {
         if (!proxy && attempt > 0) break;
         
         const t0 = Date.now();
-        const parsed = await doAdobeRequest(token, clean_code, proxy, keyCookies);
+        const parsed = await doAdobeRequest(token, fingerprint_token, clean_code, proxy, keyCookies);
         const latency_ms = Date.now() - t0;
         
         keyCookies = parsed._cookies || {};

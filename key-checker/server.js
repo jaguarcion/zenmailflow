@@ -72,6 +72,9 @@ app.post('/check', async (req, res) => {
     if (!req.body.auth_token) {
         req.body.auth_token = configManager.getConfig().auth_token;
     }
+    if (!req.body.fingerprint_token) {
+        req.body.fingerprint_token = configManager.getConfig().fingerprint_token;
+    }
     const result = await adobeClient.checkKey(req.body);
     res.json(result);
 });

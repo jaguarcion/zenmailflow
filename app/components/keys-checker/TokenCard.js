@@ -7,6 +7,7 @@ import { KeyRound, User, Loader2 } from 'lucide-react'
 
 export function TokenCard({ token: zenToken }) {
   const [token, setToken] = useState('')
+  const [fingerprintToken, setFingerprintToken] = useState('')
   const [account, setAccount] = useState('')
   const [status, setStatus] = useState(null)
   const [loading, setLoading] = useState(false)
@@ -21,9 +22,11 @@ export function TokenCard({ token: zenToken }) {
       .then(d => {
         if (!mounted) return;
         const savedToken = d.auth_token ? d.auth_token.split('\n')[0].trim() : '';
+        const savedFingerprint = d.fingerprint_token ? d.fingerprint_token.split('\n')[0].trim() : '';
         const savedAccount = d.adobe_account ? d.adobe_account.split('\n')[0].trim() : '';
         
         setAccount(savedAccount);
+        setFingerprintToken(savedFingerprint);
         if (savedToken) {
           setToken(savedToken);
           setLoading(true);
@@ -48,25 +51,34 @@ export function TokenCard({ token: zenToken }) {
     return () => { mounted = false; };
   }, [zenToken])
 
-  const saveConfig = async (newToken, newAccount) => {
+  const saveConfig = async (newToken, newFingerprint, newAccount) => {
     await fetch('/api/checker/api/config', {
       method: 'POST',
       headers: { 
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${zenToken}`
       },
-      body: JSON.stringify({ auth_token: newToken.trim(), adobe_account: newAccount.trim() })
+      body: JSON.stringify({ 
+          auth_token: newToken.trim(), 
+          fingerprint_token: newFingerprint.trim(),
+          adobe_account: newAccount.trim() 
+      })
     }).catch(()=>{})
   }
 
   const handleTokenChange = (val) => {
     setToken(val)
-    saveConfig(val, account)
+    saveConfig(val, fingerprintToken, account)
+  }
+
+  const handleFingerprintChange = (val) => {
+    setFingerprintToken(val)
+    saveConfig(token, val, account)
   }
 
   const handleAccountChange = (val) => {
     setAccount(val)
-    saveConfig(token, val)
+    saveConfig(token, fingerprintToken, val)
   }
 
   const testToken = async () => {
@@ -114,6 +126,12 @@ export function TokenCard({ token: zenToken }) {
             onChange={(e) => handleTokenChange(e.target.value)} 
             placeholder="Bearer eyJhbGciOiJ..." 
             className={`font-mono text-xs h-8 transition-colors ${status ? (status.ok ? 'border-emerald-400 focus-visible:ring-emerald-200 bg-emerald-50/30' : 'border-rose-400 focus-visible:ring-rose-200 bg-rose-50/30') : ''}`}
+          />
+          <Input 
+            value={fingerprintToken} 
+            onChange={(e) => handleFingerprintChange(e.target.value)} 
+            placeholder="x-adobe-fingerprint-token" 
+            className="font-mono text-xs h-8 text-slate-600 bg-slate-50 border-slate-200 focus-visible:ring-slate-300"
           />
         </div>
         <Button className="w-full text-xs h-8 shadow-[0_0_10px_rgba(59,130,246,0.3)] hover:shadow-[0_0_15px_rgba(59,130,246,0.5)] transition-all bg-blue-600 hover:bg-blue-700 text-white" onClick={testToken} disabled={loading || !token}>

@@ -4,7 +4,8 @@ const path = require('path');
 const CONFIG_FILE = path.join(__dirname, '..', 'config.json');
 
 let config = {
-    auth_token: ''
+    auth_token: '',
+    fingerprint_token: ''
 };
 
 function loadConfig() {
