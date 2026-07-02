@@ -142,7 +142,7 @@ export function ProxyCard({ count, setCount, token: zenToken }) {
           <Button onClick={loadProxies} disabled={loadingPrx} variant="outline" className="text-xs bg-purple-50 text-purple-600 border-purple-200 hover:bg-purple-100 hover:text-purple-700 transition-colors">
             {loadingPrx ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Загрузить'}
           </Button>
-          <Button onClick={clearProxies} disabled={loadingPrx || count === 0} variant="outline" className="text-xs bg-rose-50 text-rose-600 border-rose-200 hover:bg-rose-100 hover:text-rose-700 transition-colors">
+          <Button onClick={clearProxies} disabled={loadingPrx || (count === 0 && !url)} variant="outline" className="text-xs bg-rose-50 text-rose-600 border-rose-200 hover:bg-rose-100 hover:text-rose-700 transition-colors">
             Очистить
           </Button>
         </div>

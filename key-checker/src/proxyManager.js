@@ -300,7 +300,12 @@ async function testRandomProxy() {
         
         return { ok: true, info, proxy_url: safeUrl };
     } catch (e) {
-        return { ok: false, info: e.message, proxy_url: proxy.url };
+        let safeUrl = proxy.url;
+        if (proxy.user) {
+            const parsed = new URL(proxy.url);
+            safeUrl = `${parsed.protocol}//${proxy.user}:***@${parsed.host}`;
+        }
+        return { ok: false, info: e.message, proxy_url: safeUrl };
     }
 }
 
