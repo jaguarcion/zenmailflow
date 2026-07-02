@@ -29,6 +29,7 @@ app.post('/proxies', async (req, res) => {
 app.delete('/proxies', async (req, res) => {
     proxyManager.loadProxies([]);
     await proxyManager.saveToFile();
+    await proxyManager.setAutoUpdateConfig({ url: '', interval_min: 0 });
     res.json({ ok: true, count: 0 });
 });
 
