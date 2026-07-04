@@ -20,7 +20,7 @@ if (!APP_TOKEN) {
     process.exit(1);
 }
 
-const BASE_URL = process.env.APP_BASE_URL?.trim() || 'http://127.0.0.1:3000';
+const BASE_URL = process.env.APP_BASE_URL?.trim() || 'https://mail.cdk-gpt.ru';
 
 const bot = new TelegramBot(token, { polling: true });
 const dbPath = path.resolve(__dirname, '..', 'emails.db');
