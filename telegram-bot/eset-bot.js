@@ -8,17 +8,19 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.join(__dirname, '..', '.env.local') });
 
-const token = process.env.ESET_TELEGRAM_BOT_TOKEN;
+const token = process.env.ESET_TELEGRAM_BOT_TOKEN?.trim();
 if (!token) {
     console.error('ESET_TELEGRAM_BOT_TOKEN is not set in .env.local');
     process.exit(1);
 }
 
-const APP_TOKEN = process.env.APP_ACCESS_TOKEN;
+const APP_TOKEN = process.env.APP_ACCESS_TOKEN?.trim();
 if (!APP_TOKEN) {
     console.error('APP_ACCESS_TOKEN is not set in .env.local');
     process.exit(1);
 }
+
+const BASE_URL = process.env.APP_BASE_URL?.trim() || 'http://127.0.0.1:3000';
 
 const bot = new TelegramBot(token, { polling: true });
 const dbPath = path.resolve(__dirname, '..', 'emails.db');
@@ -112,7 +114,7 @@ ${resetText}
         try {
             // Use native fetch (Node.js 18+)
             const userInfo = user.username ? `@${user.username}` : user.first_name;
-            const res = await fetch('http://localhost:3000/api/eset/external/generate', {
+            const res = await fetch(`${BASE_URL}/api/eset/external/generate`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${APP_TOKEN}`,
