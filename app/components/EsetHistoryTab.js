@@ -130,7 +130,14 @@ export default function EsetHistoryTab({ token }) {
                                                     {isExpanded ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
                                                 </TableCell>
                                                 <TableCell>
-                                                    <div className="font-medium text-sm">{new Date(task.created_at).toLocaleString()}</div>
+                                                    <div className="font-medium text-sm flex items-center gap-2">
+                                                        {new Date(task.created_at).toLocaleString()}
+                                                        {task.source === 'api' && (
+                                                            <span className="bg-purple-100 text-purple-700 text-[10px] px-1.5 py-0.5 rounded uppercase font-bold tracking-wider shadow-sm">
+                                                                API
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                     <div className="text-xs text-muted-foreground font-mono">{task.id.split('-')[0]}</div>
                                                 </TableCell>
                                                 <TableCell>

@@ -9,7 +9,7 @@ export async function GET(request) {
 
     try {
         const tasks = db.prepare(`
-            SELECT id, created_at, total, success, error, status, items_json
+            SELECT id, created_at, total, success, error, status, items_json, source
             FROM eset_tasks
             ORDER BY created_at DESC
         `).all();

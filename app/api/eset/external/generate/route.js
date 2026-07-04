@@ -37,8 +37,8 @@ async function handleRequest(request) {
 
         // Create a new task record in DB
         db.prepare(`
-            INSERT INTO eset_tasks (id, total, status, items_json)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO eset_tasks (id, total, status, items_json, source)
+            VALUES (?, ?, ?, ?, 'api')
         `).run(taskId, count, 'processing', '[]');
 
         // Start and AWAIT background process synchronously
