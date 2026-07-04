@@ -3,7 +3,6 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import Database from 'better-sqlite3';
-import fetch from 'node-fetch'; // Next.js API uses native fetch, but for Node.js we can use native fetch since v18.
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
