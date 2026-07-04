@@ -105,9 +105,22 @@ export function TokenCard({ token: zenToken }) {
   return (
     <Card className="bg-white/70 backdrop-blur-xl border-slate-200 hover:-translate-y-1 hover:shadow-xl transition-all duration-300">
       <CardHeader className="pb-3">
-        <CardTitle className="text-sm flex items-center gap-2">
-          <KeyRound className="w-4 h-4 text-blue-500" />
-          Токен Авторизации
+        <CardTitle className="text-sm flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <KeyRound className="w-4 h-4 text-blue-500" />
+            Токен Авторизации
+          </div>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => {
+                const script = `(function(){console.log("Ожидаю API-запрос...");let foundTokens={auth:null,fingerprint:null};function handleHeaders(headers){let updated=false;if(headers['authorization']&&!foundTokens.auth){foundTokens.auth=headers['authorization'];updated=true;}if(headers['x-adobe-fingerprint-token']&&!foundTokens.fingerprint){foundTokens.fingerprint=headers['x-adobe-fingerprint-token'];updated=true;}if(updated&&foundTokens.auth&&foundTokens.fingerprint){console.log("=================================");console.log("✅ ТОКЕНЫ ADOBE УСПЕШНО ПЕРЕХВАЧЕНЫ!");console.log("Authorization Token:\\n"+foundTokens.auth);console.log("x-adobe-fingerprint-token:\\n"+foundTokens.fingerprint);console.log("=================================");alert("Токены успешно перехвачены! Посмотрите в консоль.");}}const originalOpen=XMLHttpRequest.prototype.open;const originalSetRequestHeader=XMLHttpRequest.prototype.setRequestHeader;XMLHttpRequest.prototype.open=function(){this._headers={};return originalOpen.apply(this,arguments);};XMLHttpRequest.prototype.setRequestHeader=function(header,value){this._headers[header.toLowerCase()]=value;handleHeaders(this._headers);return originalSetRequestHeader.apply(this,arguments);};const originalFetch=window.fetch;window.fetch=async function(){if(arguments[1]&&arguments[1].headers){let extracted={};if(arguments[1].headers instanceof Headers){extracted['authorization']=arguments[1].headers.get('authorization');extracted['x-adobe-fingerprint-token']=arguments[1].headers.get('x-adobe-fingerprint-token');}else if(Array.isArray(arguments[1].headers)){arguments[1].headers.forEach(h=>extracted[h[0].toLowerCase()]=h[1]);}else{for(let key in arguments[1].headers){extracted[key.toLowerCase()]=arguments[1].headers[key];}}handleHeaders(extracted);}return originalFetch.apply(this,arguments);};})();`;
+                navigator.clipboard.writeText(script);
+                toast.success("Скрипт перехвата скопирован!");
+            }}
+          >
+            Скрипт (F12)
+          </Button>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">

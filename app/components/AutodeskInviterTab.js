@@ -177,7 +177,20 @@ export default function AutodeskInviterTab({ token }) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Card>
                     <CardHeader>
-                        <CardTitle>Настройки API Autodesk</CardTitle>
+                        <CardTitle className="flex justify-between items-center">
+                            <span>Настройки API Autodesk</span>
+                            <Button 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={() => {
+                                    const script = `(function(){console.log("Ожидаю API-запрос...");let found=false;function handleToken(token){if(found||!token.startsWith('Bearer '))return;found=true;console.log("=================================");console.log("ДАННЫЕ УСПЕШНО ПЕРЕХВАЧЕНЫ!");console.log("Authorization Token:\\n" + token);console.log("Cookie String:\\n" + document.cookie);console.log("=================================");alert("Токен и Cookie успешно перехвачены! Посмотрите в консоль.");}const originalOpen=XMLHttpRequest.prototype.open;const originalSetRequestHeader=XMLHttpRequest.prototype.setRequestHeader;XMLHttpRequest.prototype.open=function(){this._headers={};return originalOpen.apply(this,arguments);};XMLHttpRequest.prototype.setRequestHeader=function(header,value){if(header.toLowerCase()==='authorization'){handleToken(value);}return originalSetRequestHeader.apply(this,arguments);};const originalFetch=window.fetch;window.fetch=async function(){if(arguments[1]&&arguments[1].headers){let auth=null;if(arguments[1].headers instanceof Headers){auth=arguments[1].headers.get('authorization');}else if(Array.isArray(arguments[1].headers)){const h=arguments[1].headers.find(h=>h[0].toLowerCase()==='authorization');if(h)auth=h[1];}else{for(let key in arguments[1].headers){if(key.toLowerCase()==='authorization')auth=arguments[1].headers[key];}}if(auth)handleToken(auth);}return originalFetch.apply(this,arguments);};})();`;
+                                    navigator.clipboard.writeText(script);
+                                    toast.success("Скрипт перехвата скопирован!");
+                                }}
+                            >
+                                Копировать скрипт (F12)
+                            </Button>
+                        </CardTitle>
                         <CardDescription>Введите данные для авторизации в панели Autodesk</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
