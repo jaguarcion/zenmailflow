@@ -1,0 +1,165 @@
+import TelegramBot from 'node-telegram-bot-api';
+import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import Database from 'better-sqlite3';
+import fetch from 'node-fetch'; // Next.js API uses native fetch, but for Node.js we can use native fetch since v18.
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+dotenv.config({ path: path.join(__dirname, '..', '.env.local') });
+
+const token = process.env.ESET_TELEGRAM_BOT_TOKEN;
+if (!token) {
+    console.error('ESET_TELEGRAM_BOT_TOKEN is not set in .env.local');
+    process.exit(1);
+}
+
+const APP_TOKEN = process.env.APP_ACCESS_TOKEN;
+if (!APP_TOKEN) {
+    console.error('APP_ACCESS_TOKEN is not set in .env.local');
+    process.exit(1);
+}
+
+const bot = new TelegramBot(token, { polling: true });
+const dbPath = path.resolve(__dirname, '..', 'emails.db');
+const db = new Database(dbPath);
+
+console.log('[ESET Bot] Started fetching updates...');
+
+const KEYBOARD_MENU = {
+    reply_markup: {
+        keyboard: [
+            [{ text: '🔑 Получить ключ' }, { text: '👤 Мой профиль' }]
+        ],
+        resize_keyboard: true
+    }
+};
+
+function getUser(msg) {
+    const tgId = msg.chat.id.toString();
+    const user = db.prepare('SELECT * FROM eset_tg_users WHERE tg_id = ?').get(tgId);
+    if (!user) {
+        const info = db.prepare(`
+            INSERT INTO eset_tg_users (tg_id, username, first_name)
+            VALUES (?, ?, ?)
+            RETURNING *
+        `).get(tgId, msg.from.username || null, msg.from.first_name || null);
+        return info;
+    }
+    return user;
+}
+
+bot.onText(/\/start/, (msg) => {
+    const chatId = msg.chat.id;
+    const user = getUser(msg);
+    bot.sendMessage(
+        chatId, 
+        `👋 Привет, ${user.first_name || 'пользователь'}!\n\nЭто бот для бесплатной раздачи ключей ESET. Вы можете получить 1 ключ раз в сутки.`, 
+        KEYBOARD_MENU
+    );
+});
+
+bot.on('message', async (msg) => {
+    const chatId = msg.chat.id;
+    const text = msg.text;
+
+    if (text === '👤 Мой профиль') {
+        const user = getUser(msg);
+        
+        let resetText = "✅ Доступен 1 ключ";
+        if (user.last_generation_at) {
+            const lastGenTime = new Date(user.last_generation_at).getTime();
+            const now = Date.now();
+            const msPassed = now - lastGenTime;
+            const msIn24Hours = 24 * 60 * 60 * 1000;
+            
+            if (msPassed < msIn24Hours) {
+                const remaining = msIn24Hours - msPassed;
+                const hours = Math.floor(remaining / (1000 * 60 * 60));
+                const mins = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+                resetText = `⏳ Обновление лимита через ${hours} ч. ${mins} мин.`;
+            }
+        }
+
+        const profileText = `
+👤 <b>Ваш профиль</b>
+
+💎 <b>Статус:</b> Базовый (Бесплатный)
+📅 <b>Регистрация:</b> ${new Date(user.created_at).toLocaleDateString('ru-RU')}
+🔑 <b>Сгенерировано ключей:</b> ${user.keys_received}
+
+🔄 <b>Лимит:</b> 1 ключ в сутки
+${resetText}
+        `.trim();
+
+        bot.sendMessage(chatId, profileText, { parse_mode: 'HTML', ...KEYBOARD_MENU });
+        return;
+    }
+
+    if (text === '🔑 Получить ключ') {
+        const user = getUser(msg);
+        
+        if (user.last_generation_at) {
+            const lastGenTime = new Date(user.last_generation_at).getTime();
+            const now = Date.now();
+            if (now - lastGenTime < 24 * 60 * 60 * 1000) {
+                return bot.sendMessage(chatId, '❌ <b>Вы уже получали ключ за последние 24 часа!</b>\n\nПриходите завтра или проверьте точное время обновления лимита в профиле.', { parse_mode: 'HTML' });
+            }
+        }
+
+        const waitMsg = await bot.sendMessage(chatId, '⏳ Отправлен запрос на генерацию. Пожалуйста, подождите (это может занять около 1 минуты)...');
+
+        try {
+            // Use native fetch (Node.js 18+)
+            const userInfo = user.username ? `@${user.username}` : user.first_name;
+            const res = await fetch('http://localhost:3000/api/eset/external/generate', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${APP_TOKEN}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ 
+                    count: 1, 
+                    source: 'api-telegram',
+                    user_info: userInfo 
+                })
+            });
+
+            if (!res.ok) {
+                throw new Error(`API Error: ${res.status}`);
+            }
+
+            const keys = await res.json();
+            
+            if (Array.isArray(keys) && keys.length > 0) {
+                // Update DB limits
+                db.prepare(`
+                    UPDATE eset_tg_users 
+                    SET keys_received = keys_received + 1, last_generation_at = CURRENT_TIMESTAMP 
+                    WHERE id = ?
+                `).run(user.id);
+
+                bot.deleteMessage(chatId, waitMsg.message_id).catch(()=>{});
+                
+                const successMsg = `
+✅ <b>Генерация успешна!</b>
+
+Ваш ключ ESET:
+<code>${keys[0]}</code>
+
+<i>Следующий бесплатный ключ будет доступен ровно через 24 часа.</i>
+                `.trim();
+                bot.sendMessage(chatId, successMsg, { parse_mode: 'HTML' });
+            } else {
+                bot.deleteMessage(chatId, waitMsg.message_id).catch(()=>{});
+                bot.sendMessage(chatId, '⚠️ Не удалось получить ключ от сервера, возможно закончились прокси. Попробуйте позже.');
+            }
+        } catch (err) {
+            console.error('Generation err:', err);
+            bot.deleteMessage(chatId, waitMsg.message_id).catch(()=>{});
+            bot.sendMessage(chatId, '⚠️ Внутренняя ошибка сервера. Пожалуйста, обратитесь к администратору или попробуйте позже.');
+        }
+        return;
+    }
+});

@@ -13,6 +13,7 @@ import YopmailGrabberTab from "../components/YopmailGrabberTab";
 import EsetGeneratorTab from "../components/EsetGeneratorTab";
 import EsetHistoryTab from "../components/EsetHistoryTab";
 import EsetSettingsTab from "../components/EsetSettingsTab";
+import EsetTelegramTab from "../components/EsetTelegramTab";
 import GlobalSearch from "../components/GlobalSearch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -321,6 +322,7 @@ export default function ClientPage({ initialTab }) {
       subItems: [
         { id: 'eset-generator', label: 'Генерация' },
         { id: 'eset-history', label: 'История' },
+        { id: 'eset-telegram', label: 'Телеграм Бот' },
         { id: 'eset-settings', label: 'Настройки' }
       ] 
     }
@@ -472,6 +474,7 @@ export default function ClientPage({ initialTab }) {
                 )}
                 {activeTab === 'eset-generator' && 'Генератор ключей ESET'}
                 {activeTab === 'eset-history' && 'История генераций ESET'}
+                {activeTab === 'eset-telegram' && 'Статистика Telegram Бота ESET'}
                 {activeTab === 'eset-settings' && 'Настройки ESET'}
                 {activeTab !== 'adobe-list' && activeTab !== 'adobe-upload' && activeTab !== 'audit-logs' && activeTab !== 'keys-checker' && !activeTab.startsWith('eset-') && navItems.find(n => n.id === activeTab)?.label}
               </h1>
@@ -488,6 +491,7 @@ export default function ClientPage({ initialTab }) {
                 {activeTab === 'history' && 'Управление базой данных сгенерированных почт'}
                 {activeTab === 'eset-generator' && 'Массовая генерация триальных ключей'}
                 {activeTab === 'eset-history' && 'Архив сгенерированных пачек ESET'}
+                {activeTab === 'eset-telegram' && 'Управление ботом бесплатной раздачи ESET'}
                 {activeTab === 'eset-settings' && 'Конфигурация прокси и почтового провайдера ESET'}
               </p>
             </div>
@@ -689,6 +693,9 @@ export default function ClientPage({ initialTab }) {
           )}
           {activeTab === 'eset-history' && (
             <EsetHistoryTab token={token} />
+          )}
+          {activeTab === 'eset-telegram' && (
+            <EsetTelegramTab token={token} />
           )}
           {activeTab === 'eset-settings' && (
             <EsetSettingsTab token={token} />

@@ -11,22 +11,28 @@ async function handleRequest(request) {
 
     try {
         let count = 1;
+        let source = 'api';
+        let userInfo = null;
 
         if (request.method === 'POST') {
             try {
                 const body = await request.json();
-                if (body && body.count) {
-                    count = parseInt(body.count, 10);
-                }
+                if (body && body.count) count = parseInt(body.count, 10);
+                if (body && body.source) source = String(body.source).substring(0, 50);
+                if (body && body.user_info) userInfo = String(body.user_info).substring(0, 100);
             } catch (e) {
                 // Ignore JSON parse errors
             }
         } else if (request.method === 'GET') {
             const url = new URL(request.url);
             const queryCount = url.searchParams.get('count');
-            if (queryCount) {
-                count = parseInt(queryCount, 10);
-            }
+            if (queryCount) count = parseInt(queryCount, 10);
+            
+            const querySource = url.searchParams.get('source');
+            if (querySource) source = String(querySource).substring(0, 50);
+            
+            const queryUserInfo = url.searchParams.get('user_info');
+            if (queryUserInfo) userInfo = String(queryUserInfo).substring(0, 100);
         }
         
         if (isNaN(count) || count < 1 || count > 100) {
@@ -37,9 +43,9 @@ async function handleRequest(request) {
 
         // Create a new task record in DB
         db.prepare(`
-            INSERT INTO eset_tasks (id, total, status, items_json, source)
-            VALUES (?, ?, ?, ?, 'api')
-        `).run(taskId, count, 'processing', '[]');
+            INSERT INTO eset_tasks (id, total, status, items_json, source, user_info)
+            VALUES (?, ?, ?, ?, ?, ?)
+        `).run(taskId, count, 'processing', '[]', source, userInfo);
 
         // Start and AWAIT background process synchronously
         const concurrency = parseInt(getSetting('eset_concurrency'), 10) || 2;
