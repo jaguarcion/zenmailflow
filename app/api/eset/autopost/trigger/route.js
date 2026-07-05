@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { isAuthenticated } from '@/lib/auth';
-import { getSetting } from '@/lib/db';
+import db, { getSetting } from '@/lib/db';
+import crypto from 'crypto';
+import { startBatchEsetActivate } from '@/lib/eset/batchEsetActivate';
 
 export async function POST(request) {
     if (!isAuthenticated(request)) {
@@ -19,30 +21,19 @@ export async function POST(request) {
             return NextResponse.json({ status: 'error', error: 'Не указан токен бота (ESET_TELEGRAM_BOT_TOKEN)' }, { status: 400 });
         }
 
-        // 1. Сгенерировать ключи через внутреннее API
-        const generateUrl = new URL('/api/eset/external/generate', request.url);
-        
-        // Pass the auth token
-        const authHeader = request.headers.get('Authorization');
-        
-        const genRes = await fetch(generateUrl.toString(), {
-            method: 'POST',
-            headers: {
-                'Authorization': authHeader,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                count: count,
-                source: 'api-telegram-autopost',
-                user_info: 'manual_trigger'
-            })
-        });
+        // 1. Сгенерировать ключи (прямой вызов логики)
+        const taskId = crypto.randomUUID();
+        db.prepare(`
+            INSERT INTO eset_tasks (id, total, status, items_json, source, user_info)
+            VALUES (?, ?, ?, ?, ?, ?)
+        `).run(taskId, count, 'processing', '[]', 'api-telegram-autopost', 'manual_trigger');
 
-        if (!genRes.ok) {
-            throw new Error(`Ошибка генерации: ${genRes.statusText}`);
-        }
+        const concurrency = parseInt(getSetting('eset_concurrency'), 10) || 2;
+        await startBatchEsetActivate(taskId, count, concurrency);
 
-        const keys = await genRes.json();
+        const finalTask = db.prepare('SELECT items_json FROM eset_tasks WHERE id = ?').get(taskId);
+        const items = JSON.parse(finalTask?.items_json || '[]');
+        const keys = items.map(item => item.licenseKey).filter(Boolean);
 
         if (!Array.isArray(keys) || keys.length === 0) {
             throw new Error('Генератор не вернул ни одного ключа');
