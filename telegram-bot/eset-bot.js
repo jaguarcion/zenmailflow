@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import Database from 'better-sqlite3';
-
+import cron from 'node-cron';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.join(__dirname, '..', '.env.local') });
@@ -164,3 +164,52 @@ ${resetText}
         return;
     }
 });
+
+const CHANNEL_ID = process.env.ESET_TELEGRAM_CHANNEL_ID?.trim();
+const CRON_SCHEDULE = process.env.ESET_AUTOPOST_CRON?.trim() || '0 12 * * *';
+
+if (CHANNEL_ID) {
+    console.log(`[ESET Bot] Auto-posting configured for channel ${CHANNEL_ID} at schedule: ${CRON_SCHEDULE}`);
+    cron.schedule(CRON_SCHEDULE, async () => {
+        console.log('[ESET Bot] Running auto-posting job...');
+        try {
+            const res = await fetch(`${BASE_URL}/api/eset/external/generate`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${APP_TOKEN}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ 
+                    count: 5, 
+                    source: 'api-telegram-autopost',
+                    user_info: 'channel_autopost' 
+                })
+            });
+
+            if (!res.ok) {
+                throw new Error(`API Error: ${res.status}`);
+            }
+
+            const keys = await res.json();
+            
+            if (Array.isArray(keys) && keys.length > 0) {
+                const keysFormatted = keys.map(k => `<code>${k}</code>`).join('\n');
+                const successMsg = `
+🎁 <b>Свежая раздача ключей ESET!</b>
+
+Забирайте ключи:
+${keysFormatted}
+
+<i>Ключи разбирают очень быстро! Бесплатный ключ также можно получить в нашем боте.</i>
+                `.trim();
+                
+                await bot.sendMessage(CHANNEL_ID, successMsg, { parse_mode: 'HTML' });
+                console.log(`[ESET Bot] Successfully auto-posted ${keys.length} keys to ${CHANNEL_ID}`);
+            } else {
+                console.warn('[ESET Bot] Auto-posting skipped: no keys generated or proxies exhausted.');
+            }
+        } catch (err) {
+            console.error('[ESET Bot] Auto-posting err:', err);
+        }
+    });
+}
