@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Copy, Upload, Zap, RefreshCcw, ChevronDown, ChevronUp, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
+import { Skeleton } from "@/components/ui/skeleton";
+
 export default function YopmailGrabberTab({ token }) {
     const [emailsInput, setEmailsInput] = useState("");
     const [tasks, setTasks] = useState([]);
@@ -26,8 +28,9 @@ export default function YopmailGrabberTab({ token }) {
                 }
             } catch (err) {
                 console.error("Failed to load tasks", err);
+            } finally {
+                setIsLoaded(true);
             }
-            setIsLoaded(true);
         };
         fetchTasks();
     }, [token]);
@@ -229,7 +232,27 @@ export default function YopmailGrabberTab({ token }) {
                 </CardContent>
             </Card>
 
-            {tasks.length > 0 && (
+            {!isLoaded ? (
+                <div className="space-y-4">
+                    <h3 className="text-lg font-medium">История задач</h3>
+                    {[...Array(3)].map((_, i) => (
+                        <Card key={i} className="p-4 flex items-center justify-between">
+                            <div className="flex flex-col gap-2">
+                                <Skeleton className="h-5 w-[150px]" />
+                                <Skeleton className="h-4 w-[200px]" />
+                            </div>
+                            <Skeleton className="h-8 w-24 rounded-full" />
+                        </Card>
+                    ))}
+                </div>
+            ) : tasks.length === 0 ? (
+                <div className="space-y-4">
+                    <h3 className="text-lg font-medium">История задач</h3>
+                    <div className="text-center py-10 text-muted-foreground bg-muted/20 rounded-md border border-dashed">
+                        История задач пуста.
+                    </div>
+                </div>
+            ) : (
                 <div className="space-y-4">
                     <h3 className="text-lg font-medium">История задач</h3>
                     {tasks.map(task => (

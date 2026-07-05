@@ -5,6 +5,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Users, Key, Clock, Bot, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+import { Skeleton } from "@/components/ui/skeleton";
+
 export default function EsetTelegramTab({ token }) {
     const [stats, setStats] = useState({ totalUsers: 0, todayUsers: 0, totalKeys: 0 });
     const [history, setHistory] = useState([]);
@@ -84,23 +86,33 @@ export default function EsetTelegramTab({ token }) {
                     </Button>
                 </CardHeader>
                 <CardContent className="pt-4">
-                    {history.length === 0 ? (
-                        <div className="text-center py-12 text-muted-foreground border rounded-md border-dashed bg-muted/10">
-                            <Bot className="w-10 h-10 mx-auto text-muted-foreground/30 mb-3" />
-                            <p>Никто еще не получал ключи через бота.</p>
-                        </div>
-                    ) : (
-                        <div className="rounded-md border shadow-sm h-[400px] overflow-auto">
-                            <Table>
-                                <TableHeader className="sticky top-0 bg-background z-10 shadow-sm">
+                    <div className="rounded-md border shadow-sm h-[400px] overflow-auto">
+                        <Table>
+                            <TableHeader className="sticky top-0 bg-background z-10 shadow-sm">
+                                <TableRow>
+                                    <TableHead>Дата и Время</TableHead>
+                                    <TableHead>Пользователь</TableHead>
+                                    <TableHead>Сгенерированный ключ</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {loading ? (
+                                    [...Array(5)].map((_, i) => (
+                                        <TableRow key={i}>
+                                            <TableCell><Skeleton className="h-4 w-[150px]" /></TableCell>
+                                            <TableCell><Skeleton className="h-6 w-[120px] rounded" /></TableCell>
+                                            <TableCell><Skeleton className="h-4 w-[200px]" /></TableCell>
+                                        </TableRow>
+                                    ))
+                                ) : history.length === 0 ? (
                                     <TableRow>
-                                        <TableHead>Дата и Время</TableHead>
-                                        <TableHead>Пользователь</TableHead>
-                                        <TableHead>Сгенерированный ключ</TableHead>
+                                        <TableCell colSpan={3} className="text-center py-20 text-muted-foreground">
+                                            <Bot className="w-10 h-10 mx-auto text-muted-foreground/30 mb-3" />
+                                            <p>Никто еще не получал ключи через бота.</p>
+                                        </TableCell>
                                     </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {history.map((task) => {
+                                ) : (
+                                    history.map((task) => {
                                         let items = [];
                                         try { items = JSON.parse(task.items_json || '[]'); } catch {}
                                         const key = items.length > 0 ? items[0].licenseKey : '—';
@@ -123,11 +135,11 @@ export default function EsetTelegramTab({ token }) {
                                                 </TableCell>
                                             </TableRow>
                                         );
-                                    })}
-                                </TableBody>
-                            </Table>
-                        </div>
-                    )}
+                                    })
+                                )}
+                            </TableBody>
+                        </Table>
+                    </div>
                 </CardContent>
             </Card>
         </div>

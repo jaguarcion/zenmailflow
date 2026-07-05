@@ -7,18 +7,23 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Upload, Eye, History, Copy, Check } from "lucide-react";
 
+import { Skeleton } from "@/components/ui/skeleton";
+
 export default function AdobeUploadTab({ token }) {
     const [uploadText, setUploadText] = useState("");
     const [loading, setLoading] = useState(false);
     const [uploads, setUploads] = useState([]);
+    const [loadingUploads, setLoadingUploads] = useState(true);
     
     // Modal state
     const [selectedUploadId, setSelectedUploadId] = useState(null);
     const [uploadAccounts, setUploadAccounts] = useState([]);
     const [modalOpen, setModalOpen] = useState(false);
+    const [loadingAccounts, setLoadingAccounts] = useState(false);
 
     const fetchUploads = async () => {
         try {
+            setLoadingUploads(true);
             const res = await fetch("/api/adobe/uploads", {
                 headers: { "Authorization": `Bearer ${token}` }
             });
@@ -28,6 +33,8 @@ export default function AdobeUploadTab({ token }) {
             }
         } catch (e) {
             console.error("Failed to fetch uploads");
+        } finally {
+            setLoadingUploads(false);
         }
     };
 
@@ -63,6 +70,7 @@ export default function AdobeUploadTab({ token }) {
         setSelectedUploadId(uploadId);
         setUploadAccounts([]);
         setModalOpen(true);
+        setLoadingAccounts(true);
         try {
             const res = await fetch(`/api/adobe/uploads/${uploadId}`, {
                 headers: { "Authorization": `Bearer ${token}` }
@@ -73,6 +81,8 @@ export default function AdobeUploadTab({ token }) {
             }
         } catch (e) {
             console.error("Failed to fetch upload accounts");
+        } finally {
+            setLoadingAccounts(false);
         }
     };
 
@@ -109,23 +119,32 @@ export default function AdobeUploadTab({ token }) {
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
-                    {uploads.length === 0 ? (
-                        <div className="text-center py-10 text-muted-foreground bg-muted/20 rounded-md border border-dashed">
-                            История загрузок пуста.
-                        </div>
-                    ) : (
-                        <div className="rounded-md border overflow-hidden">
-                            <Table>
-                                <TableHeader className="bg-muted/50">
+                    <div className="rounded-md border overflow-hidden">
+                        <Table>
+                            <TableHeader className="bg-muted/50">
+                                <TableRow>
+                                    <TableHead>ID</TableHead>
+                                    <TableHead>Дата загрузки</TableHead>
+                                    <TableHead>Количество</TableHead>
+                                    <TableHead className="text-right">Действия</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {loadingUploads ? (
+                                    [...Array(3)].map((_, i) => (
+                                        <TableRow key={i}>
+                                            <TableCell><Skeleton className="h-4 w-12" /></TableCell>
+                                            <TableCell><Skeleton className="h-4 w-[150px]" /></TableCell>
+                                            <TableCell><Skeleton className="h-6 w-16 rounded-md" /></TableCell>
+                                            <TableCell><Skeleton className="h-8 w-24 float-right" /></TableCell>
+                                        </TableRow>
+                                    ))
+                                ) : uploads.length === 0 ? (
                                     <TableRow>
-                                        <TableHead>ID</TableHead>
-                                        <TableHead>Дата загрузки</TableHead>
-                                        <TableHead>Количество</TableHead>
-                                        <TableHead className="text-right">Действия</TableHead>
+                                        <TableCell colSpan={4} className="text-center py-10 text-muted-foreground">История загрузок пуста.</TableCell>
                                     </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {uploads.map((upload) => (
+                                ) : (
+                                    uploads.map((upload) => (
                                         <TableRow key={upload.id}>
                                             <TableCell className="font-medium">#{upload.id}</TableCell>
                                             <TableCell>
@@ -142,11 +161,11 @@ export default function AdobeUploadTab({ token }) {
                                                 </Button>
                                             </TableCell>
                                         </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </div>
-                    )}
+                                    ))
+                                )}
+                            </TableBody>
+                        </Table>
+                    </div>
                 </CardContent>
             </Card>
 
@@ -169,10 +188,22 @@ export default function AdobeUploadTab({ token }) {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {uploadAccounts.length === 0 ? (
+                                {loadingAccounts ? (
+                                    [...Array(5)].map((_, i) => (
+                                        <TableRow key={i}>
+                                            <TableCell><Skeleton className="h-4 w-[150px]" /></TableCell>
+                                            <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
+                                            <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
+                                            <TableCell><Skeleton className="h-4 w-[150px]" /></TableCell>
+                                            <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
+                                            <TableCell><Skeleton className="h-4 w-12" /></TableCell>
+                                            <TableCell><Skeleton className="h-8 w-16 float-right" /></TableCell>
+                                        </TableRow>
+                                    ))
+                                ) : uploadAccounts.length === 0 ? (
                                     <TableRow>
                                         <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                                            Загрузка аккаунтов...
+                                            Нет аккаунтов.
                                         </TableCell>
                                     </TableRow>
                                 ) : (

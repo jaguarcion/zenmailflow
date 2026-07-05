@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Trash2, Download, History, ChevronDown, ChevronRight, CheckCircle2, Clock, RefreshCw } from "lucide-react";
 
+import { Skeleton } from "@/components/ui/skeleton";
+
 export default function EsetHistoryTab({ token }) {
     const [tasks, setTasks] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -105,8 +107,8 @@ export default function EsetHistoryTab({ token }) {
                     <CardDescription>Архив всех пачек сгенерированных ключей ESET.</CardDescription>
                 </div>
                 <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={fetchTasks} disabled={loading}>
-                        <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} /> Обновить
+                    <Button variant="outline" size="sm" onClick={() => fetchTasks(1, false)} disabled={loading}>
+                        <RefreshCw className={`w-4 h-4 mr-2 ${loading && page === 1 ? 'animate-spin' : ''}`} /> Обновить
                     </Button>
                     {tasks.length > 0 && (
                         <Button variant="destructive" size="sm" onClick={handleClearAll} className="bg-red-900 hover:bg-red-800">
@@ -116,25 +118,37 @@ export default function EsetHistoryTab({ token }) {
                 </div>
             </CardHeader>
             <CardContent className="pt-4">
-                {tasks.length === 0 ? (
-                    <div className="text-center py-12 text-muted-foreground border rounded-md border-dashed bg-muted/10">
-                        <History className="w-10 h-10 mx-auto text-muted-foreground/30 mb-3" />
-                        <p>История генераций пуста.</p>
-                    </div>
-                ) : (
-                    <div className="rounded-md border shadow-sm h-[600px] overflow-auto" onScroll={handleScroll}>
-                        <Table>
-                            <TableHeader className="sticky top-0 bg-background z-10 shadow-sm">
+                <div className="rounded-md border shadow-sm h-[600px] overflow-auto" onScroll={handleScroll}>
+                    <Table>
+                        <TableHeader className="sticky top-0 bg-background z-10 shadow-sm">
+                            <TableRow>
+                                <TableHead className="w-[40px]"></TableHead>
+                                <TableHead>Дата (ID)</TableHead>
+                                <TableHead>Статус</TableHead>
+                                <TableHead>Успешно / Ошибок / Всего</TableHead>
+                                <TableHead className="text-right">Действия</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {loading && page === 1 ? (
+                                [...Array(5)].map((_, i) => (
+                                    <TableRow key={i}>
+                                        <TableCell><Skeleton className="h-4 w-4" /></TableCell>
+                                        <TableCell><Skeleton className="h-4 w-[150px]" /></TableCell>
+                                        <TableCell><Skeleton className="h-6 w-[100px] rounded-full" /></TableCell>
+                                        <TableCell><Skeleton className="h-4 w-[120px]" /></TableCell>
+                                        <TableCell><Skeleton className="h-8 w-16 float-right" /></TableCell>
+                                    </TableRow>
+                                ))
+                            ) : tasks.length === 0 ? (
                                 <TableRow>
-                                    <TableHead className="w-[40px]"></TableHead>
-                                    <TableHead>Дата (ID)</TableHead>
-                                    <TableHead>Статус</TableHead>
-                                    <TableHead>Успешно / Ошибок / Всего</TableHead>
-                                    <TableHead className="text-right">Действия</TableHead>
+                                    <TableCell colSpan={5} className="text-center py-20 text-muted-foreground">
+                                        <History className="w-10 h-10 mx-auto text-muted-foreground/30 mb-3" />
+                                        <p>История генераций пуста.</p>
+                                    </TableCell>
                                 </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {tasks.map((task) => {
+                            ) : (
+                                tasks.map((task) => {
                                     const isExpanded = expandedTasks.has(task.id);
                                     let items = [];
                                     try { items = JSON.parse(task.items_json || '[]'); } catch {}
@@ -227,11 +241,18 @@ export default function EsetHistoryTab({ token }) {
                                             )}
                                         </React.Fragment>
                                     );
-                                })}
-                            </TableBody>
-                        </Table>
-                    </div>
-                )}
+                                })
+                            )}
+                            {loading && page > 1 && (
+                                <TableRow>
+                                    <TableCell colSpan={5} className="text-center py-4">
+                                        <RefreshCw className="w-5 h-5 animate-spin mx-auto text-muted-foreground" />
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
+                </div>
             </CardContent>
         </Card>
     );

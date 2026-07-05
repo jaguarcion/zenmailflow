@@ -10,6 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 
+import { Skeleton } from "@/components/ui/skeleton";
+
 export default function AdobeListTab({ token, clients, onFetchClients }) {
     const [accounts, setAccounts] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -21,6 +23,7 @@ export default function AdobeListTab({ token, clients, onFetchClients }) {
 
     const fetchAccounts = async () => {
         try {
+            setLoading(true);
             const res = await fetch("/api/adobe", { headers: { "Authorization": `Bearer ${token}` } });
             const data = await res.json();
             if (data.success) {
@@ -28,6 +31,8 @@ export default function AdobeListTab({ token, clients, onFetchClients }) {
             }
         } catch (e) {
             console.error(e);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -213,11 +218,23 @@ export default function AdobeListTab({ token, clients, onFetchClients }) {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {filteredAccounts.length === 0 && (
+                                {loading ? (
+                                    [...Array(5)].map((_, i) => (
+                                        <TableRow key={i}>
+                                            <TableCell><Skeleton className="h-4 w-4" /></TableCell>
+                                            <TableCell><Skeleton className="h-4 w-[150px]" /></TableCell>
+                                            <TableCell><Skeleton className="h-5 w-[80px] rounded-full" /></TableCell>
+                                            <TableCell><Skeleton className="h-8 w-[130px]" /></TableCell>
+                                            <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
+                                            <TableCell><Skeleton className="h-8 w-[150px]" /></TableCell>
+                                            <TableCell><Skeleton className="h-8 w-16 float-right" /></TableCell>
+                                        </TableRow>
+                                    ))
+                                ) : filteredAccounts.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={4} className="text-center py-10 text-muted-foreground">Нет аккаунтов</TableCell>
+                                        <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">Нет аккаунтов</TableCell>
                                     </TableRow>
-                                )}
+                                ) : null}
                                 {sortedAccounts.map(acc => (
                                     <TableRow key={acc.id} className={selectedIds.has(acc.id) ? 'bg-muted/50' : ''}>
                                         <TableCell>
