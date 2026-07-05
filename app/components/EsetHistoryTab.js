@@ -142,6 +142,11 @@ export default function EsetHistoryTab({ token }) {
                                                                 API-TELEGRAM
                                                             </span>
                                                         )}
+                                                        {task.source === 'api-telegram-autopost' && (
+                                                            <span className="bg-orange-100 text-orange-700 text-[10px] px-1.5 py-0.5 rounded uppercase font-bold tracking-wider shadow-sm">
+                                                                API-TELEGRAM-AUTO
+                                                            </span>
+                                                        )}
                                                     </div>
                                                     <div className="text-xs text-muted-foreground font-mono">{task.id.split('-')[0]}</div>
                                                 </TableCell>
