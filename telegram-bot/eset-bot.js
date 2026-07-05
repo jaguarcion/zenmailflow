@@ -200,7 +200,10 @@ if (CHANNEL_ID) {
 Забирайте ключи:
 ${keysFormatted}
 
-<i>Ключи разбирают очень быстро! Бесплатный ключ также можно получить в нашем боте.</i>
+<i>⚠️ Ключи разбирают очень быстро!</i>
+
+🤖 <b>Не успели?</b>
+Вы можете получить свой <b>личный бесплатный ключ</b> в нашем Telegram-боте: @eset_free_keys_bot
                 `.trim();
                 
                 await bot.sendMessage(CHANNEL_ID, successMsg, { parse_mode: 'HTML' });
