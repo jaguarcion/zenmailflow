@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server';
-import { isAuthenticated } from '@/lib/auth';
+import { isAuthenticated, checkFail2Ban } from '@/lib/auth';
 import db, { getSetting } from '@/lib/db';
 import crypto from 'crypto';
 import { startBatchEsetActivate } from '@/lib/eset/batchEsetActivate';
 
 export async function POST(request) {
-    if (!isAuthenticated(request)) {
-        return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-    }
+    const authStatus = await checkFail2Ban(request);
+    if (authStatus.banned) return NextResponse.json({ error: 'Banned for 24h' }, { status: 429 });
+    if (!authStatus.isAuth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     try {
         const channelId = getSetting('eset_autopost_channel') || process.env.ESET_TELEGRAM_CHANNEL_ID || '';

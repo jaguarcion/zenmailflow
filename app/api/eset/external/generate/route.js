@@ -1,12 +1,20 @@
 import { NextResponse } from 'next/server';
-import { isAuthenticated } from '@/lib/auth';
+import { isAuthenticated, checkFail2Ban } from '@/lib/auth';
 import db, { getSetting } from '@/lib/db';
 import crypto from 'crypto';
 import { startBatchEsetActivate } from '@/lib/eset/batchEsetActivate';
 
+import { checkRateLimit } from '@/lib/rateLimit';
+
 async function handleRequest(request) {
-    if (!isAuthenticated(request)) {
-        return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    const authStatus = await checkFail2Ban(request);
+    if (authStatus.banned) return NextResponse.json({ error: 'Banned for 24h' }, { status: 429 });
+    if (!authStatus.isAuth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const ip = request.headers.get('x-forwarded-for') || request.ip || 'unknown-ip';
+    const isAllowed = await checkRateLimit(ip, 5, 60); // 5 requests per minute per IP
+    if (!isAllowed) {
+        return NextResponse.json({ success: false, error: 'Too Many Requests. Please try again later.' }, { status: 429 });
     }
 
     try {

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { insertEmail } from "@/lib/db";
-import { isAuthenticated } from "@/lib/auth";
+import { isAuthenticated, checkFail2Ban } from "@/lib/auth";
 import crypto from "crypto";
 
 const MIGADU_API_URL = "https://api.migadu.com/v1/domains";
@@ -34,9 +34,9 @@ function generatePassword(length = 16) {
 }
 
 export async function POST(request) {
-  if (!isAuthenticated(request)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const authStatus = await checkFail2Ban(request);
+    if (authStatus.banned) return NextResponse.json({ error: 'Banned for 24h' }, { status: 429 });
+    if (!authStatus.isAuth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
     const body = await request.json();

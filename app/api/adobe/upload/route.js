@@ -1,14 +1,14 @@
 import { NextResponse } from 'next/server';
-import { isAuthenticated } from '@/lib/auth';
+import { isAuthenticated, checkFail2Ban } from '@/lib/auth';
 import { insertAdobeAccount, insertAdobeUpload } from '@/lib/db';
 
 // [SECURITY] M-04: Limit upload text size
 const MAX_UPLOAD_SIZE = 500_000; // ~500KB
 
 export async function POST(request) {
-  if (!isAuthenticated(request)) {
-    return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-  }
+  const authStatus = await checkFail2Ban(request);
+    if (authStatus.banned) return NextResponse.json({ error: 'Banned for 24h' }, { status: 429 });
+    if (!authStatus.isAuth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
     const body = await request.json();

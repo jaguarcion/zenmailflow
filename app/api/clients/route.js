@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
-import { isAuthenticated } from '@/lib/auth';
+import { isAuthenticated, checkFail2Ban } from '@/lib/auth';
 import { getAllClients, insertClient } from '@/lib/db';
 
 export async function GET(request) {
-  if (!isAuthenticated(request)) {
-    return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-  }
+  const authStatus = await checkFail2Ban(request);
+    if (authStatus.banned) return NextResponse.json({ error: 'Banned for 24h' }, { status: 429 });
+    if (!authStatus.isAuth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
     const clients = getAllClients();
@@ -18,9 +18,9 @@ export async function GET(request) {
 }
 
 export async function POST(request) {
-  if (!isAuthenticated(request)) {
-    return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-  }
+  const authStatus = await checkFail2Ban(request);
+    if (authStatus.banned) return NextResponse.json({ error: 'Banned for 24h' }, { status: 429 });
+    if (!authStatus.isAuth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
     const body = await request.json();
@@ -51,9 +51,9 @@ export async function POST(request) {
 }
 
 export async function PUT(request) {
-  if (!isAuthenticated(request)) {
-    return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-  }
+  const authStatus = await checkFail2Ban(request);
+    if (authStatus.banned) return NextResponse.json({ error: 'Banned for 24h' }, { status: 429 });
+    if (!authStatus.isAuth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
     const body = await request.json();

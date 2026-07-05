@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
-import { isAuthenticated } from '@/lib/auth';
+import { isAuthenticated, checkFail2Ban } from '@/lib/auth';
 
 const CHECKER_URL = 'http://127.0.0.1:3015';
 
 export async function GET(request, { params }) {
-  if (!isAuthenticated(request)) {
-    return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-  }
+  const authStatus = await checkFail2Ban(request);
+    if (authStatus.banned) return NextResponse.json({ error: 'Banned for 24h' }, { status: 429 });
+    if (!authStatus.isAuth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { path } = await params;
   const targetPath = '/' + (path ? path.join('/') : '');
@@ -25,9 +25,9 @@ export async function GET(request, { params }) {
 }
 
 export async function POST(request, { params }) {
-  if (!isAuthenticated(request)) {
-    return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-  }
+  const authStatus = await checkFail2Ban(request);
+    if (authStatus.banned) return NextResponse.json({ error: 'Banned for 24h' }, { status: 429 });
+    if (!authStatus.isAuth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { path } = await params;
   const targetPath = '/' + (path ? path.join('/') : '');
@@ -55,9 +55,9 @@ export async function POST(request, { params }) {
 }
 
 export async function DELETE(request, { params }) {
-  if (!isAuthenticated(request)) {
-    return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-  }
+  const authStatus = await checkFail2Ban(request);
+    if (authStatus.banned) return NextResponse.json({ error: 'Banned for 24h' }, { status: 429 });
+    if (!authStatus.isAuth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { path } = await params;
   const targetPath = '/' + (path ? path.join('/') : '');

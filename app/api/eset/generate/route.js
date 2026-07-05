@@ -1,14 +1,14 @@
 import { NextResponse } from 'next/server';
-import { isAuthenticated } from '@/lib/auth';
+import { isAuthenticated, checkFail2Ban } from '@/lib/auth';
 import db from '@/lib/db';
 import crypto from 'crypto';
-import { startBatchEsetActivate } from '@/lib/eset/batchEsetActivate';
 import { getSetting } from '@/lib/db';
+import { esetQueue } from '@/lib/queue';
 
 export async function POST(request) {
-    if (!isAuthenticated(request)) {
-        return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-    }
+    const authStatus = await checkFail2Ban(request);
+    if (authStatus.banned) return NextResponse.json({ error: 'Banned for 24h' }, { status: 429 });
+    if (!authStatus.isAuth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     try {
         const body = await request.json();
@@ -26,9 +26,13 @@ export async function POST(request) {
             VALUES (?, ?, ?, ?)
         `).run(taskId, count, 'processing', '[]');
 
-        // Start background process
+        // Send job to queue
         const concurrency = parseInt(getSetting('eset_concurrency'), 10) || 2;
-        startBatchEsetActivate(taskId, count, concurrency).catch(console.error);
+        await esetQueue.add('generate-eset', {
+            taskId,
+            totalCount: count,
+            concurrency
+        });
 
         return NextResponse.json({ success: true, taskId });
     } catch (err) {
