@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Save, Settings } from "lucide-react";
+import { Save, Settings, Play } from "lucide-react";
 
 export default function EsetSettingsTab({ token }) {
     const [config, setConfig] = useState({
@@ -14,9 +14,13 @@ export default function EsetSettingsTab({ token }) {
         migaduUser: "",
         migaduToken: "",
         migaduDomain: "",
-        concurrency: 2
+        concurrency: 2,
+        autopostChannel: "",
+        autopostCron: "0 12 * * *",
+        autopostCount: 5
     });
     const [loading, setLoading] = useState(false);
+    const [triggerLoading, setTriggerLoading] = useState(false);
     const [isConfigLoaded, setIsConfigLoaded] = useState(false);
 
     useEffect(() => {
@@ -33,7 +37,10 @@ export default function EsetSettingsTab({ token }) {
                         migaduUser: data.config.migaduUser || "",
                         migaduToken: data.config.migaduToken || "",
                         migaduDomain: data.config.migaduDomain || "",
-                        concurrency: data.config.concurrency || 2
+                        concurrency: data.config.concurrency || 2,
+                        autopostChannel: data.config.autopostChannel || "",
+                        autopostCron: data.config.autopostCron || "0 12 * * *",
+                        autopostCount: data.config.autopostCount || 5
                     });
                 }
             } catch (err) {
@@ -73,6 +80,29 @@ export default function EsetSettingsTab({ token }) {
             toast.error("Ошибка сети при сохранении настроек.");
         } finally {
             setLoading(false);
+        }
+    };
+
+    const triggerAutopost = async () => {
+        setTriggerLoading(true);
+        try {
+            const res = await fetch('/api/eset/autopost/trigger', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            const data = await res.json();
+            if (data.status === 'success') {
+                toast.success(`Автопостинг успешно выполнен! Отправлено ключей: ${data.keysCount}`);
+            } else {
+                toast.error("Ошибка автопостинга: " + data.error);
+            }
+        } catch (err) {
+            toast.error("Ошибка сети при запуске автопостинга.");
+        } finally {
+            setTriggerLoading(false);
         }
     };
 
@@ -164,6 +194,51 @@ export default function EsetSettingsTab({ token }) {
                                 </div>
                             </div>
                         )}
+                    </div>
+
+                    <div className="space-y-4">
+                        <h3 className="font-semibold text-lg border-b pb-2">Telegram Автопостинг</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-muted/20 p-4 rounded-lg border">
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">ID Канала</label>
+                                <Input 
+                                    name="autopostChannel" 
+                                    value={config.autopostChannel} 
+                                    onChange={handleConfigChange} 
+                                    placeholder="@eset_free_keys" 
+                                />
+                                <p className="text-xs text-muted-foreground">Например: @channelname</p>
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">Расписание (Cron)</label>
+                                <Input 
+                                    name="autopostCron" 
+                                    value={config.autopostCron} 
+                                    onChange={handleConfigChange} 
+                                    placeholder="0 12 * * *" 
+                                />
+                                <p className="text-xs text-muted-foreground">Формат: cron (по умолч. 0 12 * * *)</p>
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">Количество ключей</label>
+                                <Input 
+                                    type="number"
+                                    name="autopostCount" 
+                                    min="1"
+                                    max="50"
+                                    value={config.autopostCount} 
+                                    onChange={handleConfigChange} 
+                                    placeholder="5" 
+                                />
+                                <p className="text-xs text-muted-foreground">Сколько ключей будет в одном посте</p>
+                            </div>
+                        </div>
+                        <div className="flex justify-end pt-2">
+                            <Button variant="outline" onClick={triggerAutopost} disabled={triggerLoading} className="text-orange-600 border-orange-200 hover:bg-orange-50 hover:text-orange-700">
+                                <Play className="w-4 h-4 mr-2" /> 
+                                {triggerLoading ? "Выполняется..." : "Запустить сейчас"}
+                            </Button>
+                        </div>
                     </div>
 
                     <Button onClick={saveConfig} disabled={loading} className="w-full sm:w-auto">

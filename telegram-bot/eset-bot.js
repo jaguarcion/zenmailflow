@@ -163,38 +163,59 @@ ${resetText}
         }
         return;
     }
-});
+let currentCronJob = null;
+let currentCronStr = null;
+let currentChannelId = null;
+let currentCount = 5;
 
-const CHANNEL_ID = process.env.ESET_TELEGRAM_CHANNEL_ID?.trim();
-const CRON_SCHEDULE = process.env.ESET_AUTOPOST_CRON?.trim() || '0 12 * * *';
+function reloadAutopostSettings() {
+    try {
+        const channelRow = db.prepare("SELECT value FROM app_settings WHERE key = 'eset_autopost_channel'").get();
+        const cronRow = db.prepare("SELECT value FROM app_settings WHERE key = 'eset_autopost_cron'").get();
+        const countRow = db.prepare("SELECT value FROM app_settings WHERE key = 'eset_autopost_count'").get();
 
-if (CHANNEL_ID) {
-    console.log(`[ESET Bot] Auto-posting configured for channel ${CHANNEL_ID} at schedule: ${CRON_SCHEDULE}`);
-    cron.schedule(CRON_SCHEDULE, async () => {
-        console.log('[ESET Bot] Running auto-posting job...');
-        try {
-            const res = await fetch(`${BASE_URL}/api/eset/external/generate`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${APP_TOKEN}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ 
-                    count: 5, 
-                    source: 'api-telegram-autopost',
-                    user_info: 'channel_autopost' 
-                })
-            });
+        const channelId = channelRow?.value || process.env.ESET_TELEGRAM_CHANNEL_ID?.trim();
+        const cronStr = cronRow?.value || process.env.ESET_AUTOPOST_CRON?.trim() || '0 12 * * *';
+        const count = parseInt(countRow?.value, 10) || 5;
 
-            if (!res.ok) {
-                throw new Error(`API Error: ${res.status}`);
+        currentCount = count;
+
+        if (currentCronStr !== cronStr || currentChannelId !== channelId) {
+            currentCronStr = cronStr;
+            currentChannelId = channelId;
+
+            if (currentCronJob) {
+                currentCronJob.stop();
+                currentCronJob = null;
             }
 
-            const keys = await res.json();
-            
-            if (Array.isArray(keys) && keys.length > 0) {
-                const keysFormatted = keys.map(k => `<code>${k}</code>`).join('\n');
-                const successMsg = `
+            if (channelId && cronStr) {
+                console.log(`[ESET Bot] Auto-posting configured for ${channelId} at ${cronStr} (count: ${count})`);
+                currentCronJob = cron.schedule(cronStr, async () => {
+                    console.log(`[ESET Bot] Running auto-posting job (count: ${currentCount})...`);
+                    try {
+                        const res = await fetch(`${BASE_URL}/api/eset/external/generate`, {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${APP_TOKEN}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ 
+                                count: currentCount, 
+                                source: 'api-telegram-autopost',
+                                user_info: 'channel_autopost' 
+                            })
+                        });
+
+                        if (!res.ok) {
+                            throw new Error(`API Error: ${res.status}`);
+                        }
+
+                        const keys = await res.json();
+                        
+                        if (Array.isArray(keys) && keys.length > 0) {
+                            const keysFormatted = keys.map(k => `<code>${k}</code>`).join('\n');
+                            const successMsg = `
 🎁 <b>Свежая раздача ключей ESET!</b>
 
 Забирайте ключи:
@@ -204,15 +225,26 @@ ${keysFormatted}
 
 🤖 <b>Не успели?</b>
 Вы можете получить свой <b>личный бесплатный ключ</b> в нашем Telegram-боте: @eset_free_keys_bot
-                `.trim();
-                
-                await bot.sendMessage(CHANNEL_ID, successMsg, { parse_mode: 'HTML' });
-                console.log(`[ESET Bot] Successfully auto-posted ${keys.length} keys to ${CHANNEL_ID}`);
-            } else {
-                console.warn('[ESET Bot] Auto-posting skipped: no keys generated or proxies exhausted.');
+                            `.trim();
+                            
+                            await bot.sendMessage(channelId, successMsg, { parse_mode: 'HTML' });
+                            console.log(`[ESET Bot] Successfully auto-posted ${keys.length} keys to ${channelId}`);
+                        } else {
+                            console.warn('[ESET Bot] Auto-posting skipped: no keys generated or proxies exhausted.');
+                        }
+                    } catch (err) {
+                        console.error('[ESET Bot] Auto-posting err:', err);
+                    }
+                });
             }
-        } catch (err) {
-            console.error('[ESET Bot] Auto-posting err:', err);
         }
-    });
+    } catch (err) {
+        // Table might not exist yet if DB is completely fresh, ignore safely
+        if (!err.message.includes('no such table')) {
+            console.error('[ESET Bot] Error reloading autopost settings:', err);
+        }
+    }
 }
+
+reloadAutopostSettings();
+setInterval(reloadAutopostSettings, 60000);
