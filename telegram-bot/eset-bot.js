@@ -163,6 +163,8 @@ ${resetText}
         }
         return;
     }
+});
+
 let currentCronJob = null;
 let currentCronStr = null;
 let currentChannelId = null;
