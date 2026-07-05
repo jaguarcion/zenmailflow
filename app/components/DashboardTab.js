@@ -10,6 +10,8 @@ import {
 
 const COLORS = ['#22c55e', '#ef4444', '#f59e0b', '#3b82f6'];
 
+import { Skeleton } from "@/components/ui/skeleton";
+
 export default function DashboardTab({ token }) {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -35,8 +37,39 @@ export default function DashboardTab({ token }) {
 
   if (loading) {
     return (
-      <div className="flex h-[400px] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="space-y-6">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-4 w-4 rounded-full" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-8 w-16" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+          <Card className="col-span-1 lg:col-span-4">
+            <CardHeader>
+              <Skeleton className="h-6 w-48 mb-2" />
+              <Skeleton className="h-4 w-64" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-[300px] w-full" />
+            </CardContent>
+          </Card>
+          <Card className="col-span-1 lg:col-span-3">
+            <CardHeader>
+              <Skeleton className="h-6 w-48" />
+            </CardHeader>
+            <CardContent className="h-[300px] flex flex-col gap-4">
+              <Skeleton className="flex-1 w-full rounded-full" />
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }

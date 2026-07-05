@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Save, Settings, Play } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function EsetSettingsTab({ token }) {
     const [config, setConfig] = useState({
@@ -106,8 +107,24 @@ export default function EsetSettingsTab({ token }) {
         }
     };
 
-    if (!isConfigLoaded) return <div className="p-8 text-center text-muted-foreground animate-pulse">Загрузка настроек...</div>;
-
+    if (!isConfigLoaded) {
+        return (
+            <div className="space-y-6">
+                <Skeleton className="h-10 w-[200px]" />
+                <Card>
+                    <CardHeader>
+                        <Skeleton className="h-6 w-[200px] mb-2" />
+                        <Skeleton className="h-4 w-[300px]" />
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <Skeleton className="h-10 w-full" />
+                        <Skeleton className="h-[100px] w-full" />
+                        <Skeleton className="h-10 w-[150px]" />
+                    </CardContent>
+                </Card>
+            </div>
+        );
+    }
     return (
         <div className="space-y-6">
             <Card>

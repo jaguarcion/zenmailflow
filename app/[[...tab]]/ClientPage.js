@@ -15,6 +15,7 @@ import EsetHistoryTab from "../components/EsetHistoryTab";
 import EsetSettingsTab from "../components/EsetSettingsTab";
 import EsetTelegramTab from "../components/EsetTelegramTab";
 import GlobalSearch from "../components/GlobalSearch";
+import ActiveTasksWidget from "../components/ActiveTasksWidget";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -702,8 +703,9 @@ export default function ClientPage({ initialTab }) {
           )}
 
         </div>
-      </main>
+          </main>
+        </div>
+        <ActiveTasksWidget token={token} />
       </div>
-    </div>
-  );
+    );
 }

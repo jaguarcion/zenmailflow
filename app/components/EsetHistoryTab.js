@@ -11,18 +11,34 @@ export default function EsetHistoryTab({ token }) {
     const [loading, setLoading] = useState(false);
     const [expandedTasks, setExpandedTasks] = useState(new Set());
 
-    const fetchTasks = async () => {
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(true);
+
+    const fetchTasks = async (pageNum = 1, append = false) => {
         try {
             setLoading(true);
-            const res = await fetch("/api/eset/tasks", { headers: { 'Authorization': `Bearer ${token}` } });
+            const res = await fetch(`/api/eset/tasks?page=${pageNum}`, { headers: { 'Authorization': `Bearer ${token}` } });
             const data = await res.json();
             if (data.success) {
-                setTasks(data.tasks);
+                if (append) {
+                    setTasks(prev => [...prev, ...data.tasks]);
+                } else {
+                    setTasks(data.tasks);
+                }
+                setHasMore(data.hasMore);
+                setPage(pageNum);
             }
         } catch (err) {
             console.error("Failed to fetch eset tasks", err);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleScroll = (e) => {
+        const { scrollTop, clientHeight, scrollHeight } = e.target;
+        if (scrollHeight - scrollTop <= clientHeight * 1.5 && !loading && hasMore) {
+            fetchTasks(page + 1, true);
         }
     };
 
@@ -106,7 +122,7 @@ export default function EsetHistoryTab({ token }) {
                         <p>История генераций пуста.</p>
                     </div>
                 ) : (
-                    <div className="rounded-md border shadow-sm h-[600px] overflow-auto">
+                    <div className="rounded-md border shadow-sm h-[600px] overflow-auto" onScroll={handleScroll}>
                         <Table>
                             <TableHeader className="sticky top-0 bg-background z-10 shadow-sm">
                                 <TableRow>
