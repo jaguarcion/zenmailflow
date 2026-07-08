@@ -224,11 +224,21 @@ export default function EsetHistoryTab({ token }) {
                                                                         <TableBody>
                                                                             {items.map((item, i) => (
                                                                                 <TableRow key={i}>
-                                                                                    <TableCell className="py-2 text-xs font-mono">{item.email}</TableCell>
-                                                                                    <TableCell className="py-2 text-xs font-mono text-muted-foreground">{item.accountPassword}</TableCell>
-                                                                                    <TableCell className="py-2 text-xs font-medium">{item.productName}</TableCell>
-                                                                                    <TableCell className="py-2 text-sm font-mono font-bold text-primary">{item.licenseKey}</TableCell>
-                                                                                    <TableCell className="py-2 text-xs text-right text-muted-foreground">{item.expirationDate?.split('T')[0]}</TableCell>
+                                                                                    {item.isError ? (
+                                                                                        <>
+                                                                                            <TableCell colSpan={5} className="py-2 text-xs font-mono text-destructive">
+                                                                                                <span className="font-semibold">Ошибка генерации:</span> {item.error}
+                                                                                            </TableCell>
+                                                                                        </>
+                                                                                    ) : (
+                                                                                        <>
+                                                                                            <TableCell className="py-2 text-xs font-mono">{item.email}</TableCell>
+                                                                                            <TableCell className="py-2 text-xs font-mono text-muted-foreground">{item.accountPassword}</TableCell>
+                                                                                            <TableCell className="py-2 text-xs font-medium">{item.productName}</TableCell>
+                                                                                            <TableCell className="py-2 text-sm font-mono font-bold text-primary">{item.licenseKey}</TableCell>
+                                                                                            <TableCell className="py-2 text-xs text-right text-muted-foreground">{item.expirationDate?.split('T')[0]}</TableCell>
+                                                                                        </>
+                                                                                    )}
                                                                                 </TableRow>
                                                                             ))}
                                                                         </TableBody>
