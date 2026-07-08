@@ -101,6 +101,8 @@ export default function ClientPage({ initialTab }) {
           fetchHistory(token);
           fetchClients(token);
           setError(null);
+        } else if (res.status === 429) {
+          setError("Слишком много попыток. Ваш IP заблокирован на 30 минут.");
         } else {
           setError("Неверный мастер-токен");
         }
