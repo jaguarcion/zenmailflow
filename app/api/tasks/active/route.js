@@ -10,7 +10,7 @@ export async function GET(request) {
     try {
         // Fetch processing tasks for ESET
         const esetTasks = db.prepare(`
-            SELECT id, total, success, error, status, 'eset' as type
+            SELECT id, total, success, error, status, created_at, 'eset' as type
             FROM eset_tasks
             WHERE status = 'processing'
             ORDER BY created_at DESC
@@ -18,7 +18,7 @@ export async function GET(request) {
 
         // Fetch processing tasks for Yopmail (if any)
         const yopmailTasks = db.prepare(`
-            SELECT id, total, success, error, status, 'yopmail' as type
+            SELECT id, total, success, error, status, created_at, 'yopmail' as type
             FROM yopmail_tasks
             WHERE status = 'processing'
             ORDER BY created_at DESC
