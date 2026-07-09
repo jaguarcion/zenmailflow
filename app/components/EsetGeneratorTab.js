@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Zap, Download, RefreshCw, XCircle, CheckCircle2, Clock } from "lucide-react";
+import confetti from "canvas-confetti";
 
 export default function EsetGeneratorTab({ token }) {
     const [count, setCount] = useState(1);
@@ -58,7 +59,15 @@ export default function EsetGeneratorTab({ token }) {
                         if (task.status !== 'processing') {
                             setLoading(false);
                             clearInterval(interval);
-                            if (task.status === 'success') toast.success("Генерация завершена!");
+                            if (task.status === 'success') {
+                                toast.success("Генерация завершена!");
+                                confetti({
+                                    particleCount: 100,
+                                    spread: 70,
+                                    origin: { y: 0.6 },
+                                    colors: ['#22c55e', '#3b82f6', '#f59e0b']
+                                });
+                            }
                         }
                     } else if (data.status === 404) {
                         setActiveTaskId(null);

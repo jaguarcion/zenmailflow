@@ -4,6 +4,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import Database from 'better-sqlite3';
 import cron from 'node-cron';
+import crypto from 'crypto';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.join(__dirname, '..', '.env.local') });
@@ -248,6 +249,7 @@ ${keysFormatted}
                     } catch (err) {
                         console.error('[ESET Bot] Auto-posting err:', err);
                     }
+                        }
                 });
             }
         }
