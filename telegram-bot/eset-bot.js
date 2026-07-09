@@ -249,7 +249,6 @@ ${keysFormatted}
                     } catch (err) {
                         console.error('[ESET Bot] Auto-posting err:', err);
                     }
-                        }
                 });
             }
         }
