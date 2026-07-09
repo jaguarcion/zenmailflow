@@ -48,6 +48,42 @@ export default function EsetHistoryTab({ token }) {
         fetchTasks();
     }, [token]);
 
+    // Автоматическое обновление данных каждые 10 секунд (тихий пуллинг)
+    useEffect(() => {
+        const interval = setInterval(() => {
+            fetch(`/api/eset/tasks?page=1`, { headers: { 'Authorization': `Bearer ${token}` } })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success && data.tasks) {
+                        setTasks(prev => {
+                            // Если мы на первой странице, просто заменяем (так как это всегда самые свежие данные)
+                            if (page === 1) return data.tasks;
+                            
+                            // Если пользователь проскроллил вниз, аккуратно обновляем или добавляем новые
+                            const newTasks = [...prev];
+                            let added = false;
+                            data.tasks.forEach(updatedTask => {
+                                const idx = newTasks.findIndex(t => t.id === updatedTask.id);
+                                if (idx !== -1) {
+                                    newTasks[idx] = updatedTask;
+                                } else {
+                                    newTasks.unshift(updatedTask);
+                                    added = true;
+                                }
+                            });
+                            if (added) {
+                                newTasks.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                            }
+                            return newTasks;
+                        });
+                    }
+                })
+                .catch(err => console.error("Auto-refresh failed", err));
+        }, 10000);
+
+        return () => clearInterval(interval);
+    }, [page, token]);
+
     const toggleExpand = (id) => {
         const newExpanded = new Set(expandedTasks);
         if (newExpanded.has(id)) newExpanded.delete(id);
