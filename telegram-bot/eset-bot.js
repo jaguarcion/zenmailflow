@@ -196,27 +196,38 @@ function reloadAutopostSettings() {
                 currentCronJob = cron.schedule(cronStr, async () => {
                     console.log(`[ESET Bot] Running auto-posting job (count: ${currentCount})...`);
                     try {
-                        const res = await fetch(`${BASE_URL}/api/eset/external/generate`, {
-                            method: 'POST',
-                            headers: {
-                                'Authorization': `Bearer ${APP_TOKEN}`,
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({ 
-                                count: currentCount, 
-                                source: 'api-telegram-autopost',
-                                user_info: 'channel_autopost' 
-                            })
-                        });
+                        let generatedKeys = [];
+                        for (let i = 0; i < currentCount; i++) {
+                            try {
+                                const res = await fetch(`${BASE_URL}/api/eset/external/generate`, {
+                                    method: 'POST',
+                                    headers: {
+                                        'Authorization': `Bearer ${APP_TOKEN}`,
+                                        'Content-Type': 'application/json'
+                                    },
+                                    body: JSON.stringify({ 
+                                        count: 1, 
+                                        source: 'api-telegram-autopost',
+                                        user_info: `channel_autopost_${i+1}_of_${currentCount}`
+                                    })
+                                });
 
-                        if (!res.ok) {
-                            throw new Error(`API Error: ${res.status}`);
+                                if (!res.ok) {
+                                    console.warn(`[ESET Bot] Error fetching key ${i+1}/${currentCount}: ${res.status}`);
+                                    continue;
+                                }
+
+                                const keys = await res.json();
+                                if (Array.isArray(keys) && keys.length > 0) {
+                                    generatedKeys.push(...keys);
+                                }
+                            } catch (e) {
+                                console.error(`[ESET Bot] Exception fetching key ${i+1}/${currentCount}:`, e.message);
+                            }
                         }
-
-                        const keys = await res.json();
                         
-                        if (Array.isArray(keys) && keys.length > 0) {
-                            const keysFormatted = keys.map(k => `<code>${k}</code>`).join('\n');
+                        if (generatedKeys.length > 0) {
+                            const keysFormatted = generatedKeys.map(k => `<code>${k}</code>`).join('\n');
                             const successMsg = `
 🎁 <b>Свежая раздача ключей ESET!</b>
 
@@ -230,7 +241,7 @@ ${keysFormatted}
                             `.trim();
                             
                             await bot.sendMessage(channelId, successMsg, { parse_mode: 'HTML' });
-                            console.log(`[ESET Bot] Successfully auto-posted ${keys.length} keys to ${channelId}`);
+                            console.log(`[ESET Bot] Successfully auto-posted ${generatedKeys.length} keys to ${channelId}`);
                         } else {
                             console.warn('[ESET Bot] Auto-posting skipped: no keys generated or proxies exhausted.');
                         }
