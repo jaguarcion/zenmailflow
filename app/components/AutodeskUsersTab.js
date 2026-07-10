@@ -299,18 +299,15 @@ export default function AutodeskUsersTab({ token }) {
                         <TableHeader className="sticky top-0 bg-background z-10 shadow-sm">
                             <TableRow>
                                 <TableHead className="w-[40px]">
-                                    <Checkbox 
-                                        checked={isAllSelected}
-                                        onCheckedChange={toggleSelectAll}
-                                        aria-label="Select all"
-                                        className={isSomeSelected ? "data-[state=unchecked]:bg-primary data-[state=unchecked]:text-primary-foreground" : ""}
-                                    />
+                                <TableHead className="w-[50px]">
+                                    <Checkbox checked={isAllSelected} onCheckedChange={toggleSelectAll} ref={r => r && (r.indeterminate = isSomeSelected)} aria-label="Select all" />
                                 </TableHead>
                                 <TableHead>Имя</TableHead>
                                 <TableHead>Email</TableHead>
                                 <TableHead>Роль</TableHead>
                                 <TableHead>Статус</TableHead>
-                                <TableHead>Группы</TableHead>
+                                <TableHead>Дата добавления</TableHead>
+                                <TableHead>Осталось дней</TableHead>
                                 <TableHead className="text-right">Действия</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -323,13 +320,14 @@ export default function AutodeskUsersTab({ token }) {
                                         <TableCell><Skeleton className="h-4 w-[200px]" /></TableCell>
                                         <TableCell><Skeleton className="h-4 w-[80px]" /></TableCell>
                                         <TableCell><Skeleton className="h-6 w-[80px] rounded-full" /></TableCell>
-                                        <TableCell><Skeleton className="h-4 w-[120px]" /></TableCell>
+                                        <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
+                                        <TableCell><Skeleton className="h-4 w-[60px]" /></TableCell>
                                         <TableCell><Skeleton className="h-6 w-6 ml-auto" /></TableCell>
                                     </TableRow>
                                 ))
                             ) : filteredUsers.length === 0 && !error ? (
                                 <TableRow>
-                                    <TableCell colSpan={7} className="text-center py-20 text-muted-foreground">
+                                    <TableCell colSpan={8} className="text-center py-20 text-muted-foreground">
                                         <Users className="w-10 h-10 mx-auto text-muted-foreground/30 mb-3" />
                                         <p>Пользователей не найдено.</p>
                                     </TableCell>
@@ -343,6 +341,26 @@ export default function AutodeskUsersTab({ token }) {
                                     const userGroups = (user.groups || []).filter(g => g.groupName !== 'everyone' && g.groupId !== 'everyone' && g.name !== 'everyone');
                                     const hasGroup = userGroups.length > 0;
                                     
+                                    // Calculate Dates
+                                    let addedDate = null;
+                                    let remainingDays = null;
+                                    
+                                    if (hasGroup) {
+                                        // Try to find any date field in the first valid group
+                                        const g = userGroups[0];
+                                        const dateStr = g.created || g.createdAt || g.createdDate || g.addedOn || g.assignedOn || g.dateAdded || user.created || user.createdAt;
+                                        if (dateStr) {
+                                            addedDate = new Date(dateStr);
+                                            // Add 1 year
+                                            const expiryDate = new Date(addedDate);
+                                            expiryDate.setFullYear(expiryDate.getFullYear() + 1);
+                                            
+                                            // Calculate diff in days
+                                            const diffTime = expiryDate.getTime() - new Date().getTime();
+                                            remainingDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                                        }
+                                    }
+                                    
                                     return (
                                         <TableRow key={rowId} className="hover:bg-muted/50">
                                             <TableCell>
@@ -352,7 +370,7 @@ export default function AutodeskUsersTab({ token }) {
                                                     aria-label="Select user"
                                                 />
                                             </TableCell>
-                                            <TableCell className="font-medium text-sm" title={JSON.stringify(Object.keys(user))}>
+                                            <TableCell className="font-medium text-sm">
                                                 {user.firstName || user.name} {user.lastName}
                                             </TableCell>
                                             <TableCell className="font-mono text-sm text-muted-foreground">
@@ -365,23 +383,28 @@ export default function AutodeskUsersTab({ token }) {
                                             </TableCell>
                                             <TableCell>
                                                 {hasGroup ? (
-                                                    <span className="bg-green-100 text-green-700 border border-green-200 text-xs px-2 py-0.5 rounded-full font-medium">Есть группа</span>
+                                                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 border border-emerald-200">
+                                                        Есть группа
+                                                    </span>
                                                 ) : (
-                                                    <span className="bg-red-100 text-red-700 border border-red-200 text-xs px-2 py-0.5 rounded-full font-medium">Нет группы</span>
+                                                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700 border border-red-200">
+                                                        Нет группы
+                                                    </span>
                                                 )}
                                             </TableCell>
+                                            <TableCell className="text-sm">
+                                                {addedDate ? addedDate.toLocaleDateString('ru-RU') : <span className="text-muted-foreground text-xs">Нет данных</span>}
+                                            </TableCell>
                                             <TableCell>
-                                                {hasGroup ? (
-                                                    <div className="flex flex-wrap gap-1">
-                                                        {userGroups.map(g => (
-                                                            <span key={g.groupId || g.id} className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded border border-primary/20" title={g.groupId || g.id}>
-                                                                {g.groupName || g.name || g.groupId || g.id}
-                                                            </span>
-                                                        ))}
-                                                    </div>
-                                                ) : (
-                                                    <span className="text-xs text-muted-foreground">-</span>
-                                                )}
+                                                {remainingDays !== null ? (
+                                                    <span className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-bold ${
+                                                        remainingDays > 30 ? 'bg-emerald-100 text-emerald-700' : 
+                                                        remainingDays > 7 ? 'bg-amber-100 text-amber-700' : 
+                                                        'bg-red-100 text-red-700'
+                                                    }`}>
+                                                        {remainingDays} дн.
+                                                    </span>
+                                                ) : <span className="text-muted-foreground text-xs">-</span>}
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <Button variant="ghost" size="sm" onClick={() => handleDeleteUser(rowId, email)} className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 w-8 p-0">
@@ -401,6 +424,19 @@ export default function AutodeskUsersTab({ token }) {
                             )}
                         </TableBody>
                     </Table>
+                    
+                    {/* Load More Button */}
+                    {hasMore && !loading && filteredUsers.length > 0 && (
+                        <div className="py-4 flex justify-center mt-2 mb-8">
+                            <Button 
+                                variant="outline" 
+                                onClick={() => fetchUsers(pageRef.current + 1, true)}
+                                disabled={loadingMore}
+                            >
+                                {loadingMore ? "Загрузка..." : "Загрузить еще"}
+                            </Button>
+                        </div>
+                    )}
                 </div>
             </CardContent>
             
