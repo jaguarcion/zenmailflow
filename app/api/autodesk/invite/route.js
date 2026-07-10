@@ -16,7 +16,7 @@ export async function POST(request) {
 
     try {
         const body = await request.json();
-        const { tenant_id, invited_by, auth_token, cookie, user } = body;
+        const { tenant_id, invited_by, group_id, auth_token, cookie, user } = body;
 
         if (!user || !user.email) {
             return NextResponse.json({ error: 'User email is required' }, { status: 400 });
@@ -44,8 +44,6 @@ export async function POST(request) {
             })
         });
 
-        // The Autodesk API usually returns empty body on success (204 or 201)
-        // or JSON on error. We try parsing json, fallback to empty object.
         const text = await response.text();
         let data = {};
         if (text) {
@@ -56,7 +54,60 @@ export async function POST(request) {
             return NextResponse.json(data, { status: response.status });
         }
 
-        return NextResponse.json(data);
+        let groupAssigned = false;
+        let groupError = null;
+
+        // Если указан group_id и мы получили id созданного пользователя, пробуем добавить в группу
+        if (group_id && group_id.trim() !== '' && data.id) {
+            try {
+                // Стандартный эндпоинт для добавления в группу (возможны вариации)
+                const groupUrl = `https://api.user-access.aum.autodesk.com/user-access/v1/tenants/${tenant_id}/groups/${group_id.trim()}/users`;
+                const groupRes = await fetch(groupUrl, {
+                    method: 'POST', // Иногда требуется PUT
+                    headers: {
+                        "accept": "application/json, text/plain, */*",
+                        "authorization": auth_token,
+                        "content-type": "application/json",
+                        "cookie": cookie,
+                        "origin": "https://manage.autodesk.com",
+                        "referer": "https://manage.autodesk.com/"
+                    },
+                    body: JSON.stringify([
+                        { id: data.id } // Обычно передается массив пользователей или объект пользователя
+                    ])
+                });
+
+                if (groupRes.ok) {
+                    groupAssigned = true;
+                } else {
+                    const groupText = await groupRes.text();
+                    console.error("Group assignment failed:", groupRes.status, groupText);
+                    
+                    // Fallback to single object if array fails
+                    if (groupRes.status === 400 || groupRes.status === 422) {
+                        const retryRes = await fetch(groupUrl, {
+                            method: 'POST',
+                            headers: {
+                                "accept": "application/json, text/plain, */*",
+                                "authorization": auth_token,
+                                "content-type": "application/json",
+                                "cookie": cookie
+                            },
+                            body: JSON.stringify({ userId: data.id })
+                        });
+                        if (retryRes.ok) groupAssigned = true;
+                        else groupError = "Group API error: " + retryRes.status;
+                    } else {
+                        groupError = "Group API error: " + groupRes.status;
+                    }
+                }
+            } catch (err) {
+                console.error("Failed to assign to group:", err);
+                groupError = err.message;
+            }
+        }
+
+        return NextResponse.json({ ...data, groupAssigned, groupError });
     } catch (err) {
         return NextResponse.json({ error: err.message }, { status: 500 });
     }

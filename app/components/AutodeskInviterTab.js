@@ -20,6 +20,7 @@ export default function AutodeskInviterTab({ token }) {
     const [config, setConfig] = useState({
         tenantId: "63238795",
         invitedBy: "2S82WAKKQY6ZQB2X",
+        groupId: "",
         authToken: "",
         cookieString: ""
     });
@@ -126,6 +127,7 @@ export default function AutodeskInviterTab({ token }) {
                     body: JSON.stringify({
                         tenant_id: config.tenantId,
                         invited_by: config.invitedBy,
+                        group_id: config.groupId,
                         auth_token: config.authToken,
                         cookie: config.cookieString,
                         user: {
@@ -141,7 +143,11 @@ export default function AutodeskInviterTab({ token }) {
                 if (res.ok) {
                     user.status = 'success';
                     successCount++;
-                    addLog('success', `Успешно: ${user.email}`);
+                    if (config.groupId && !data.groupAssigned) {
+                        addLog('success', `Успешно создан: ${user.email}, но НЕ добавлен в группу (ошибка: ${data.groupError || 'неизвестно'})`);
+                    } else {
+                        addLog('success', `Успешно: ${user.email}`);
+                    }
                 } else {
                     user.status = 'error';
                     errorCount++;
@@ -201,6 +207,10 @@ export default function AutodeskInviterTab({ token }) {
                         <div className="space-y-2">
                             <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Invited By ID</label>
                             <Input name="invitedBy" value={config.invitedBy} onChange={handleConfigChange} placeholder="2S82WAKKQY6ZQB2X" />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Group ID (опционально)</label>
+                            <Input name="groupId" value={config.groupId || ''} onChange={handleConfigChange} placeholder="Например: 1234567" />
                         </div>
                         <div className="space-y-2">
                             <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Authorization Token</label>
