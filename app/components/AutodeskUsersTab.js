@@ -54,7 +54,7 @@ export default function AutodeskUsersTab({ token }) {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}` 
                 },
-                body: JSON.stringify({ limit, page: targetPage })
+                body: JSON.stringify({ limit, page: targetPage, search: searchQuery })
             });
             const data = await res.json();
             
@@ -186,14 +186,6 @@ export default function AutodeskUsersTab({ token }) {
     }, [token]);
 
     const filteredUsers = users.filter(user => {
-        const email = (user.emailId || user.email || user.primaryEmail || '').toLowerCase();
-        const name = `${user.firstName || user.name} ${user.lastName || ''}`.toLowerCase();
-        
-        if (searchQuery) {
-            const sq = searchQuery.toLowerCase();
-            if (!email.includes(sq) && !name.includes(sq)) return false;
-        }
-        
         const filteredGroups = (user.groups || []).filter(g => g.groupName !== 'everyone' && g.groupId !== 'everyone' && g.name !== 'everyone');
         const hasGroup = filteredGroups.length > 0;
         
@@ -202,6 +194,12 @@ export default function AutodeskUsersTab({ token }) {
         
         return true;
     });
+
+    const handleSearch = (e) => {
+        if (e.key === 'Enter') {
+            fetchUsers(0, false);
+        }
+    };
 
     const toggleSelectAll = (checked) => {
         const newSet = new Set(selectedUsers);
@@ -249,15 +247,19 @@ export default function AutodeskUsersTab({ token }) {
             </CardHeader>
             <CardContent className="pt-4 flex-1 overflow-hidden p-0 flex flex-col">
                 <div className="px-4 pb-4 flex gap-4">
-                    <div className="relative flex-1">
-                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            type="text"
-                            placeholder="Поиск по email или имени..."
-                            className="pl-8"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
+                    <div className="relative flex-1 flex gap-2">
+                        <div className="relative flex-1">
+                            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                type="text"
+                                placeholder="Поиск по email или имени (Enter)..."
+                                className="pl-8"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                onKeyDown={handleSearch}
+                            />
+                        </div>
+                        <Button variant="secondary" onClick={() => fetchUsers(0, false)} disabled={loading || loadingMore}>Найти</Button>
                     </div>
                     <Select value={statusFilter} onValueChange={setStatusFilter}>
                         <SelectTrigger className="w-[180px]">

@@ -9,7 +9,7 @@ export async function POST(request) {
 
     try {
         const body = await request.json();
-        const { limit = 50, page = 0 } = body;
+        const { limit = 50, page = 0, search = '', groupId = '' } = body;
 
         const configJson = getSetting('autodesk_config');
         if (!configJson) {
@@ -25,6 +25,25 @@ export async function POST(request) {
 
         const apiUrl = `https://api.user-access.aum.autodesk.com/user-access/v1/teams/urn:adsk.aum:prd:tenant.oxygenId:${tenantId}/users`;
         
+        const requestBody = {
+            sort: ["nameEmail asc"],
+            pagination: { limit, offset: page },
+            includeAssignments: true,
+            includeGuests: true
+        };
+
+        const filter = {};
+        if (search && search.trim() !== '') {
+            filter.search = search.trim();
+        }
+        if (groupId && groupId.trim() !== '') {
+            filter.groupOxygenIds = [groupId.trim()];
+        }
+        
+        if (Object.keys(filter).length > 0) {
+            requestBody.filter = filter;
+        }
+
         const response = await fetch(apiUrl, {
             method: 'POST',
             headers: {
@@ -36,12 +55,7 @@ export async function POST(request) {
                 "referer": "https://manage.autodesk.com/",
                 "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0"
             },
-            body: JSON.stringify({
-                sort: ["nameEmail asc"],
-                pagination: { limit, offset: page },
-                includeAssignments: true,
-                includeGuests: true
-            })
+            body: JSON.stringify(requestBody)
         });
 
         const data = await response.json();
