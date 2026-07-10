@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Trash2, Plus, Mail, RefreshCw, Paperclip } from "lucide-react";
+import { Trash2, Plus, Mail, RefreshCw, Paperclip, Copy } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
@@ -108,6 +108,12 @@ export default function BurpTab({ token }) {
         }
     };
 
+    const handleCopy = (e, text) => {
+        e.stopPropagation();
+        navigator.clipboard.writeText(text);
+        toast.success("Address copied to clipboard!");
+    };
+
     return (
         <Card className="flex flex-col h-full">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b">
@@ -162,8 +168,18 @@ export default function BurpTab({ token }) {
                                         <Button 
                                             variant="ghost" 
                                             size="sm" 
+                                            onClick={(e) => handleCopy(e, addr.address)}
+                                            className="text-muted-foreground hover:text-foreground h-8 w-8 p-0 mr-1"
+                                            title="Copy address"
+                                        >
+                                            <Copy className="w-4 h-4" />
+                                        </Button>
+                                        <Button 
+                                            variant="ghost" 
+                                            size="sm" 
                                             onClick={(e) => { e.stopPropagation(); handleDelete(addr); }}
                                             className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 w-8 p-0"
+                                            title="Delete address"
                                         >
                                             <Trash2 className="w-4 h-4" />
                                         </Button>
@@ -177,9 +193,11 @@ export default function BurpTab({ token }) {
 
             <Dialog open={!!selectedAddress} onOpenChange={(open) => !open && setSelectedAddress(null)}>
                 <DialogContent className="max-w-4xl max-h-[85vh] flex flex-col p-0">
-                    <DialogHeader className="p-6 pb-2 border-b">
-                        <DialogTitle className="flex items-center gap-2">
-                            <Mail className="w-5 h-5 text-primary" /> Inbox: <span className="font-mono">{selectedAddress?.address}</span>
+                    <DialogHeader className="p-6 pb-2 border-b pr-12">
+                        <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
+                            <Mail className="w-5 h-5 text-primary shrink-0" /> 
+                            <span className="truncate">Inbox:</span>
+                            <span className="font-mono text-sm sm:text-base break-all">{selectedAddress?.address}</span>
                         </DialogTitle>
                     </DialogHeader>
                     <div className="flex-1 overflow-auto p-6 bg-muted/30">
