@@ -16,6 +16,7 @@ import EsetGeneratorTab from "../components/EsetGeneratorTab";
 import EsetHistoryTab from "../components/EsetHistoryTab";
 import EsetSettingsTab from "../components/EsetSettingsTab";
 import EsetTelegramTab from "../components/EsetTelegramTab";
+import BurpTab from "../components/BurpTab";
 import GlobalSearch from "../components/GlobalSearch";
 import ActiveTasksWidget from "../components/ActiveTasksWidget";
 import { Button } from "@/components/ui/button";
@@ -332,6 +333,14 @@ export default function ClientPage({ initialTab }) {
         { id: 'eset-telegram', label: 'Телеграм Бот' },
         { id: 'eset-settings', label: 'Настройки' }
       ] 
+    },
+    {
+      id: 'burp-group',
+      label: 'Burp',
+      icon: Mail,
+      subItems: [
+        { id: 'burp-mail', label: 'Почтовые ящики' }
+      ]
     }
   ];
 
@@ -483,7 +492,8 @@ export default function ClientPage({ initialTab }) {
                 {activeTab === 'eset-history' && 'История генераций ESET'}
                 {activeTab === 'eset-telegram' && 'Статистика Telegram Бота ESET'}
                 {activeTab === 'eset-settings' && 'Настройки ESET'}
-                {activeTab !== 'adobe-list' && activeTab !== 'adobe-upload' && activeTab !== 'audit-logs' && activeTab !== 'keys-checker' && !activeTab.startsWith('eset-') && navItems.find(n => n.id === activeTab)?.label}
+                {activeTab === 'burp-mail' && 'Временные почты Burp'}
+                {activeTab !== 'adobe-list' && activeTab !== 'adobe-upload' && activeTab !== 'audit-logs' && activeTab !== 'keys-checker' && !activeTab.startsWith('eset-') && activeTab !== 'burp-mail' && navItems.find(n => n.id === activeTab)?.label}
               </h1>
               <p className="text-muted-foreground">
                 {activeTab === 'dashboard' && 'Статистика и аналитика вашей платформы'}
@@ -502,6 +512,7 @@ export default function ClientPage({ initialTab }) {
                 {activeTab === 'eset-history' && 'Архив сгенерированных пачек ESET'}
                 {activeTab === 'eset-telegram' && 'Управление ботом бесплатной раздачи ESET'}
                 {activeTab === 'eset-settings' && 'Конфигурация прокси и почтового провайдера ESET'}
+                {activeTab === 'burp-mail' && 'Создание и управление временными почтовыми ящиками'}
               </p>
             </div>
             
@@ -708,18 +719,12 @@ export default function ClientPage({ initialTab }) {
           {activeTab === 'eset-generator' && (
             <EsetGeneratorTab token={token} />
           )}
-          {activeTab === 'eset-history' && (
-            <EsetHistoryTab token={token} />
-          )}
-          {activeTab === 'eset-telegram' && (
-            <EsetTelegramTab token={token} />
-          )}
-          {activeTab === 'eset-settings' && (
-            <EsetSettingsTab token={token} />
-          )}
-
+          {activeTab === 'eset-history' && <EsetHistoryTab token={token} />}
+          {activeTab === 'eset-settings' && <EsetSettingsTab token={token} />}
+          {activeTab === 'eset-telegram' && <EsetTelegramTab token={token} />}
+          {activeTab === 'burp-mail' && <BurpTab token={token} />}
         </div>
-          </main>
+      </main>
         </div>
         <ActiveTasksWidget token={token} />
       </div>
