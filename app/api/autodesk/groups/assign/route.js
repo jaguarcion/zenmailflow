@@ -1,16 +1,10 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs/promises';
-import path from 'path';
+import { getSetting } from '@/lib/db';
 
-const SETTINGS_FILE = path.join(process.cwd(), 'data', 'app_settings.json');
-
-async function getSettings() {
-    try {
-        const data = await fs.readFile(SETTINGS_FILE, 'utf-8');
-        return JSON.parse(data);
-    } catch (error) {
-        return { autodesk: {} };
-    }
+function getConfig() {
+    const configJson = getSetting('autodesk_config');
+    if (!configJson) return null;
+    return JSON.parse(configJson);
 }
 
 export async function GET(request) {
@@ -18,14 +12,12 @@ export async function GET(request) {
         const url_obj = new URL(request.url);
         const groupId = url_obj.searchParams.get('groupId');
         
-        const settings = await getSettings();
-        const { authToken, cookieString, selectedTenantId } = settings.autodesk || {};
-
-        if (!authToken || !cookieString) {
+        const config = getConfig();
+        if (!config || !config.authToken || !config.cookieString) {
             return NextResponse.json({ error: "Не настроена авторизация Autodesk" }, { status: 401 });
         }
 
-        const tenantId = selectedTenantId || "63238795";
+        const { tenantId, authToken, cookieString } = config;
         const headers = {
             "Authorization": authToken,
             "Cookie": cookieString,
@@ -70,14 +62,12 @@ export async function PUT(request) {
             return NextResponse.json({ error: "groupId and poolKey are required" }, { status: 400 });
         }
 
-        const settings = await getSettings();
-        const { authToken, cookieString, selectedTenantId } = settings.autodesk || {};
-
-        if (!authToken || !cookieString) {
+        const config = getConfig();
+        if (!config || !config.authToken || !config.cookieString) {
             return NextResponse.json({ error: "Не настроена авторизация Autodesk" }, { status: 401 });
         }
 
-        const tenantId = selectedTenantId || "63238795";
+        const { tenantId, authToken, cookieString } = config;
         
         const url = `https://api.user-access.aum.autodesk.com/user-access/v2/tenants/${tenantId}/assignintent`;
 
@@ -124,14 +114,12 @@ export async function DELETE(request) {
             return NextResponse.json({ error: "groupId and poolKey are required" }, { status: 400 });
         }
 
-        const settings = await getSettings();
-        const { authToken, cookieString, selectedTenantId } = settings.autodesk || {};
-
-        if (!authToken || !cookieString) {
+        const config = getConfig();
+        if (!config || !config.authToken || !config.cookieString) {
             return NextResponse.json({ error: "Не настроена авторизация Autodesk" }, { status: 401 });
         }
 
-        const tenantId = selectedTenantId || "63238795";
+        const { tenantId, authToken, cookieString } = config;
         
         // Exact format the user provided in their logs:
         const url = `https://api.user-access.aum.autodesk.com/user-access/v2/tenants/${tenantId}/assignintent?subjectId=${groupId}&subscriberContextId=urn:adsk.aum:prd:tenant.oxygenId:${tenantId}&poolType=${poolType}&poolKey=${poolKey}`;

@@ -1,28 +1,20 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs/promises';
-import path from 'path';
+import { getSetting } from '@/lib/db';
 
-const SETTINGS_FILE = path.join(process.cwd(), 'data', 'app_settings.json');
-
-async function getSettings() {
-    try {
-        const data = await fs.readFile(SETTINGS_FILE, 'utf-8');
-        return JSON.parse(data);
-    } catch (error) {
-        return { autodesk: {} };
-    }
+function getConfig() {
+    const configJson = getSetting('autodesk_config');
+    if (!configJson) return null;
+    return JSON.parse(configJson);
 }
 
 export async function GET(request) {
     try {
-        const settings = await getSettings();
-        const { authToken, cookieString, selectedTenantId } = settings.autodesk || {};
-
-        if (!authToken || !cookieString) {
+        const config = getConfig();
+        if (!config || !config.authToken || !config.cookieString) {
             return NextResponse.json({ error: "Не настроена авторизация Autodesk" }, { status: 401 });
         }
 
-        const tenantId = selectedTenantId || "63238795"; // Default tenant
+        const { tenantId, authToken, cookieString } = config;
         
         // GET /v1/tenants/{tenantId}/groups
         const url = `https://api.user-access.aum.autodesk.com/user-access/v1/tenants/${tenantId}/groups?limit=1000&offset=0&filter[groupType]=basic&filter[groupType]=synced&sort=%2Bname&includeAssignments=true`;
@@ -50,14 +42,12 @@ export async function GET(request) {
 export async function POST(request) {
     try {
         const { name } = await request.json();
-        const settings = await getSettings();
-        const { authToken, cookieString, selectedTenantId } = settings.autodesk || {};
-
-        if (!authToken || !cookieString) {
+        const config = getConfig();
+        if (!config || !config.authToken || !config.cookieString) {
             return NextResponse.json({ error: "Не настроена авторизация Autodesk" }, { status: 401 });
         }
 
-        const tenantId = selectedTenantId || "63238795";
+        const { tenantId, authToken, cookieString } = config;
         
         const url = `https://api.user-access.aum.autodesk.com/user-access/v2/tenants/${tenantId}/groups`;
 
@@ -96,14 +86,12 @@ export async function DELETE(request) {
             return NextResponse.json({ error: "Group ID is required" }, { status: 400 });
         }
 
-        const settings = await getSettings();
-        const { authToken, cookieString, selectedTenantId } = settings.autodesk || {};
-
-        if (!authToken || !cookieString) {
+        const config = getConfig();
+        if (!config || !config.authToken || !config.cookieString) {
             return NextResponse.json({ error: "Не настроена авторизация Autodesk" }, { status: 401 });
         }
 
-        const tenantId = selectedTenantId || "63238795";
+        const { tenantId, authToken, cookieString } = config;
         
         const url = `https://api.user-access.aum.autodesk.com/user-access/v1/tenants/${tenantId}/groups/${groupId}`;
 
