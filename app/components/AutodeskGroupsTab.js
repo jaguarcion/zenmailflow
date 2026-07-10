@@ -108,28 +108,42 @@ export default function AutodeskGroupsTab({ token }) {
             const data = await res.json();
             if (data.status === 'success') {
                 let spData = data.data?.seatpools;
-                let asData = data.data?.assignments;
-
                 let spArray = Array.isArray(spData) ? spData : (spData?.results || spData?.pools || spData?.items || []);
                 if (!Array.isArray(spArray)) spArray = [];
 
-                let asArray = Array.isArray(asData) ? asData : (asData?.results || asData?.assignments || asData?.items || []);
-                if (!Array.isArray(asArray)) asArray = [];
+                // Fallback: extract seatpools from ALL groups if the API didn't return them properly
+                if (spArray.length === 0 && groups.length > 0) {
+                    const poolMap = new Map();
+                    groups.forEach(g => {
+                        (g.assignments || []).forEach(a => {
+                            const key = a.pool?.key || a.poolKey;
+                            if (key && !poolMap.has(key)) {
+                                poolMap.set(key, {
+                                    poolKey: key,
+                                    poolName: a.pool?.name || a.poolName || key,
+                                    poolType: a.pool?.type || a.poolType || 'EP'
+                                });
+                            }
+                        });
+                    });
+                    spArray = Array.from(poolMap.values());
+                }
+
+                // Group assignments are already embedded in the group object!
+                let asArray = group.assignments || [];
 
                 // Normalize seatpools
                 const normalizedSp = spArray.map(p => ({
                     poolKey: p.poolKey || p.key || p.pool?.key || '',
                     poolName: p.poolName || p.name || p.pool?.name || p.poolKey || p.key || p.pool?.key || 'Неизвестная программа',
-                    poolType: p.poolType || p.type || p.pool?.type || 'EP',
-                    raw: p
+                    poolType: p.poolType || p.type || p.pool?.type || 'EP'
                 })).filter(p => !!p.poolKey);
 
                 // Normalize assignments
                 const normalizedAs = asArray.map(a => ({
                     poolKey: a.poolKey || a.pool?.key || a.key || '',
                     poolName: a.poolName || a.pool?.name || a.name || a.pool?.key || a.poolKey || a.key || 'Неизвестная программа',
-                    poolType: a.poolType || a.pool?.type || a.type || 'EP',
-                    raw: a
+                    poolType: a.poolType || a.pool?.type || a.type || 'EP'
                 })).filter(a => !!a.poolKey);
 
                 setSeatpools(normalizedSp);
@@ -166,8 +180,23 @@ export default function AutodeskGroupsTab({ token }) {
             });
             
             if (res.ok) {
-                // Refresh programs list to show the new assignment
-                openManagePrograms(manageGroup);
+                // To refresh assignments immediately in the UI without reloading everything:
+                setAssignments([...assignments, {
+                    poolKey: pool.poolKey,
+                    poolName: pool.poolName,
+                    poolType: pool.poolType
+                }]);
+                
+                // Also update the groups state to reflect the new assignment
+                setGroups(groups.map(g => {
+                    if ((g.oxygenId || g.id) === groupId) {
+                        return {
+                            ...g,
+                            assignments: [...(g.assignments || []), { pool: { key: pool.poolKey, name: pool.poolName, type: pool.poolType } }]
+                        };
+                    }
+                    return g;
+                }));
             } else {
                 const err = await res.json();
                 alert(`Ошибка: ${err.error}`);
@@ -196,6 +225,16 @@ export default function AutodeskGroupsTab({ token }) {
             
             if (res.ok) {
                 setAssignments(assignments.filter(a => a.poolKey !== poolKey));
+                // Update groups state as well
+                setGroups(groups.map(g => {
+                    if ((g.oxygenId || g.id) === groupId) {
+                        return {
+                            ...g,
+                            assignments: (g.assignments || []).filter(a => (a.pool?.key || a.poolKey) !== poolKey)
+                        };
+                    }
+                    return g;
+                }));
             } else {
                 const err = await res.json();
                 alert(`Ошибка: ${err.error}`);
