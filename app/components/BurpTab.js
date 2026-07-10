@@ -8,7 +8,7 @@ import { Trash2, Plus, Mail, RefreshCw, Paperclip } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-export default function BurpTab() {
+export default function BurpTab({ token }) {
     const [addresses, setAddresses] = useState([]);
     const [loading, setLoading] = useState(true);
     const [generating, setGenerating] = useState(false);
@@ -21,7 +21,9 @@ export default function BurpTab() {
     const fetchAddresses = async () => {
         try {
             setLoading(true);
-            const res = await fetch('/api/burp');
+            const res = await fetch('/api/burp', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
             const data = await res.json();
             if (data.status === 'success') {
                 setAddresses(data.data);
@@ -42,7 +44,10 @@ export default function BurpTab() {
     const handleGenerate = async () => {
         try {
             setGenerating(true);
-            const res = await fetch('/api/burp', { method: 'POST' });
+            const res = await fetch('/api/burp', { 
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
             const data = await res.json();
             if (data.status === 'success') {
                 toast.success('Address generated successfully! DNS propagation might take ~1 min.');
@@ -63,7 +68,10 @@ export default function BurpTab() {
         try {
             const res = await fetch('/api/burp', {
                 method: 'DELETE',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify({ id: address.id, label: address.label, domain: address.domain })
             });
             const data = await res.json();
@@ -84,7 +92,9 @@ export default function BurpTab() {
         setLoadingMessages(true);
         
         try {
-            const res = await fetch(`/api/burp/messages?addressId=${address.id}`);
+            const res = await fetch(`/api/burp/messages?addressId=${address.id}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
             const data = await res.json();
             if (data.status === 'success') {
                 setMessages(data.data);
