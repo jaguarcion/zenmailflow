@@ -10,6 +10,38 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 
+const PROGRAM_NAMES = {
+    "3DSMAX": "3ds Max",
+    "ACDIST": "AutoCAD (incl. Toolsets)",
+    "ACDLT": "AutoCAD LT",
+    "CIV3D": "Civil 3D",
+    "MAYA": "Maya",
+    "RVT": "Revit",
+    "INVPROSA": "Inventor Professional",
+    "FSN": "Fusion 360",
+    "ARNOL": "Arnold",
+    "NAVMAN": "Navisworks Manage",
+    "VRDPRO": "VRED Professional",
+    "RSAPRO": "Robot Structural Analysis Pro",
+    "RECAP": "ReCap Pro",
+    "IW360P": "InfraWorks",
+    "ADSTPR": "Advance Steel",
+    "ALAUST": "AutoCAD Architecture",
+    "NINCAD": "AutoCAD Mechanical",
+    "TNNUINV": "Inventor Nastran",
+    "INHSMP": "Inventor CAM (HSM)",
+};
+
+const formatProgramName = (key) => {
+    if (!key) return "Неизвестная программа";
+    const match = key.match(/^AG_([^_]+)_/);
+    if (match && match[1]) {
+        const code = match[1];
+        return PROGRAM_NAMES[code] || code.charAt(0).toUpperCase() + code.slice(1).toLowerCase();
+    }
+    return key;
+};
+
 export default function AutodeskGroupsTab({ token }) {
     const [groups, setGroups] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -109,7 +141,7 @@ export default function AutodeskGroupsTab({ token }) {
                     if (key && !poolMap.has(key)) {
                         poolMap.set(key, {
                             poolKey: key,
-                            poolName: a.pool?.name || a.poolName || key,
+                            poolName: formatProgramName(key),
                             poolType: a.pool?.type || a.poolType || 'EP'
                         });
                     }
@@ -121,18 +153,24 @@ export default function AutodeskGroupsTab({ token }) {
             let asArray = group.assignments || [];
 
             // Normalize seatpools
-            const normalizedSp = spArray.map(p => ({
-                poolKey: p.poolKey || p.key || p.pool?.key || '',
-                poolName: p.poolName || p.name || p.pool?.name || p.poolKey || p.key || p.pool?.key || 'Неизвестная программа',
-                poolType: p.poolType || p.type || p.pool?.type || 'EP'
-            })).filter(p => !!p.poolKey);
+            const normalizedSp = spArray.map(p => {
+                const key = p.poolKey || p.key || p.pool?.key || '';
+                return {
+                    poolKey: key,
+                    poolName: formatProgramName(key),
+                    poolType: p.poolType || p.type || p.pool?.type || 'EP'
+                };
+            }).filter(p => !!p.poolKey);
 
             // Normalize assignments
-            const normalizedAs = asArray.map(a => ({
-                poolKey: a.poolKey || a.pool?.key || a.key || '',
-                poolName: a.poolName || a.pool?.name || a.name || a.pool?.key || a.poolKey || a.key || 'Неизвестная программа',
-                poolType: a.poolType || a.pool?.type || a.type || 'EP'
-            })).filter(a => !!a.poolKey);
+            const normalizedAs = asArray.map(a => {
+                const key = a.poolKey || a.pool?.key || a.key || '';
+                return {
+                    poolKey: key,
+                    poolName: formatProgramName(key),
+                    poolType: a.poolType || a.pool?.type || a.type || 'EP'
+                };
+            }).filter(a => !!a.poolKey);
 
             setSeatpools(normalizedSp);
             setAssignments(normalizedAs);
