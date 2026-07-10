@@ -27,7 +27,7 @@ export async function POST(request) {
         
         const requestBody = {
             sort: ["nameEmail asc"],
-            pagination: { limit, offset: page },
+            pagination: { limit: Number(limit), offset: Number(page) },
             includeAssignments: true,
             includeGuests: true
         };

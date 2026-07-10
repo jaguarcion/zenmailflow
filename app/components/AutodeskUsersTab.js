@@ -62,7 +62,15 @@ export default function AutodeskUsersTab({ token }) {
                 const fetchedUsers = data.data.results || [];
                 if (append) {
                     setUsers(prev => {
-                        const newUsers = fetchedUsers.filter(nu => !prev.some(pu => (pu.id || pu.userId) === (nu.id || nu.userId)));
+                        const getUid = (u) => u.userId || u.id || u.oxygenId || u.emailId || u.email || u.primaryEmail || JSON.stringify(u);
+                        const newUsers = fetchedUsers.filter(nu => !prev.some(pu => getUid(pu) === getUid(nu)));
+                        
+                        // If we fetched items but all were duplicates, stop paginating to prevent infinite loop
+                        if (newUsers.length === 0 && fetchedUsers.length > 0) {
+                            setHasMore(false);
+                            hasMoreRef.current = false;
+                        }
+                        
                         return [...prev, ...newUsers];
                     });
                 } else {
@@ -73,7 +81,7 @@ export default function AutodeskUsersTab({ token }) {
                 if (fetchedUsers.length < limit) {
                     setHasMore(false);
                     hasMoreRef.current = false;
-                } else {
+                } else if (hasMoreRef.current !== false) { // Don't override if set to false by duplicate check
                     setHasMore(true);
                     hasMoreRef.current = true;
                 }
@@ -177,7 +185,7 @@ export default function AutodeskUsersTab({ token }) {
     const handleScroll = (e) => {
         const { scrollTop, clientHeight, scrollHeight } = e.target;
         if (scrollHeight - scrollTop <= clientHeight * 1.5 && !loadingRef.current && hasMoreRef.current) {
-            fetchUsers(pageRef.current + 1, true);
+            fetchUsers(pageRef.current + limit, true);
         }
     };
 
