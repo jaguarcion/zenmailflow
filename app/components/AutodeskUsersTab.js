@@ -209,25 +209,27 @@ export default function AutodeskUsersTab({ token }) {
         }
     };
 
+    const getUid = (u) => u.oxygenId || u.userId || u.id || u.subjectId || (u.emailId || u.email || u.primaryEmail || '').toLowerCase() || JSON.stringify(u);
+
     const toggleSelectAll = (checked) => {
         const newSet = new Set(selectedUsers);
         if (checked) {
-            filteredUsers.forEach(u => newSet.add(u.userId || u.id));
+            filteredUsers.forEach(u => newSet.add(getUid(u)));
         } else {
-            filteredUsers.forEach(u => newSet.delete(u.userId || u.id));
+            filteredUsers.forEach(u => newSet.delete(getUid(u)));
         }
         setSelectedUsers(newSet);
     };
 
-    const toggleSelectUser = (userId, checked) => {
+    const toggleSelectUser = (uid, checked) => {
         const newSet = new Set(selectedUsers);
-        if (checked) newSet.add(userId);
-        else newSet.delete(userId);
+        if (checked) newSet.add(uid);
+        else newSet.delete(uid);
         setSelectedUsers(newSet);
     };
 
-    const isAllSelected = filteredUsers.length > 0 && filteredUsers.every(u => selectedUsers.has(u.userId || u.id));
-    const isSomeSelected = filteredUsers.some(u => selectedUsers.has(u.userId || u.id)) && !isAllSelected;
+    const isAllSelected = filteredUsers.length > 0 && filteredUsers.every(u => selectedUsers.has(getUid(u)));
+    const isSomeSelected = filteredUsers.some(u => selectedUsers.has(getUid(u))) && !isAllSelected;
 
     return (
         <Card className="flex flex-col h-full">
@@ -334,22 +336,23 @@ export default function AutodeskUsersTab({ token }) {
                                 </TableRow>
                             ) : (
                                 filteredUsers.map((user, i) => {
-                                    const userId = user.userId || user.id;
-                                    const email = user.emailId || user.email || user.primaryEmail;
+                                    const email = (user.emailId || user.email || user.primaryEmail || '').toLowerCase();
+                                    const userId = user.oxygenId || user.userId || user.id || user.subjectId;
+                                    const rowId = userId || email || String(i);
                                     // Remove 'everyone' group
                                     const userGroups = (user.groups || []).filter(g => g.groupName !== 'everyone' && g.groupId !== 'everyone' && g.name !== 'everyone');
                                     const hasGroup = userGroups.length > 0;
                                     
                                     return (
-                                        <TableRow key={userId || i} className="hover:bg-muted/50">
+                                        <TableRow key={rowId} className="hover:bg-muted/50">
                                             <TableCell>
                                                 <Checkbox 
-                                                    checked={selectedUsers.has(userId)}
-                                                    onCheckedChange={(c) => toggleSelectUser(userId, c)}
+                                                    checked={selectedUsers.has(rowId)}
+                                                    onCheckedChange={(c) => toggleSelectUser(rowId, c)}
                                                     aria-label="Select user"
                                                 />
                                             </TableCell>
-                                            <TableCell className="font-medium text-sm">
+                                            <TableCell className="font-medium text-sm" title={JSON.stringify(Object.keys(user))}>
                                                 {user.firstName || user.name} {user.lastName}
                                             </TableCell>
                                             <TableCell className="font-mono text-sm text-muted-foreground">
@@ -381,7 +384,7 @@ export default function AutodeskUsersTab({ token }) {
                                                 )}
                                             </TableCell>
                                             <TableCell className="text-right">
-                                                <Button variant="ghost" size="sm" onClick={() => handleDeleteUser(userId, email)} className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 w-8 p-0">
+                                                <Button variant="ghost" size="sm" onClick={() => handleDeleteUser(rowId, email)} className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 w-8 p-0">
                                                     <Trash2 className="w-4 h-4" />
                                                 </Button>
                                             </TableCell>
