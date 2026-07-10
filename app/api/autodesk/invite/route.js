@@ -60,10 +60,10 @@ export async function POST(request) {
         // Если указан group_id и мы получили id созданного пользователя, пробуем добавить в группу
         if (group_id && group_id.trim() !== '' && data.id) {
             try {
-                // Стандартный эндпоинт для добавления в группу (возможны вариации)
-                const groupUrl = `https://api.user-access.aum.autodesk.com/user-access/v1/tenants/${tenant_id}/groups/${group_id.trim()}/users`;
+                // Точный эндпоинт на основе перехваченных данных
+                const groupUrl = `https://api.user-access.aum.autodesk.com/user-access/v1/teams/urn:adsk.aum:prd:tenant.oxygenId:${tenant_id}/groups/${group_id.trim()}/users/${data.id}`;
                 const groupRes = await fetch(groupUrl, {
-                    method: 'POST', // Иногда требуется PUT
+                    method: 'POST',
                     headers: {
                         "accept": "application/json, text/plain, */*",
                         "authorization": auth_token,
@@ -72,9 +72,7 @@ export async function POST(request) {
                         "origin": "https://manage.autodesk.com",
                         "referer": "https://manage.autodesk.com/"
                     },
-                    body: JSON.stringify([
-                        { id: data.id } // Обычно передается массив пользователей или объект пользователя
-                    ])
+                    body: JSON.stringify({}) // По результатам перехвата отправляется пустой объект
                 });
 
                 if (groupRes.ok) {
@@ -82,24 +80,7 @@ export async function POST(request) {
                 } else {
                     const groupText = await groupRes.text();
                     console.error("Group assignment failed:", groupRes.status, groupText);
-                    
-                    // Fallback to single object if array fails
-                    if (groupRes.status === 400 || groupRes.status === 422) {
-                        const retryRes = await fetch(groupUrl, {
-                            method: 'POST',
-                            headers: {
-                                "accept": "application/json, text/plain, */*",
-                                "authorization": auth_token,
-                                "content-type": "application/json",
-                                "cookie": cookie
-                            },
-                            body: JSON.stringify({ userId: data.id })
-                        });
-                        if (retryRes.ok) groupAssigned = true;
-                        else groupError = "Group API error: " + retryRes.status;
-                    } else {
-                        groupError = "Group API error: " + groupRes.status;
-                    }
+                    groupError = "Group API error: " + groupRes.status;
                 }
             } catch (err) {
                 console.error("Failed to assign to group:", err);
