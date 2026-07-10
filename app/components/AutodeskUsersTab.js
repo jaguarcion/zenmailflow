@@ -294,7 +294,7 @@ export default function AutodeskUsersTab({ token }) {
                     </div>
                 )}
                 
-                <div className="flex-1 overflow-auto px-4 min-h-[500px]" onScroll={handleScroll}>
+                <div className="h-[calc(100vh-250px)] overflow-auto px-4" onScroll={handleScroll}>
                     <Table>
                         <TableHeader className="sticky top-0 bg-background z-10 shadow-sm">
                             <TableRow>
