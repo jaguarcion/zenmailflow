@@ -9,7 +9,11 @@ export async function POST(request) {
 
     try {
         const body = await request.json();
-        const { limit = 50, page = 0 } = body;
+        const { userId } = body;
+        
+        if (!userId) {
+            return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
+        }
 
         const configJson = getSetting('autodesk_config');
         if (!configJson) {
@@ -23,34 +27,26 @@ export async function POST(request) {
             return NextResponse.json({ error: 'Incomplete Autodesk config' }, { status: 400 });
         }
 
-        const apiUrl = `https://api.user-access.aum.autodesk.com/user-access/v1/teams/urn:adsk.aum:prd:tenant.oxygenId:${tenantId}/users`;
+        const apiUrl = `https://api.user-access.aum.autodesk.com/user-access/v2/tenants/${tenantId}/users/${userId}`;
         
         const response = await fetch(apiUrl, {
-            method: 'POST',
+            method: 'DELETE',
             headers: {
                 "accept": "application/json, text/plain, */*",
                 "authorization": authToken,
-                "content-type": "application/json",
                 "cookie": cookieString,
                 "origin": "https://manage.autodesk.com",
-                "referer": "https://manage.autodesk.com/",
-                "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0"
-            },
-            body: JSON.stringify({
-                sort: ["nameEmail asc"],
-                pagination: { limit, offset: page },
-                includeAssignments: true,
-                includeGuests: true
-            })
+                "referer": "https://manage.autodesk.com/"
+            }
         });
 
-        const data = await response.json();
-
         if (!response.ok) {
-            return NextResponse.json(data, { status: response.status });
+            const text = await response.text();
+            console.error("Delete failed:", response.status, text);
+            return NextResponse.json({ error: `Delete failed: ${response.status}` }, { status: response.status });
         }
 
-        return NextResponse.json({ status: 'success', data });
+        return NextResponse.json({ status: 'success' });
     } catch (err) {
         return NextResponse.json({ error: err.message }, { status: 500 });
     }

@@ -16,7 +16,7 @@ export default function AutodeskUsersTab({ token }) {
 
     const limit = 50;
 
-    const fetchUsers = async (offset = 0, append = false) => {
+    const fetchUsers = async (targetPage = 0, append = false) => {
         try {
             setLoading(true);
             setError(null);
@@ -26,25 +26,28 @@ export default function AutodeskUsersTab({ token }) {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}` 
                 },
-                body: JSON.stringify({ limit, offset })
+                body: JSON.stringify({ limit, page: targetPage })
             });
             const data = await res.json();
             
             if (data.status === 'success') {
                 const fetchedUsers = data.data.results || [];
                 if (append) {
-                    setUsers(prev => [...prev, ...fetchedUsers]);
+                    setUsers(prev => {
+                        // avoid duplicates just in case
+                        const newUsers = fetchedUsers.filter(nu => !prev.some(pu => (pu.id || pu.userId) === (nu.id || nu.userId)));
+                        return [...prev, ...newUsers];
+                    });
                 } else {
                     setUsers(fetchedUsers);
                 }
                 
-                // Assuming data.data.pagination.total exists, or we just check if we got full limit
                 if (fetchedUsers.length < limit) {
                     setHasMore(false);
                 } else {
                     setHasMore(true);
                 }
-                setPage(offset);
+                setPage(targetPage);
             } else {
                 setError(data.error || 'Failed to fetch users');
                 if (!append) setUsers([]);
@@ -57,10 +60,33 @@ export default function AutodeskUsersTab({ token }) {
         }
     };
 
+    const handleDeleteUser = async (userId, userEmail) => {
+        if (!confirm(`Вы уверены что хотите удалить пользователя ${userEmail}?`)) return;
+        try {
+            const res = await fetch('/api/autodesk/users/delete', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}` 
+                },
+                body: JSON.stringify({ userId })
+            });
+            const data = await res.json();
+            if (data.status === 'success') {
+                toast.success(`Пользователь ${userEmail} удален`);
+                setUsers(prev => prev.filter(u => (u.id || u.userId) !== userId));
+            } else {
+                toast.error(`Ошибка удаления: ${data.error}`);
+            }
+        } catch (err) {
+            toast.error(`Ошибка: ${err.message}`);
+        }
+    };
+
     const handleScroll = (e) => {
         const { scrollTop, clientHeight, scrollHeight } = e.target;
         if (scrollHeight - scrollTop <= clientHeight * 1.5 && !loading && hasMore) {
-            fetchUsers(page + limit, true);
+            fetchUsers(page + 1, true);
         }
     };
 
@@ -100,6 +126,7 @@ export default function AutodeskUsersTab({ token }) {
                                 <TableHead>Роль</TableHead>
                                 <TableHead>Статус</TableHead>
                                 <TableHead>Группы</TableHead>
+                                <TableHead className="text-right">Действия</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -111,57 +138,69 @@ export default function AutodeskUsersTab({ token }) {
                                         <TableCell><Skeleton className="h-4 w-[80px]" /></TableCell>
                                         <TableCell><Skeleton className="h-6 w-[80px] rounded-full" /></TableCell>
                                         <TableCell><Skeleton className="h-4 w-[120px]" /></TableCell>
+                                        <TableCell><Skeleton className="h-6 w-6 ml-auto" /></TableCell>
                                     </TableRow>
                                 ))
                             ) : users.length === 0 && !error ? (
                                 <TableRow>
-                                    <TableCell colSpan={5} className="text-center py-20 text-muted-foreground">
+                                    <TableCell colSpan={6} className="text-center py-20 text-muted-foreground">
                                         <Users className="w-10 h-10 mx-auto text-muted-foreground/30 mb-3" />
                                         <p>Пользователей не найдено.</p>
                                     </TableCell>
                                 </TableRow>
                             ) : (
-                                users.map((user, i) => (
-                                    <TableRow key={user.userId || i} className="hover:bg-muted/50">
-                                        <TableCell className="font-medium text-sm">
-                                            {user.firstName} {user.lastName}
-                                        </TableCell>
-                                        <TableCell className="font-mono text-sm text-muted-foreground">
-                                            {user.emailId}
-                                        </TableCell>
-                                        <TableCell>
-                                            <span className="text-xs uppercase font-medium bg-muted px-2 py-0.5 rounded">
-                                                {user.role || 'user'}
-                                            </span>
-                                        </TableCell>
-                                        <TableCell>
-                                            {user.status === 'active' ? (
-                                                <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full">Активен</span>
-                                            ) : user.status === 'pending' ? (
-                                                <span className="bg-orange-100 text-orange-700 text-xs px-2 py-0.5 rounded-full">Ожидает</span>
-                                            ) : (
-                                                <span className="bg-muted text-muted-foreground text-xs px-2 py-0.5 rounded-full">{user.status}</span>
-                                            )}
-                                        </TableCell>
-                                        <TableCell>
-                                            {user.groups && user.groups.length > 0 ? (
-                                                <div className="flex flex-wrap gap-1">
-                                                    {user.groups.map(g => (
-                                                        <span key={g.groupId} className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded" title={g.groupId}>
-                                                            {g.groupName || g.groupId}
-                                                        </span>
-                                                    ))}
-                                                </div>
-                                            ) : (
-                                                <span className="text-xs text-muted-foreground">-</span>
-                                            )}
-                                        </TableCell>
-                                    </TableRow>
-                                ))
+                                users.map((user, i) => {
+                                    const userId = user.userId || user.id;
+                                    const email = user.emailId || user.email || user.primaryEmail;
+                                    const status = user.status || user.accountStatus || user.state;
+                                    
+                                    return (
+                                        <TableRow key={userId || i} className="hover:bg-muted/50">
+                                            <TableCell className="font-medium text-sm">
+                                                {user.firstName || user.name} {user.lastName}
+                                            </TableCell>
+                                            <TableCell className="font-mono text-sm text-muted-foreground">
+                                                {email || '-'}
+                                            </TableCell>
+                                            <TableCell>
+                                                <span className="text-xs uppercase font-medium bg-muted px-2 py-0.5 rounded">
+                                                    {user.role || 'user'}
+                                                </span>
+                                            </TableCell>
+                                            <TableCell>
+                                                {status === 'active' || status === 'ACTIVE' ? (
+                                                    <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full">Активен</span>
+                                                ) : status === 'pending' || status === 'PENDING' || status === 'INVITED' ? (
+                                                    <span className="bg-orange-100 text-orange-700 text-xs px-2 py-0.5 rounded-full">Ожидает</span>
+                                                ) : (
+                                                    <span className="bg-muted text-muted-foreground text-xs px-2 py-0.5 rounded-full">{status || '-'}</span>
+                                                )}
+                                            </TableCell>
+                                            <TableCell>
+                                                {user.groups && user.groups.length > 0 ? (
+                                                    <div className="flex flex-wrap gap-1">
+                                                        {user.groups.map(g => (
+                                                            <span key={g.groupId || g.id} className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded" title={g.groupId || g.id}>
+                                                                {g.groupName || g.name || g.groupId || g.id}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-xs text-muted-foreground">-</span>
+                                                )}
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                <Button variant="ghost" size="sm" onClick={() => handleDeleteUser(userId, email)} className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 w-8 p-0">
+                                                    <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5.5 1C5.22386 1 5 1.22386 5 1.5C5 1.77614 5.22386 2 5.5 2H9.5C9.77614 2 10 1.77614 10 1.5C10 1.22386 9.77614 1 9.5 1H5.5ZM3 3.5C2.72386 3.5 2.5 3.72386 2.5 4C2.5 4.27614 2.72386 4.5 3 4.5H12C12.2761 4.5 12.5 4.27614 12.5 4C12.5 3.72386 12.2761 3.5 12 3.5H3ZM3.5 5.5V13C3.5 13.5523 3.94772 14 4.5 14H10.5C11.0523 14 11.5 13.5523 11.5 13V5.5H3.5Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd"></path></svg>
+                                                </Button>
+                                            </TableCell>
+                                        </TableRow>
+                                    );
+                                })
                             )}
                             {loading && page > 0 && (
                                 <TableRow>
-                                    <TableCell colSpan={5} className="text-center py-4">
+                                    <TableCell colSpan={6} className="text-center py-4">
                                         <RefreshCw className="w-5 h-5 animate-spin mx-auto text-muted-foreground" />
                                     </TableCell>
                                 </TableRow>
