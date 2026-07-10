@@ -10,6 +10,7 @@ import AuditLogsTab from "../components/AuditLogsTab";
 import KeysCheckerTab from "../components/keys-checker";
 import AutodeskInviterTab from "../components/AutodeskInviterTab";
 import AutodeskUsersTab from "../components/AutodeskUsersTab";
+import AutodeskGroupsTab from "../components/AutodeskGroupsTab";
 import YopmailGrabberTab from "../components/YopmailGrabberTab";
 import EsetGeneratorTab from "../components/EsetGeneratorTab";
 import EsetHistoryTab from "../components/EsetHistoryTab";
@@ -316,6 +317,7 @@ export default function ClientPage({ initialTab }) {
       icon: Box, 
       subItems: [
         { id: 'autodesk-list', label: 'Список пользователей' },
+        { id: 'autodesk-groups', label: 'Список групп' },
         { id: 'autodesk-upload', label: 'Загрузка аккаунтов' },
         { id: 'autodesk-yopmail', label: 'Получение почт' }
       ] 
@@ -490,6 +492,7 @@ export default function ClientPage({ initialTab }) {
                 {activeTab === 'audit-logs' && 'История действий и системных событий'}
                 {activeTab === 'keys-checker' && 'Массовая проверка валидности redemption-кодов'}
                 {activeTab === 'autodesk-list' && 'Управление пользователями Autodesk'}
+                {activeTab === 'autodesk-groups' && 'Управление группами Autodesk'}
                 {activeTab === 'autodesk-upload' && 'Массовое добавление пользователей через API Autodesk'}
                 {activeTab === 'autodesk-yopmail' && 'Извлечение алиасов для одноразовых почт YOPmail'}
                 {activeTab === 'clients' && 'Управление клиентской базой и привязками'}
@@ -688,6 +691,10 @@ export default function ClientPage({ initialTab }) {
 
           {activeTab === 'autodesk-list' && (
             <AutodeskUsersTab token={token} />
+          )}
+
+          {activeTab === 'autodesk-groups' && (
+            <AutodeskGroupsTab token={token} />
           )}
 
           {activeTab === 'autodesk-upload' && (
