@@ -124,57 +124,55 @@ export default function BurpTab({ token }) {
                     </Button>
                 </div>
             </CardHeader>
-            <CardContent className="flex-1 overflow-auto p-0 relative">
-                <div className="absolute inset-0 overflow-auto">
-                    <Table>
-                        <TableHeader className="sticky top-0 bg-background z-10 shadow-sm">
+            <CardContent className="p-0">
+                <Table>
+                    <TableHeader className="bg-background shadow-sm">
+                        <TableRow>
+                            <TableHead>Address</TableHead>
+                            <TableHead>Created</TableHead>
+                            <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {loading ? (
+                            [...Array(3)].map((_, i) => (
+                                <TableRow key={i}>
+                                    <TableCell><Skeleton className="h-4 w-[250px]" /></TableCell>
+                                    <TableCell><Skeleton className="h-4 w-[150px]" /></TableCell>
+                                    <TableCell><Skeleton className="h-6 w-16 ml-auto" /></TableCell>
+                                </TableRow>
+                            ))
+                        ) : addresses.length === 0 ? (
                             <TableRow>
-                                <TableHead>Address</TableHead>
-                                <TableHead>Created</TableHead>
-                                <TableHead className="text-right">Actions</TableHead>
+                                <TableCell colSpan={3} className="text-center py-20 text-muted-foreground">
+                                    <Mail className="w-10 h-10 mx-auto text-muted-foreground/30 mb-3" />
+                                    <p>No disposable addresses generated yet.</p>
+                                </TableCell>
                             </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {loading ? (
-                                [...Array(3)].map((_, i) => (
-                                    <TableRow key={i}>
-                                        <TableCell><Skeleton className="h-4 w-[250px]" /></TableCell>
-                                        <TableCell><Skeleton className="h-4 w-[150px]" /></TableCell>
-                                        <TableCell><Skeleton className="h-6 w-16 ml-auto" /></TableCell>
-                                    </TableRow>
-                                ))
-                            ) : addresses.length === 0 ? (
-                                <TableRow>
-                                    <TableCell colSpan={3} className="text-center py-20 text-muted-foreground">
-                                        <Mail className="w-10 h-10 mx-auto text-muted-foreground/30 mb-3" />
-                                        <p>No disposable addresses generated yet.</p>
+                        ) : (
+                            addresses.map((addr) => (
+                                <TableRow key={addr.id} className="hover:bg-muted/50 cursor-pointer" onClick={() => openInbox(addr)}>
+                                    <TableCell className="font-mono text-sm font-medium text-primary">
+                                        {addr.address}
+                                    </TableCell>
+                                    <TableCell className="text-sm text-muted-foreground">
+                                        {new Date(addr.created_at + 'Z').toLocaleString('ru-RU')}
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        <Button 
+                                            variant="ghost" 
+                                            size="sm" 
+                                            onClick={(e) => { e.stopPropagation(); handleDelete(addr); }}
+                                            className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 w-8 p-0"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </Button>
                                     </TableCell>
                                 </TableRow>
-                            ) : (
-                                addresses.map((addr) => (
-                                    <TableRow key={addr.id} className="hover:bg-muted/50 cursor-pointer" onClick={() => openInbox(addr)}>
-                                        <TableCell className="font-mono text-sm font-medium text-primary">
-                                            {addr.address}
-                                        </TableCell>
-                                        <TableCell className="text-sm text-muted-foreground">
-                                            {new Date(addr.created_at + 'Z').toLocaleString('ru-RU')}
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            <Button 
-                                                variant="ghost" 
-                                                size="sm" 
-                                                onClick={(e) => { e.stopPropagation(); handleDelete(addr); }}
-                                                className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 w-8 p-0"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </Button>
-                                        </TableCell>
-                                    </TableRow>
-                                ))
-                            )}
-                        </TableBody>
-                    </Table>
-                </div>
+                            ))
+                        )}
+                    </TableBody>
+                </Table>
             </CardContent>
 
             <Dialog open={!!selectedAddress} onOpenChange={(open) => !open && setSelectedAddress(null)}>
