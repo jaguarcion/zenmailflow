@@ -203,6 +203,13 @@ export default function AutodeskUsersTab({ token }) {
         return true;
     });
 
+    // Auto-fetch more users if a filter is active and we don't have enough results on screen
+    useEffect(() => {
+        if (statusFilter !== 'all' && hasMore && !loading && !loadingMore && filteredUsers.length < 15) {
+            fetchUsers(pageRef.current + 1, true);
+        }
+    }, [statusFilter, hasMore, loading, loadingMore, filteredUsers.length]);
+
     const handleSearch = (e) => {
         if (e.key === 'Enter') {
             fetchUsers(0, false);
