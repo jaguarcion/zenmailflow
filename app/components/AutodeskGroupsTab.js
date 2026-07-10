@@ -39,7 +39,7 @@ export default function AutodeskGroupsTab({ token }) {
             });
             const data = await res.json();
             if (data.status === 'success') {
-                const results = data.data?.results || data.data || [];
+                const results = data.data?.groups || data.data?.results || data.data || [];
                 setGroups(Array.isArray(results) ? results : []);
             }
         } catch (error) {
