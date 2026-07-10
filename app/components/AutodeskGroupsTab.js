@@ -107,8 +107,33 @@ export default function AutodeskGroupsTab({ token }) {
             });
             const data = await res.json();
             if (data.status === 'success') {
-                setSeatpools(data.data.seatpools || []);
-                setAssignments(data.data.assignments || []);
+                let spData = data.data?.seatpools;
+                let asData = data.data?.assignments;
+
+                let spArray = Array.isArray(spData) ? spData : (spData?.results || spData?.pools || spData?.items || []);
+                if (!Array.isArray(spArray)) spArray = [];
+
+                let asArray = Array.isArray(asData) ? asData : (asData?.results || asData?.assignments || asData?.items || []);
+                if (!Array.isArray(asArray)) asArray = [];
+
+                // Normalize seatpools
+                const normalizedSp = spArray.map(p => ({
+                    poolKey: p.poolKey || p.key || p.pool?.key || '',
+                    poolName: p.poolName || p.name || p.pool?.name || p.poolKey || p.key || p.pool?.key || 'Неизвестная программа',
+                    poolType: p.poolType || p.type || p.pool?.type || 'EP',
+                    raw: p
+                })).filter(p => !!p.poolKey);
+
+                // Normalize assignments
+                const normalizedAs = asArray.map(a => ({
+                    poolKey: a.poolKey || a.pool?.key || a.key || '',
+                    poolName: a.poolName || a.pool?.name || a.name || a.pool?.key || a.poolKey || a.key || 'Неизвестная программа',
+                    poolType: a.poolType || a.pool?.type || a.type || 'EP',
+                    raw: a
+                })).filter(a => !!a.poolKey);
+
+                setSeatpools(normalizedSp);
+                setAssignments(normalizedAs);
             }
         } catch (error) {
             console.error("Failed to fetch programs:", error);
