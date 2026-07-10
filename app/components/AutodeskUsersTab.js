@@ -344,12 +344,20 @@ export default function AutodeskUsersTab({ token }) {
                                     let addedDate = null;
                                     let remainingDays = null;
                                     
-                                    if (hasGroup) {
-                                        // Try to find any date field in the first valid group
-                                        const g = userGroups[0];
-                                        const dateStr = g.created || g.createdAt || g.createdDate || g.addedOn || g.assignedOn || g.dateAdded || user.created || user.createdAt;
-                                        if (dateStr) {
-                                            addedDate = new Date(dateStr);
+                                    // Try to find any date field in group or user object
+                                    const g = hasGroup ? userGroups[0] : {};
+                                    let dateRaw = g.created || g.createdAt || g.createdDate || g.addedOn || g.assignedOn || g.dateAdded || 
+                                                  user.dateAdded || user.addedOn || user.created || user.createdAt || user.createdDate || user.joinDate || user.joinedOn;
+                                    
+                                    if (dateRaw) {
+                                        // Handle numeric timestamps (seconds or milliseconds)
+                                        if (typeof dateRaw === 'number') {
+                                            addedDate = new Date(dateRaw.toString().length === 10 ? dateRaw * 1000 : dateRaw);
+                                        } else {
+                                            addedDate = new Date(dateRaw);
+                                        }
+                                        
+                                        if (!isNaN(addedDate.getTime())) {
                                             // Add 1 year
                                             const expiryDate = new Date(addedDate);
                                             expiryDate.setFullYear(expiryDate.getFullYear() + 1);
@@ -357,6 +365,8 @@ export default function AutodeskUsersTab({ token }) {
                                             // Calculate diff in days
                                             const diffTime = expiryDate.getTime() - new Date().getTime();
                                             remainingDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                                        } else {
+                                            addedDate = null;
                                         }
                                     }
                                     
