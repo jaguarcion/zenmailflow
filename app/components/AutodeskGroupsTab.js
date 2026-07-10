@@ -100,57 +100,44 @@ export default function AutodeskGroupsTab({ token }) {
         setProgramsLoading(true);
         setSelectedPoolId("");
         
-        const groupId = group.oxygenId || group.id;
         try {
-            const res = await fetch(`/api/autodesk/groups/assign?groupId=${groupId}`, {
-                headers: { "Authorization": `Bearer ${token}` }
-            });
-            const data = await res.json();
-            if (data.status === 'success') {
-                let spData = data.data?.seatpools;
-                let spArray = Array.isArray(spData) ? spData : (spData?.results || spData?.pools || spData?.items || []);
-                if (!Array.isArray(spArray)) spArray = [];
-
-                // Fallback: extract seatpools from ALL groups if the API didn't return them properly
-                if (spArray.length === 0 && groups.length > 0) {
-                    const poolMap = new Map();
-                    groups.forEach(g => {
-                        (g.assignments || []).forEach(a => {
-                            const key = a.pool?.key || a.poolKey;
-                            if (key && !poolMap.has(key)) {
-                                poolMap.set(key, {
-                                    poolKey: key,
-                                    poolName: a.pool?.name || a.poolName || key,
-                                    poolType: a.pool?.type || a.poolType || 'EP'
-                                });
-                            }
+            // Extract seatpools from ALL groups
+            const poolMap = new Map();
+            groups.forEach(g => {
+                (g.assignments || []).forEach(a => {
+                    const key = a.pool?.key || a.poolKey;
+                    if (key && !poolMap.has(key)) {
+                        poolMap.set(key, {
+                            poolKey: key,
+                            poolName: a.pool?.name || a.poolName || key,
+                            poolType: a.pool?.type || a.poolType || 'EP'
                         });
-                    });
-                    spArray = Array.from(poolMap.values());
-                }
+                    }
+                });
+            });
+            const spArray = Array.from(poolMap.values());
 
-                // Group assignments are already embedded in the group object!
-                let asArray = group.assignments || [];
+            // Group assignments are already embedded in the group object!
+            let asArray = group.assignments || [];
 
-                // Normalize seatpools
-                const normalizedSp = spArray.map(p => ({
-                    poolKey: p.poolKey || p.key || p.pool?.key || '',
-                    poolName: p.poolName || p.name || p.pool?.name || p.poolKey || p.key || p.pool?.key || 'Неизвестная программа',
-                    poolType: p.poolType || p.type || p.pool?.type || 'EP'
-                })).filter(p => !!p.poolKey);
+            // Normalize seatpools
+            const normalizedSp = spArray.map(p => ({
+                poolKey: p.poolKey || p.key || p.pool?.key || '',
+                poolName: p.poolName || p.name || p.pool?.name || p.poolKey || p.key || p.pool?.key || 'Неизвестная программа',
+                poolType: p.poolType || p.type || p.pool?.type || 'EP'
+            })).filter(p => !!p.poolKey);
 
-                // Normalize assignments
-                const normalizedAs = asArray.map(a => ({
-                    poolKey: a.poolKey || a.pool?.key || a.key || '',
-                    poolName: a.poolName || a.pool?.name || a.name || a.pool?.key || a.poolKey || a.key || 'Неизвестная программа',
-                    poolType: a.poolType || a.pool?.type || a.type || 'EP'
-                })).filter(a => !!a.poolKey);
+            // Normalize assignments
+            const normalizedAs = asArray.map(a => ({
+                poolKey: a.poolKey || a.pool?.key || a.key || '',
+                poolName: a.poolName || a.pool?.name || a.name || a.pool?.key || a.poolKey || a.key || 'Неизвестная программа',
+                poolType: a.poolType || a.pool?.type || a.type || 'EP'
+            })).filter(a => !!a.poolKey);
 
-                setSeatpools(normalizedSp);
-                setAssignments(normalizedAs);
-            }
+            setSeatpools(normalizedSp);
+            setAssignments(normalizedAs);
         } catch (error) {
-            console.error("Failed to fetch programs:", error);
+            console.error("Failed to parse programs:", error);
         } finally {
             setProgramsLoading(false);
         }
