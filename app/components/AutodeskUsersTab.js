@@ -402,7 +402,14 @@ export default function AutodeskUsersTab({ token }) {
                                                 )}
                                             </TableCell>
                                             <TableCell className="text-sm">
-                                                {addedDate ? addedDate.toLocaleDateString('ru-RU') : <span className="text-muted-foreground text-xs">Нет данных</span>}
+                                                {addedDate ? (
+                                                    <div className="flex flex-col">
+                                                        <span className="text-xs text-muted-foreground">Добавлен:</span>
+                                                        <span className="font-medium text-sm">{addedDate.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-xs text-muted-foreground" title={JSON.stringify(user, null, 2)}>Нет данных (Наведите мышь)</span>
+                                                )}
                                             </TableCell>
                                             <TableCell>
                                                 {remainingDays !== null ? (
