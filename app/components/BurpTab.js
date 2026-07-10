@@ -158,8 +158,13 @@ export default function BurpTab({ token }) {
                         ) : (
                             addresses.map((addr) => (
                                 <TableRow key={addr.id} className="hover:bg-muted/50 cursor-pointer" onClick={() => openInbox(addr)}>
-                                    <TableCell className="font-mono text-sm font-medium text-primary">
-                                        {addr.address}
+                                    <TableCell className="font-mono text-sm font-medium text-primary flex items-center gap-2">
+                                        <span>{addr.address}</span>
+                                        {addr.message_count > 0 && (
+                                            <span className="bg-primary text-primary-foreground text-xs px-2 py-0.5 rounded-full font-sans">
+                                                {addr.message_count} {addr.message_count === 1 ? 'msg' : 'msgs'}
+                                            </span>
+                                        )}
                                     </TableCell>
                                     <TableCell className="text-sm text-muted-foreground">
                                         {new Date(addr.created_at + 'Z').toLocaleString('ru-RU')}
