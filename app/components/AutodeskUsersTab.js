@@ -185,7 +185,7 @@ export default function AutodeskUsersTab({ token }) {
     const handleScroll = (e) => {
         const { scrollTop, clientHeight, scrollHeight } = e.target;
         if (scrollHeight - scrollTop <= clientHeight * 1.5 && !loadingRef.current && hasMoreRef.current) {
-            fetchUsers(pageRef.current + limit, true);
+            fetchUsers(pageRef.current + 1, true);
         }
     };
 
