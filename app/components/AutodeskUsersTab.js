@@ -305,8 +305,6 @@ export default function AutodeskUsersTab({ token }) {
                                 <TableHead>Email</TableHead>
                                 <TableHead>Роль</TableHead>
                                 <TableHead>Статус</TableHead>
-                                <TableHead>Дата добавления</TableHead>
-                                <TableHead>Осталось дней</TableHead>
                                 <TableHead className="text-right">Действия</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -319,8 +317,6 @@ export default function AutodeskUsersTab({ token }) {
                                         <TableCell><Skeleton className="h-4 w-[200px]" /></TableCell>
                                         <TableCell><Skeleton className="h-4 w-[80px]" /></TableCell>
                                         <TableCell><Skeleton className="h-6 w-[80px] rounded-full" /></TableCell>
-                                        <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
-                                        <TableCell><Skeleton className="h-4 w-[60px]" /></TableCell>
                                         <TableCell><Skeleton className="h-6 w-6 ml-auto" /></TableCell>
                                     </TableRow>
                                 ))
@@ -339,36 +335,6 @@ export default function AutodeskUsersTab({ token }) {
                                     // Remove 'everyone' group
                                     const userGroups = (user.groups || []).filter(g => g.groupName !== 'everyone' && g.groupId !== 'everyone' && g.name !== 'everyone');
                                     const hasGroup = userGroups.length > 0;
-                                    
-                                    // Calculate Dates
-                                    let addedDate = null;
-                                    let remainingDays = null;
-                                    
-                                    // Try to find any date field in group or user object
-                                    const g = hasGroup ? userGroups[0] : {};
-                                    let dateRaw = g.created || g.createdAt || g.createdDate || g.addedOn || g.assignedOn || g.dateAdded || 
-                                                  user.dateAdded || user.addedOn || user.created || user.createdAt || user.createdDate || user.joinDate || user.joinedOn;
-                                    
-                                    if (dateRaw) {
-                                        // Handle numeric timestamps (seconds or milliseconds)
-                                        if (typeof dateRaw === 'number') {
-                                            addedDate = new Date(dateRaw.toString().length === 10 ? dateRaw * 1000 : dateRaw);
-                                        } else {
-                                            addedDate = new Date(dateRaw);
-                                        }
-                                        
-                                        if (!isNaN(addedDate.getTime())) {
-                                            // Add 1 year
-                                            const expiryDate = new Date(addedDate);
-                                            expiryDate.setFullYear(expiryDate.getFullYear() + 1);
-                                            
-                                            // Calculate diff in days
-                                            const diffTime = expiryDate.getTime() - new Date().getTime();
-                                            remainingDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                                        } else {
-                                            addedDate = null;
-                                        }
-                                    }
                                     
                                     return (
                                         <TableRow key={rowId} className="hover:bg-muted/50">
@@ -400,27 +366,6 @@ export default function AutodeskUsersTab({ token }) {
                                                         Нет группы
                                                     </span>
                                                 )}
-                                            </TableCell>
-                                            <TableCell className="text-sm">
-                                                {addedDate ? (
-                                                    <div className="flex flex-col">
-                                                        <span className="text-xs text-muted-foreground">Добавлен:</span>
-                                                        <span className="font-medium text-sm">{addedDate.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
-                                                    </div>
-                                                ) : (
-                                                    <span className="text-xs text-muted-foreground" title={JSON.stringify(user, null, 2)}>Нет данных (Наведите мышь)</span>
-                                                )}
-                                            </TableCell>
-                                            <TableCell>
-                                                {remainingDays !== null ? (
-                                                    <span className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-bold ${
-                                                        remainingDays > 30 ? 'bg-emerald-100 text-emerald-700' : 
-                                                        remainingDays > 7 ? 'bg-amber-100 text-amber-700' : 
-                                                        'bg-red-100 text-red-700'
-                                                    }`}>
-                                                        {remainingDays} дн.
-                                                    </span>
-                                                ) : <span className="text-muted-foreground text-xs">-</span>}
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <Button variant="ghost" size="sm" onClick={() => handleDeleteUser(rowId, email)} className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 w-8 p-0">
