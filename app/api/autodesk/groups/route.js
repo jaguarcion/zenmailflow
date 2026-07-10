@@ -25,8 +25,8 @@ export async function GET(request) {
             "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0"
         };
         
-        // GET /v1/tenants/{tenantId}/groups
-        const url = `https://api.user-access.aum.autodesk.com/user-access/v1/tenants/${tenantId}/groups?limit=1000&offset=0&filter[groupType]=basic&filter[groupType]=synced&sort=%2Bname&includeAssignments=true`;
+        // GET /v2/tenants/{tenantId}/groups
+        const url = `https://api.user-access.aum.autodesk.com/user-access/v2/tenants/${tenantId}/groups?offset=0&limit=1000&filter[groupType]=basic&filter[groupType]=synced&includeAssignments=true`;
 
         const response = await fetch(url, { headers });
 

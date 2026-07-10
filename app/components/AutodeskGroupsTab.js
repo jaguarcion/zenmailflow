@@ -39,7 +39,8 @@ export default function AutodeskGroupsTab({ token }) {
             });
             const data = await res.json();
             if (data.status === 'success') {
-                setGroups(data.data.results || data.data || []);
+                const results = data.data?.results || data.data || [];
+                setGroups(Array.isArray(results) ? results : []);
             }
         } catch (error) {
             console.error("Failed to fetch groups:", error);
