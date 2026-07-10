@@ -19,9 +19,12 @@ export async function GET(request) {
 
         const { tenantId, authToken, cookieString } = config;
         const headers = {
-            "Authorization": authToken,
-            "Cookie": cookieString,
-            "Accept": "application/json"
+            "accept": "application/json, text/plain, */*",
+            "authorization": authToken,
+            "cookie": cookieString,
+            "origin": "https://manage.autodesk.com",
+            "referer": "https://manage.autodesk.com/",
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0"
         };
         
         // 1. Fetch available seatpools (programs)
@@ -74,10 +77,13 @@ export async function PUT(request) {
         const response = await fetch(url, {
             method: 'PUT',
             headers: {
-                "Authorization": authToken,
-                "Cookie": cookieString,
-                "Accept": "application/json",
-                "Content-Type": "application/json"
+                "accept": "application/json, text/plain, */*",
+                "authorization": authToken,
+                "content-type": "application/json",
+                "cookie": cookieString,
+                "origin": "https://manage.autodesk.com",
+                "referer": "https://manage.autodesk.com/",
+                "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0"
             },
             body: JSON.stringify({
                 subjectId: groupId,
@@ -127,9 +133,12 @@ export async function DELETE(request) {
         const response = await fetch(url, {
             method: 'DELETE',
             headers: {
-                "Authorization": authToken,
-                "Cookie": cookieString,
-                "Accept": "application/json"
+                "accept": "application/json, text/plain, */*",
+                "authorization": authToken,
+                "cookie": cookieString,
+                "origin": "https://manage.autodesk.com",
+                "referer": "https://manage.autodesk.com/",
+                "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0"
             }
         });
 

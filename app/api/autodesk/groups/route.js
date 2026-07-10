@@ -16,16 +16,19 @@ export async function GET(request) {
 
         const { tenantId, authToken, cookieString } = config;
         
+        const headers = {
+            "accept": "application/json, text/plain, */*",
+            "authorization": authToken,
+            "cookie": cookieString,
+            "origin": "https://manage.autodesk.com",
+            "referer": "https://manage.autodesk.com/",
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0"
+        };
+        
         // GET /v1/tenants/{tenantId}/groups
         const url = `https://api.user-access.aum.autodesk.com/user-access/v1/tenants/${tenantId}/groups?limit=1000&offset=0&filter[groupType]=basic&filter[groupType]=synced&sort=%2Bname&includeAssignments=true`;
 
-        const response = await fetch(url, {
-            headers: {
-                "Authorization": authToken,
-                "Cookie": cookieString,
-                "Accept": "application/json"
-            }
-        });
+        const response = await fetch(url, { headers });
 
         if (!response.ok) {
             throw new Error(`Autodesk API error: ${response.status}`);
@@ -54,10 +57,13 @@ export async function POST(request) {
         const response = await fetch(url, {
             method: 'POST',
             headers: {
-                "Authorization": authToken,
-                "Cookie": cookieString,
-                "Accept": "application/json",
-                "Content-Type": "application/json"
+                "accept": "application/json, text/plain, */*",
+                "authorization": authToken,
+                "content-type": "application/json",
+                "cookie": cookieString,
+                "origin": "https://manage.autodesk.com",
+                "referer": "https://manage.autodesk.com/",
+                "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0"
             },
             body: JSON.stringify({
                 name,
@@ -98,9 +104,12 @@ export async function DELETE(request) {
         const response = await fetch(url, {
             method: 'DELETE',
             headers: {
-                "Authorization": authToken,
-                "Cookie": cookieString,
-                "Accept": "application/json"
+                "accept": "application/json, text/plain, */*",
+                "authorization": authToken,
+                "cookie": cookieString,
+                "origin": "https://manage.autodesk.com",
+                "referer": "https://manage.autodesk.com/",
+                "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0"
             }
         });
 
