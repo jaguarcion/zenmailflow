@@ -10,16 +10,30 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function AutodeskUsersTab({ token }) {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [loadingMore, setLoadingMore] = useState(false);
     const [error, setError] = useState(null);
-    const [page, setPage] = useState(0); // offset basically
+    const [page, setPage] = useState(0); 
     const [hasMore, setHasMore] = useState(true);
+    
+    // Refs to prevent stale state in scroll handler
+    const loadingRef = React.useRef(false);
+    const hasMoreRef = React.useRef(true);
+    const pageRef = React.useRef(0);
 
     const limit = 50;
 
     const fetchUsers = async (targetPage = 0, append = false) => {
+        if (loadingRef.current) return;
+        
         try {
-            setLoading(true);
+            loadingRef.current = true;
+            if (append) {
+                setLoadingMore(true);
+            } else {
+                setLoading(true);
+            }
             setError(null);
+            
             const res = await fetch('/api/autodesk/users', {
                 method: 'POST',
                 headers: { 
@@ -34,7 +48,6 @@ export default function AutodeskUsersTab({ token }) {
                 const fetchedUsers = data.data.results || [];
                 if (append) {
                     setUsers(prev => {
-                        // avoid duplicates just in case
                         const newUsers = fetchedUsers.filter(nu => !prev.some(pu => (pu.id || pu.userId) === (nu.id || nu.userId)));
                         return [...prev, ...newUsers];
                     });
@@ -44,10 +57,13 @@ export default function AutodeskUsersTab({ token }) {
                 
                 if (fetchedUsers.length < limit) {
                     setHasMore(false);
+                    hasMoreRef.current = false;
                 } else {
                     setHasMore(true);
+                    hasMoreRef.current = true;
                 }
                 setPage(targetPage);
+                pageRef.current = targetPage;
             } else {
                 setError(data.error || 'Failed to fetch users');
                 if (!append) setUsers([]);
@@ -56,7 +72,9 @@ export default function AutodeskUsersTab({ token }) {
             console.error("Failed to fetch autodesk users", err);
             setError(err.message);
         } finally {
+            loadingRef.current = false;
             setLoading(false);
+            setLoadingMore(false);
         }
     };
 
@@ -85,8 +103,8 @@ export default function AutodeskUsersTab({ token }) {
 
     const handleScroll = (e) => {
         const { scrollTop, clientHeight, scrollHeight } = e.target;
-        if (scrollHeight - scrollTop <= clientHeight * 1.5 && !loading && hasMore) {
-            fetchUsers(page + 1, true);
+        if (scrollHeight - scrollTop <= clientHeight * 1.5 && !loadingRef.current && hasMoreRef.current) {
+            fetchUsers(pageRef.current + 1, true);
         }
     };
 
@@ -101,8 +119,8 @@ export default function AutodeskUsersTab({ token }) {
                     <CardTitle className="text-lg flex items-center gap-2"><Users className="w-5 h-5 text-primary" /> Пользователи Autodesk</CardTitle>
                     <CardDescription>Список всех пользователей привязанных к вашему аккаунту.</CardDescription>
                 </div>
-                <Button variant="outline" size="sm" onClick={() => fetchUsers(0, false)} disabled={loading}>
-                    <RefreshCw className={`w-4 h-4 mr-2 ${loading && page === 0 ? 'animate-spin' : ''}`} /> Обновить
+                <Button variant="outline" size="sm" onClick={() => fetchUsers(0, false)} disabled={loading || loadingMore}>
+                    <RefreshCw className={`w-4 h-4 mr-2 ${(loading || loadingMore) && page === 0 ? 'animate-spin' : ''}`} /> Обновить
                 </Button>
             </CardHeader>
             <CardContent className="pt-4 flex-1 overflow-hidden p-0">
@@ -130,7 +148,7 @@ export default function AutodeskUsersTab({ token }) {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {loading && page === 0 ? (
+                            {loading && users.length === 0 ? (
                                 [...Array(5)].map((_, i) => (
                                     <TableRow key={i}>
                                         <TableCell><Skeleton className="h-4 w-[150px]" /></TableCell>
@@ -198,7 +216,7 @@ export default function AutodeskUsersTab({ token }) {
                                     );
                                 })
                             )}
-                            {loading && page > 0 && (
+                            {loadingMore && (
                                 <TableRow>
                                     <TableCell colSpan={6} className="text-center py-4">
                                         <RefreshCw className="w-5 h-5 animate-spin mx-auto text-muted-foreground" />
