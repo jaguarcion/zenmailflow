@@ -298,7 +298,6 @@ export default function AutodeskUsersTab({ token }) {
                     <Table>
                         <TableHeader className="sticky top-0 bg-background z-10 shadow-sm">
                             <TableRow>
-                                <TableHead className="w-[40px]">
                                 <TableHead className="w-[50px]">
                                     <Checkbox checked={isAllSelected} onCheckedChange={toggleSelectAll} ref={r => r && (r.indeterminate = isSomeSelected)} aria-label="Select all" />
                                 </TableHead>
