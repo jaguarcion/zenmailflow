@@ -31,7 +31,8 @@ export async function GET(request) {
         const response = await fetch(url, { headers });
 
         if (!response.ok) {
-            throw new Error(`Autodesk API error: ${response.status}`);
+            const errText = await response.text().catch(() => '');
+            throw new Error(`Autodesk API error: ${response.status} - ${errText}`);
         }
 
         const data = await response.json();
@@ -72,7 +73,8 @@ export async function POST(request) {
         });
 
         if (!response.ok) {
-            throw new Error(`Autodesk API error: ${response.status}`);
+            const errText = await response.text().catch(() => '');
+            throw new Error(`Autodesk API error: ${response.status} - ${errText}`);
         }
 
         const data = await response.json();
@@ -114,7 +116,8 @@ export async function DELETE(request) {
         });
 
         if (!response.ok) {
-            throw new Error(`Autodesk API error: ${response.status}`);
+            const errText = await response.text().catch(() => '');
+            throw new Error(`Autodesk API error: ${response.status} - ${errText}`);
         }
 
         return NextResponse.json({ status: "success" });
