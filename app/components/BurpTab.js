@@ -197,7 +197,7 @@ export default function BurpTab({ token }) {
             </CardContent>
 
             <Dialog open={!!selectedAddress} onOpenChange={(open) => !open && setSelectedAddress(null)}>
-                <DialogContent className="max-w-4xl max-h-[85vh] flex flex-col p-0">
+                <DialogContent className="max-w-[95vw] sm:max-w-3xl md:max-w-4xl max-h-[85vh] flex flex-col p-0">
                     <DialogHeader className="p-6 pb-2 border-b pr-12">
                         <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
                             <Mail className="w-5 h-5 text-primary shrink-0" /> 
