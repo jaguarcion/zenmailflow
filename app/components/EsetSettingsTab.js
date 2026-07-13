@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Save, Settings, Play } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -18,7 +19,8 @@ export default function EsetSettingsTab({ token }) {
         concurrency: 2,
         autopostChannel: "",
         autopostCron: "0 12 * * *",
-        autopostCount: 5
+        autopostCount: 5,
+        autopostEnabled: true
     });
     const [loading, setLoading] = useState(false);
     const [triggerLoading, setTriggerLoading] = useState(false);
@@ -41,7 +43,8 @@ export default function EsetSettingsTab({ token }) {
                         concurrency: data.config.concurrency || 2,
                         autopostChannel: data.config.autopostChannel || "",
                         autopostCron: data.config.autopostCron || "0 12 * * *",
-                        autopostCount: data.config.autopostCount || 5
+                        autopostCount: data.config.autopostCount || 5,
+                        autopostEnabled: data.config.autopostEnabled !== undefined ? data.config.autopostEnabled : true
                     });
                 }
             } catch (err) {
@@ -250,7 +253,17 @@ export default function EsetSettingsTab({ token }) {
                                 <p className="text-xs text-muted-foreground">Сколько ключей будет в одном посте</p>
                             </div>
                         </div>
-                        <div className="flex justify-end pt-2">
+                        <div className="flex justify-between items-center pt-2">
+                            <div className="flex items-center space-x-2">
+                                <Checkbox 
+                                    id="autopostEnabled" 
+                                    checked={config.autopostEnabled} 
+                                    onCheckedChange={(checked) => setConfig({ ...config, autopostEnabled: checked })}
+                                />
+                                <label htmlFor="autopostEnabled" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                    Включить автопостинг
+                                </label>
+                            </div>
                             <Button variant="outline" onClick={triggerAutopost} disabled={triggerLoading} className="text-orange-600 border-orange-200 hover:bg-orange-50 hover:text-orange-700">
                                 <Play className="w-4 h-4 mr-2" /> 
                                 {triggerLoading ? "Выполняется..." : "Запустить сейчас"}

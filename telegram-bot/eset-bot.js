@@ -170,29 +170,33 @@ let currentCronJob = null;
 let currentCronStr = null;
 let currentChannelId = null;
 let currentCount = 5;
+let currentIsEnabled = true;
 
 function reloadAutopostSettings() {
     try {
         const channelRow = db.prepare("SELECT value FROM app_settings WHERE key = 'eset_autopost_channel'").get();
         const cronRow = db.prepare("SELECT value FROM app_settings WHERE key = 'eset_autopost_cron'").get();
         const countRow = db.prepare("SELECT value FROM app_settings WHERE key = 'eset_autopost_count'").get();
+        const enabledRow = db.prepare("SELECT value FROM app_settings WHERE key = 'eset_autopost_enabled'").get();
 
         const channelId = channelRow?.value || process.env.ESET_TELEGRAM_CHANNEL_ID?.trim();
         const cronStr = cronRow?.value || process.env.ESET_AUTOPOST_CRON?.trim() || '0 12 * * *';
         const count = parseInt(countRow?.value, 10) || 5;
+        const isEnabled = enabledRow?.value !== 'false';
 
         currentCount = count;
 
-        if (currentCronStr !== cronStr || currentChannelId !== channelId) {
+        if (currentCronStr !== cronStr || currentChannelId !== channelId || currentIsEnabled !== isEnabled) {
             currentCronStr = cronStr;
             currentChannelId = channelId;
+            currentIsEnabled = isEnabled;
 
             if (currentCronJob) {
                 currentCronJob.stop();
                 currentCronJob = null;
             }
 
-            if (channelId && cronStr) {
+            if (isEnabled && channelId && cronStr) {
                 console.log(`[ESET Bot] Auto-posting configured for ${channelId} at ${cronStr} (count: ${count})`);
                 currentCronJob = cron.schedule(cronStr, async () => {
                     console.log(`[ESET Bot] Running auto-posting job (count: ${currentCount})...`);

@@ -18,6 +18,7 @@ export async function GET(request) {
             autopostChannel: getSetting('eset_autopost_channel') || process.env.ESET_TELEGRAM_CHANNEL_ID || '',
             autopostCron: getSetting('eset_autopost_cron') || process.env.ESET_AUTOPOST_CRON || '0 12 * * *',
             autopostCount: parseInt(getSetting('eset_autopost_count'), 10) || 5,
+            autopostEnabled: getSetting('eset_autopost_enabled') !== 'false',
         };
         return NextResponse.json({ status: 'success', config });
     } catch (err) {
@@ -42,6 +43,7 @@ export async function POST(request) {
         if (body.autopostChannel !== undefined) setSetting('eset_autopost_channel', body.autopostChannel);
         if (body.autopostCron !== undefined) setSetting('eset_autopost_cron', body.autopostCron);
         if (body.autopostCount !== undefined) setSetting('eset_autopost_count', body.autopostCount.toString());
+        if (body.autopostEnabled !== undefined) setSetting('eset_autopost_enabled', body.autopostEnabled.toString());
 
         return NextResponse.json({ status: 'success' });
     } catch (err) {
