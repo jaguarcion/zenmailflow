@@ -24,9 +24,17 @@ export async function GET(request) {
             ORDER BY created_at DESC
         `).all();
 
+        // Fetch processing tasks for Autodesk
+        const autodeskTasks = db.prepare(`
+            SELECT id, total, success, error, status, created_at, 'autodesk' as type
+            FROM autodesk_tasks
+            WHERE status = 'processing'
+            ORDER BY created_at DESC
+        `).all();
+
         return NextResponse.json({ 
             success: true, 
-            tasks: [...esetTasks, ...yopmailTasks] 
+            tasks: [...esetTasks, ...yopmailTasks, ...autodeskTasks] 
         });
     } catch (err) {
         return NextResponse.json({ success: false, error: err.message }, { status: 500 });

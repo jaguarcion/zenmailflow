@@ -79,7 +79,7 @@ export default function ActiveTasksWidget({ token }) {
                     {tasks.map(task => {
                         const completed = task.success + task.error;
                         const progress = task.total > 0 ? Math.round((completed / task.total) * 100) : 0;
-                        const label = task.type === 'eset' ? 'Генерация ESET' : 'Извлечение Yopmail';
+                        const label = task.type === 'eset' ? 'Генерация ESET' : task.type === 'autodesk' ? 'Инвайт Autodesk' : 'Извлечение Yopmail';
                         
                         // Calculate ETA
                         let etaSeconds = 0;
