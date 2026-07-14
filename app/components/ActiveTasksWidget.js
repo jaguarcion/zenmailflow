@@ -84,10 +84,19 @@ export default function ActiveTasksWidget({ token }) {
                         // Calculate ETA
                         let etaSeconds = 0;
                         if (task.created_at && completed > 0) {
-                            const timeElapsed = (Date.now() - new Date(task.created_at).getTime()) / 1000;
-                            const timePerItem = timeElapsed / completed;
-                            const remaining = task.total - completed;
-                            etaSeconds = remaining * timePerItem;
+                            // Ensure SQLite CURRENT_TIMESTAMP is parsed as UTC
+                            let dateStr = task.created_at;
+                            if (typeof dateStr === 'string' && !dateStr.includes('Z')) {
+                                dateStr = dateStr.replace(' ', 'T') + 'Z';
+                            }
+                            const timeElapsed = (Date.now() - new Date(dateStr).getTime()) / 1000;
+                            
+                            // Prevent negative time elapsed if servers are out of sync
+                            if (timeElapsed > 0) {
+                                const timePerItem = timeElapsed / completed;
+                                const remaining = task.total - completed;
+                                etaSeconds = remaining * timePerItem;
+                            }
                         }
 
                         return (
