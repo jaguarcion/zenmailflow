@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Save, Settings, Play } from "lucide-react";
+import { Save, Settings, Play, ShieldCheck } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function EsetSettingsTab({ token }) {
@@ -25,12 +25,13 @@ export default function EsetSettingsTab({ token }) {
     const [loading, setLoading] = useState(false);
     const [triggerLoading, setTriggerLoading] = useState(false);
     const [isConfigLoaded, setIsConfigLoaded] = useState(false);
+    const [proxyStatus, setProxyStatus] = useState(null);
 
     useEffect(() => {
         const fetchConfig = async () => {
             try {
                 const res = await fetch('/api/eset/config', {
-                    headers: { 'Authorization': `Bearer ${token}` }
+                    headers: { 'Authorization': "Bearer " + token }
                 });
                 const data = await res.json();
                 if (data.status === 'success' && data.config) {
@@ -70,7 +71,7 @@ export default function EsetSettingsTab({ token }) {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+                    'Authorization': "Bearer " + token
                 },
                 body: JSON.stringify(config)
             });
@@ -94,12 +95,12 @@ export default function EsetSettingsTab({ token }) {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+                    'Authorization': "Bearer " + token
                 }
             });
             const data = await res.json();
             if (data.status === 'success') {
-                toast.success(`Автопостинг успешно выполнен! Отправлено ключей: ${data.keysCount}`);
+                toast.success(Автопостинг успешно выполнен! Отправлено ключей:  + data.keysCount);
             } else {
                 toast.error("Ошибка автопостинга: " + data.error);
             }
@@ -107,6 +108,36 @@ export default function EsetSettingsTab({ token }) {
             toast.error("Ошибка сети при запуске автопостинга.");
         } finally {
             setTriggerLoading(false);
+        }
+    };
+
+    const checkProxy = async () => {
+        if (!config.proxy) return toast.error("Введите прокси");
+        setProxyStatus({ status: 'loading', text: 'Проверка...' });
+        try {
+            const res = await fetch('/api/eset/proxy/check', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': "Bearer " + token
+                },
+                body: JSON.stringify({ proxy: config.proxy })
+            });
+            const data = await res.json();
+            if (data.status === 'success') {
+                setProxyStatus({ status: 'success', text: "OK (" + data.timeMs + "ms) - IP: " + data.ip });
+                toast.success("Прокси работает!");
+            } else {
+                setProxyStatus({ status: 'error', text: "Ошибка: " + data.error });
+                if (data.refreshed) {
+                    toast.info("Был вызван URL смены IP");
+                } else {
+                    toast.error("Ошибка прокси: " + data.error);
+                }
+            }
+        } catch (err) {
+            setProxyStatus({ status: 'error', text: "Ошибка соединения" });
+            toast.error("Ошибка сети");
         }
     };
 
@@ -141,12 +172,28 @@ export default function EsetSettingsTab({ token }) {
                         <div className="grid grid-cols-1 gap-4">
                             <div className="space-y-2">
                                 <label className="text-sm font-medium">Прокси (Поддерживается ротация)</label>
-                                <Input 
-                                    name="proxy" 
-                                    value={config.proxy} 
-                                    onChange={handleConfigChange} 
-                                    placeholder="http://user:pass@1.2.3.4:443[https://url-for-ip-change]" 
-                                />
+                                <div className="flex gap-2">
+                                    <Input 
+                                        name="proxy" 
+                                        value={config.proxy} 
+                                        onChange={handleConfigChange} 
+                                        placeholder="http://user:pass@1.2.3.4:443[https://url-for-ip-change]" 
+                                        className="flex-1"
+                                    />
+                                    <Button 
+                                        variant="secondary" 
+                                        onClick={checkProxy} 
+                                        disabled={proxyStatus?.status === 'loading' || !config.proxy}
+                                    >
+                                        <ShieldCheck className="w-4 h-4 mr-2" />
+                                        Проверить
+                                    </Button>
+                                </div>
+                                {proxyStatus && (
+                                    <p className={"text-xs " + (proxyStatus.status === 'error' ? 'text-red-500' : proxyStatus.status === 'success' ? 'text-green-500' : 'text-blue-500')}>
+                                        {proxyStatus.text}
+                                    </p>
+                                )}
                                 <p className="text-xs text-muted-foreground">Формат: <code>протокол://логин:пароль@хост:порт[URL_СМЕНЫ_IP]</code>. Либо через запятую несколько прокси.</p>
                             </div>
                             <div className="space-y-2 max-w-[200px]">

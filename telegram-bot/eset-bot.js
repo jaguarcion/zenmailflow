@@ -1,4 +1,4 @@
-import TelegramBot from 'node-telegram-bot-api';
+﻿import TelegramBot from 'node-telegram-bot-api';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -32,7 +32,7 @@ console.log('[ESET Bot] Started fetching updates...');
 const KEYBOARD_MENU = {
     reply_markup: {
         keyboard: [
-            [{ text: '🔑 Получить ключ' }, { text: '👤 Мой профиль' }]
+            [{ text: 'рџ”‘ РџРѕР»СѓС‡РёС‚СЊ РєР»СЋС‡' }, { text: 'рџ‘¤ РњРѕР№ РїСЂРѕС„РёР»СЊ' }]
         ],
         resize_keyboard: true
     }
@@ -57,7 +57,7 @@ bot.onText(/\/start/, (msg) => {
     const user = getUser(msg);
     bot.sendMessage(
         chatId, 
-        `👋 Привет, ${user.first_name || 'пользователь'}!\n\nЭто бот для бесплатной раздачи ключей ESET. Вы можете получить 1 ключ раз в сутки.`, 
+        `рџ‘‹ РџСЂРёРІРµС‚, ${user.first_name || 'РїРѕР»СЊР·РѕРІР°С‚РµР»СЊ'}!\n\nР­С‚Рѕ Р±РѕС‚ РґР»СЏ Р±РµСЃРїР»Р°С‚РЅРѕР№ СЂР°Р·РґР°С‡Рё РєР»СЋС‡РµР№ ESET. Р’С‹ РјРѕР¶РµС‚Рµ РїРѕР»СѓС‡РёС‚СЊ 1 РєР»СЋС‡ СЂР°Р· РІ СЃСѓС‚РєРё.`, 
         KEYBOARD_MENU
     );
 });
@@ -66,10 +66,10 @@ bot.on('message', async (msg) => {
     const chatId = msg.chat.id;
     const text = msg.text;
 
-    if (text === '👤 Мой профиль') {
+    if (text === 'рџ‘¤ РњРѕР№ РїСЂРѕС„РёР»СЊ') {
         const user = getUser(msg);
         
-        let resetText = "✅ Доступен 1 ключ";
+        let resetText = "вњ… Р”РѕСЃС‚СѓРїРµРЅ 1 РєР»СЋС‡";
         if (user.last_generation_at) {
             const lastGenTime = new Date(user.last_generation_at).getTime();
             const now = Date.now();
@@ -80,18 +80,18 @@ bot.on('message', async (msg) => {
                 const remaining = msIn24Hours - msPassed;
                 const hours = Math.floor(remaining / (1000 * 60 * 60));
                 const mins = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
-                resetText = `⏳ Обновление лимита через ${hours} ч. ${mins} мин.`;
+                resetText = `вЏі РћР±РЅРѕРІР»РµРЅРёРµ Р»РёРјРёС‚Р° С‡РµСЂРµР· ${hours} С‡. ${mins} РјРёРЅ.`;
             }
         }
 
         const profileText = `
-👤 <b>Ваш профиль</b>
+рџ‘¤ <b>Р’Р°С€ РїСЂРѕС„РёР»СЊ</b>
 
-💎 <b>Статус:</b> Базовый (Бесплатный)
-📅 <b>Регистрация:</b> ${new Date(user.created_at).toLocaleDateString('ru-RU')}
-🔑 <b>Сгенерировано ключей:</b> ${user.keys_received}
+рџ’Ћ <b>РЎС‚Р°С‚СѓСЃ:</b> Р‘Р°Р·РѕРІС‹Р№ (Р‘РµСЃРїР»Р°С‚РЅС‹Р№)
+рџ“… <b>Р РµРіРёСЃС‚СЂР°С†РёСЏ:</b> ${new Date(user.created_at).toLocaleDateString('ru-RU')}
+рџ”‘ <b>РЎРіРµРЅРµСЂРёСЂРѕРІР°РЅРѕ РєР»СЋС‡РµР№:</b> ${user.keys_received}
 
-🔄 <b>Лимит:</b> 1 ключ в сутки
+рџ”„ <b>Р›РёРјРёС‚:</b> 1 РєР»СЋС‡ РІ СЃСѓС‚РєРё
 ${resetText}
         `.trim();
 
@@ -99,18 +99,18 @@ ${resetText}
         return;
     }
 
-    if (text === '🔑 Получить ключ') {
+    if (text === 'рџ”‘ РџРѕР»СѓС‡РёС‚СЊ РєР»СЋС‡') {
         const user = getUser(msg);
         
         if (user.last_generation_at) {
             const lastGenTime = new Date(user.last_generation_at).getTime();
             const now = Date.now();
             if (now - lastGenTime < 24 * 60 * 60 * 1000) {
-                return bot.sendMessage(chatId, '❌ <b>Вы уже получали ключ за последние 24 часа!</b>\n\nПриходите завтра или проверьте точное время обновления лимита в профиле.', { parse_mode: 'HTML' });
+                return bot.sendMessage(chatId, 'вќЊ <b>Р’С‹ СѓР¶Рµ РїРѕР»СѓС‡Р°Р»Рё РєР»СЋС‡ Р·Р° РїРѕСЃР»РµРґРЅРёРµ 24 С‡Р°СЃР°!</b>\n\nРџСЂРёС…РѕРґРёС‚Рµ Р·Р°РІС‚СЂР° РёР»Рё РїСЂРѕРІРµСЂСЊС‚Рµ С‚РѕС‡РЅРѕРµ РІСЂРµРјСЏ РѕР±РЅРѕРІР»РµРЅРёСЏ Р»РёРјРёС‚Р° РІ РїСЂРѕС„РёР»Рµ.', { parse_mode: 'HTML' });
             }
         }
 
-        const waitMsg = await bot.sendMessage(chatId, '⏳ Отправлен запрос на генерацию. Пожалуйста, подождите (это может занять около 1 минуты)...');
+        const waitMsg = await bot.sendMessage(chatId, 'вЏі РћС‚РїСЂР°РІР»РµРЅ Р·Р°РїСЂРѕСЃ РЅР° РіРµРЅРµСЂР°С†РёСЋ. РџРѕР¶Р°Р»СѓР№СЃС‚Р°, РїРѕРґРѕР¶РґРёС‚Рµ (СЌС‚Рѕ РјРѕР¶РµС‚ Р·Р°РЅСЏС‚СЊ РѕРєРѕР»Рѕ 1 РјРёРЅСѓС‚С‹)...');
 
         try {
             // Use native fetch (Node.js 18+)
@@ -145,22 +145,22 @@ ${resetText}
                 bot.deleteMessage(chatId, waitMsg.message_id).catch(()=>{});
                 
                 const successMsg = `
-✅ <b>Генерация успешна!</b>
+вњ… <b>Р“РµРЅРµСЂР°С†РёСЏ СѓСЃРїРµС€РЅР°!</b>
 
-Ваш ключ ESET:
+Р’Р°С€ РєР»СЋС‡ ESET:
 <code>${keys[0]}</code>
 
-<i>Следующий бесплатный ключ будет доступен ровно через 24 часа.</i>
+<i>РЎР»РµРґСѓСЋС‰РёР№ Р±РµСЃРїР»Р°С‚РЅС‹Р№ РєР»СЋС‡ Р±СѓРґРµС‚ РґРѕСЃС‚СѓРїРµРЅ СЂРѕРІРЅРѕ С‡РµСЂРµР· 24 С‡Р°СЃР°.</i>
                 `.trim();
                 bot.sendMessage(chatId, successMsg, { parse_mode: 'HTML' });
             } else {
                 bot.deleteMessage(chatId, waitMsg.message_id).catch(()=>{});
-                bot.sendMessage(chatId, '⚠️ Не удалось получить ключ от сервера, возможно закончились прокси. Попробуйте позже.');
+                bot.sendMessage(chatId, 'вљ пёЏ РќРµ СѓРґР°Р»РѕСЃСЊ РїРѕР»СѓС‡РёС‚СЊ РєР»СЋС‡ РѕС‚ СЃРµСЂРІРµСЂР°, РІРѕР·РјРѕР¶РЅРѕ Р·Р°РєРѕРЅС‡РёР»РёСЃСЊ РїСЂРѕРєСЃРё. РџРѕРїСЂРѕР±СѓР№С‚Рµ РїРѕР·Р¶Рµ.');
             }
         } catch (err) {
             console.error('Generation err:', err);
             bot.deleteMessage(chatId, waitMsg.message_id).catch(()=>{});
-            bot.sendMessage(chatId, '⚠️ Внутренняя ошибка сервера. Пожалуйста, обратитесь к администратору или попробуйте позже.');
+            bot.sendMessage(chatId, 'вљ пёЏ Р’РЅСѓС‚СЂРµРЅРЅСЏСЏ РѕС€РёР±РєР° СЃРµСЂРІРµСЂР°. РџРѕР¶Р°Р»СѓР№СЃС‚Р°, РѕР±СЂР°С‚РёС‚РµСЃСЊ Рє Р°РґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂСѓ РёР»Рё РїРѕРїСЂРѕР±СѓР№С‚Рµ РїРѕР·Р¶Рµ.');
         }
         return;
     }
@@ -234,15 +234,15 @@ function reloadAutopostSettings() {
                         if (generatedKeys.length > 0) {
                             const keysFormatted = generatedKeys.map(k => `<code>${k}</code>`).join('\n');
                             const successMsg = `
-🎁 <b>Свежая раздача ключей ESET!</b>
+рџЋЃ <b>РЎРІРµР¶Р°СЏ СЂР°Р·РґР°С‡Р° РєР»СЋС‡РµР№ ESET!</b>
 
-Забирайте ключи:
+Р—Р°Р±РёСЂР°Р№С‚Рµ РєР»СЋС‡Рё:
 ${keysFormatted}
 
-<i>⚠️ Ключи разбирают очень быстро!</i>
+<i>вљ пёЏ РљР»СЋС‡Рё СЂР°Р·Р±РёСЂР°СЋС‚ РѕС‡РµРЅСЊ Р±С‹СЃС‚СЂРѕ!</i>
 
-🤖 <b>Не успели?</b>
-Вы можете получить свой <b>личный бесплатный ключ</b> в нашем Telegram-боте: @eset_free_keys_bot
+рџ¤– <b>РќРµ СѓСЃРїРµР»Рё?</b>
+Р’С‹ РјРѕР¶РµС‚Рµ РїРѕР»СѓС‡РёС‚СЊ СЃРІРѕР№ <b>Р»РёС‡РЅС‹Р№ Р±РµСЃРїР»Р°С‚РЅС‹Р№ РєР»СЋС‡</b> РІ РЅР°С€РµРј Telegram-Р±РѕС‚Рµ: @eset_free_keys_bot
                             `.trim();
                             
                             await bot.sendMessage(channelId, successMsg, { parse_mode: 'HTML' });
@@ -266,3 +266,43 @@ ${keysFormatted}
 
 reloadAutopostSettings();
 setInterval(reloadAutopostSettings, 60000);
+
+// --- Background Proxy Checker ---
+async function checkProxyHealth() {
+    try {
+        const proxyRow = db.prepare("SELECT value FROM app_settings WHERE key = 'eset_proxy'").get();
+        if (!proxyRow || !proxyRow.value) return;
+
+        const proxyStr = proxyRow.value;
+        console.log('[ESET Bot] Running background proxy check...');
+        
+        const res = await fetch(BASE_URL + '/api/eset/proxy/check', {
+            method: 'POST',
+            headers: {
+                'Authorization': 'Bearer ' + APP_TOKEN,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ proxy: proxyStr })
+        });
+        
+        if (res.ok) {
+            const data = await res.json();
+            if (data.status === 'success') {
+                console.log('[ESET Bot] Proxy is HEALTHY. IP: ' + data.ip + ' (' + data.timeMs + 'ms)');
+            } else {
+                console.warn('[ESET Bot] Proxy is DEAD. Error: ' + data.error);
+                if (data.refreshed) {
+                    console.log('[ESET Bot] Successfully hit refresh_url to get new IP.');
+                }
+            }
+        }
+    } catch (err) {
+        console.error('[ESET Bot] Background proxy check failed:', err.message);
+    }
+}
+
+// Run every 1 hour (cron format: 0 * * * *)
+cron.schedule('0 * * * *', checkProxyHealth);
+// Also run once on startup after 10s
+setTimeout(checkProxyHealth, 10000);
+
