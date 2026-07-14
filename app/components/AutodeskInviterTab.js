@@ -32,6 +32,7 @@ export default function AutodeskInviterTab({ token }) {
     const [isInviting, setIsInviting] = useState(false);
     const [stats, setStats] = useState({ success: 0, error: 0 });
     const logsEndRef = useRef(null);
+    const isInvitingRef = useRef(false);
 
     useEffect(() => {
         const fetchConfig = async () => {
@@ -105,71 +106,105 @@ export default function AutodeskInviterTab({ token }) {
         }
 
         setIsInviting(true);
-        addLog('info', 'Запуск процесса приглашений...');
+        isInvitingRef.current = true;
+        addLog('info', 'Запуск фонового воркера приглашений...');
         
-        let successCount = 0;
-        let errorCount = 0;
-        const updatedUsers = [...users];
+        let localUsers = [...users];
 
-        for (let i = 0; i < updatedUsers.length; i++) {
-            const user = updatedUsers[i];
-            if (user.status === 'success') continue;
-
-            addLog('info', `[${i + 1}/${updatedUsers.length}] Приглашение: ${user.email}`);
-
-            try {
-                const res = await fetch('/api/autodesk/invite', {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}` 
-                    },
-                    body: JSON.stringify({
-                        tenant_id: config.tenantId,
-                        invited_by: config.invitedBy,
-                        group_id: config.groupId,
-                        auth_token: config.authToken,
-                        cookie: config.cookieString,
-                        user: {
-                            email: user.email,
-                            firstName: user.firstName,
-                            lastName: user.lastName
-                        }
-                    })
-                });
-
-                const data = await res.json();
-
-                if (res.ok) {
-                    user.status = 'success';
-                    successCount++;
-                    if (config.groupId && !data.groupAssigned) {
-                        addLog('success', `Успешно создан: ${user.email}, но НЕ добавлен в группу (ошибка: ${data.groupError || 'неизвестно'})`);
-                    } else {
-                        addLog('success', `Успешно: ${user.email}`);
-                    }
-                } else {
-                    user.status = 'error';
-                    errorCount++;
-                    const errMsg = data.message || data.error || JSON.stringify(data);
-                    addLog('error', `Ошибка (${user.email}): ${errMsg}`);
-                }
-            } catch (err) {
-                user.status = 'error';
-                errorCount++;
-                addLog('error', `Ошибка сети (${user.email}): ${err.message}`);
-            }
-
-            setUsers([...updatedUsers]);
-            setStats({ success: successCount, error: errorCount });
+        while (localUsers.some(u => u.status !== 'success') && isInvitingRef.current) {
+            let successCount = localUsers.filter(u => u.status === 'success').length;
+            let errorCount = localUsers.filter(u => u.status === 'error').length;
             
-            // Задержка между запросами
-            await new Promise(r => setTimeout(r, 500));
+            for (let i = 0; i < localUsers.length; i++) {
+                if (!isInvitingRef.current) break;
+                
+                const user = localUsers[i];
+                if (user.status === 'success') continue;
+
+                if (user.status === 'error') {
+                    addLog('info', `[${i + 1}/${localUsers.length}] Повторная попытка: ${user.email}`);
+                } else {
+                    addLog('info', `[${i + 1}/${localUsers.length}] Приглашение: ${user.email}`);
+                }
+
+                try {
+                    const res = await fetch('/api/autodesk/invite', {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}` 
+                        },
+                        body: JSON.stringify({
+                            tenant_id: config.tenantId,
+                            invited_by: config.invitedBy,
+                            group_id: config.groupId,
+                            auth_token: config.authToken,
+                            cookie: config.cookieString,
+                            user: {
+                                email: user.email,
+                                firstName: user.firstName,
+                                lastName: user.lastName
+                            }
+                        })
+                    });
+
+                    if (res.status === 429) {
+                        user.status = 'error';
+                        addLog('error', `Rate limit (429) для ${user.email}. Ожидание 5 сек...`);
+                        setUsers([...localUsers]);
+                        await new Promise(r => setTimeout(r, 5000));
+                        continue;
+                    }
+
+                    const data = await res.json();
+
+                    if (res.ok) {
+                        user.status = 'success';
+                        successCount++;
+                        if (config.groupId && !data.groupAssigned) {
+                            addLog('success', `Успешно создан: ${user.email}, но НЕ добавлен в группу (ошибка: ${data.groupError || 'неизвестно'})`);
+                        } else {
+                            addLog('success', `Успешно: ${user.email}`);
+                        }
+                    } else {
+                        user.status = 'error';
+                        const errMsg = data.message || data.error || JSON.stringify(data);
+                        addLog('error', `Ошибка (${user.email}): ${errMsg}`);
+                    }
+                } catch (err) {
+                    user.status = 'error';
+                    addLog('error', `Ошибка сети (${user.email}): ${err.message}`);
+                }
+
+                errorCount = localUsers.filter(u => u.status === 'error').length;
+                setUsers([...localUsers]);
+                setStats({ success: successCount, error: errorCount });
+                
+                // Задержка между запросами
+                await new Promise(r => setTimeout(r, 1000));
+            }
+            
+            if (isInvitingRef.current && localUsers.some(u => u.status !== 'success')) {
+                addLog('info', 'Воркер: есть неудачные добавления. Повтор через 5 секунд...');
+                await new Promise(r => setTimeout(r, 5000));
+            }
         }
 
-        addLog('info', 'Процесс завершен!');
+        if (isInvitingRef.current) {
+            addLog('info', 'Воркер завершил работу! Все аккаунты добавлены.');
+            toast.success(`Завершено. Все аккаунты добавлены!`);
+        } else {
+            addLog('info', 'Воркер остановлен.');
+            toast.info(`Воркер остановлен пользователем.`);
+        }
+        
         setIsInviting(false);
-        toast.success(`Завершено. Успешно: ${successCount}, Ошибок: ${errorCount}`);
+        isInvitingRef.current = false;
+    };
+
+    const stopInvites = () => {
+        isInvitingRef.current = false;
+        setIsInviting(false);
     };
 
     const resetProcess = () => {
@@ -264,12 +299,13 @@ export default function AutodeskInviterTab({ token }) {
 
                         <div className="flex gap-2 pt-2 border-t mt-4">
                             <Button 
-                                onClick={startInvites} 
-                                disabled={isInviting || users.length === 0}
+                                onClick={isInviting ? stopInvites : startInvites} 
+                                disabled={users.length === 0}
                                 className="flex-1"
+                                variant={isInviting ? "destructive" : "default"}
                             >
-                                {isInviting ? <RotateCcw className="mr-2 h-4 w-4 animate-spin" /> : <Play className="mr-2 h-4 w-4" />}
-                                {isInviting ? "Рассылка инвайтов..." : "Начать приглашения"}
+                                {isInviting ? <XCircle className="mr-2 h-4 w-4" /> : <Play className="mr-2 h-4 w-4" />}
+                                {isInviting ? "Остановить воркер" : "Начать приглашения"}
                             </Button>
                             
                             <Button 
