@@ -11,6 +11,7 @@ import KeysCheckerTab from "../components/keys-checker";
 import AutodeskInviterTab from "../components/AutodeskInviterTab";
 import AutodeskUsersTab from "../components/AutodeskUsersTab";
 import AutodeskGroupsTab from "../components/AutodeskGroupsTab";
+import AutodeskHistoryTab from "../components/AutodeskHistoryTab";
 import YopmailGrabberTab from "../components/YopmailGrabberTab";
 import EsetGeneratorTab from "../components/EsetGeneratorTab";
 import EsetHistoryTab from "../components/EsetHistoryTab";
@@ -320,6 +321,7 @@ export default function ClientPage({ initialTab }) {
         { id: 'autodesk-list', label: 'Список пользователей' },
         { id: 'autodesk-groups', label: 'Список групп' },
         { id: 'autodesk-upload', label: 'Загрузка аккаунтов' },
+        { id: 'autodesk-history', label: 'История инвайтов' },
         { id: 'autodesk-yopmail', label: 'Получение почт' }
       ] 
     },
@@ -504,6 +506,7 @@ export default function ClientPage({ initialTab }) {
                 {activeTab === 'autodesk-list' && 'Управление пользователями Autodesk'}
                 {activeTab === 'autodesk-groups' && 'Управление группами Autodesk'}
                 {activeTab === 'autodesk-upload' && 'Массовое добавление пользователей через API Autodesk'}
+                {activeTab === 'autodesk-history' && 'Архив фоновых задач по добавлению пользователей в Autodesk'}
                 {activeTab === 'autodesk-yopmail' && 'Извлечение алиасов для одноразовых почт YOPmail'}
                 {activeTab === 'clients' && 'Управление клиентской базой и привязками'}
                 {activeTab === 'generator' && 'Массовая генерация почтовых ящиков через Migadu'}
@@ -715,6 +718,8 @@ export default function ClientPage({ initialTab }) {
           {activeTab === 'autodesk-yopmail' && (
             <YopmailGrabberTab token={token} />
           )}
+
+          {activeTab === 'autodesk-history' && <AutodeskHistoryTab token={token} />}
 
           {activeTab === 'eset-generator' && (
             <EsetGeneratorTab token={token} />

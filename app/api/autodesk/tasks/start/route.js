@@ -8,16 +8,19 @@ import crypto from 'crypto';
 // export const runtime = 'nodejs';
 
 async function processAutodeskTask(taskId, users, config, token) {
-    let localUsers = [...users];
+    let localUsers = users.map(u => ({ ...u, retryCount: 0 }));
     
-    // While there are users not successfully added
-    while (localUsers.some(u => u.status !== 'success')) {
+    // While there are users not successfully added and haven't exceeded retry limit
+    while (localUsers.some(u => u.status !== 'success' && u.retryCount < 5)) {
         let successCount = localUsers.filter(u => u.status === 'success').length;
-        let errorCount = localUsers.filter(u => u.status === 'error').length;
+        // Only count as 'error' (completed but failed) if retries are exhausted
+        let errorCount = localUsers.filter(u => u.status === 'error' && u.retryCount >= 5).length;
         
         for (let i = 0; i < localUsers.length; i++) {
             const user = localUsers[i];
-            if (user.status === 'success') continue;
+            if (user.status === 'success' || user.retryCount >= 5) continue;
+            
+            user.retryCount++;
             
             try {
                 // In a real background worker hitting an internal Next.js API route isn't ideal 
@@ -91,7 +94,7 @@ async function processAutodeskTask(taskId, users, config, token) {
                 console.error("Autodesk API fetch error", err);
             }
             
-            errorCount = localUsers.filter(u => u.status === 'error').length;
+            errorCount = localUsers.filter(u => u.status === 'error' && u.retryCount >= 5).length;
             
             // Update DB progress
             try {
@@ -106,15 +109,18 @@ async function processAutodeskTask(taskId, users, config, token) {
         }
         
         // Wait before retrying errors
-        if (localUsers.some(u => u.status !== 'success')) {
+        if (localUsers.some(u => u.status !== 'success' && u.retryCount < 5)) {
             await new Promise(r => setTimeout(r, 5000));
         }
     }
     
-    // Finished successfully
+    // Finished successfully (calculate final counts just in case)
+    let finalSuccess = localUsers.filter(u => u.status === 'success').length;
+    let finalError = localUsers.filter(u => u.status !== 'success').length;
+
     try {
-        db.prepare('UPDATE autodesk_tasks SET status = ?, items_json = ? WHERE id = ?')
-          .run('completed', JSON.stringify(localUsers), taskId);
+        db.prepare('UPDATE autodesk_tasks SET status = ?, success = ?, error = ?, items_json = ? WHERE id = ?')
+          .run('completed', finalSuccess, finalError, JSON.stringify(localUsers), taskId);
     } catch (e) {
         console.error("DB finalize error", e);
     }

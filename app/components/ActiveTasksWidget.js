@@ -10,6 +10,7 @@ import { toast } from "sonner";
 export default function ActiveTasksWidget({ token }) {
     const [tasks, setTasks] = useState([]);
     const [isClosed, setIsClosed] = useState(false);
+    const [isMinimized, setIsMinimized] = useState(false);
     const previousTaskIds = useRef(new Set());
 
     useEffect(() => {
@@ -63,6 +64,19 @@ export default function ActiveTasksWidget({ token }) {
         return `~${Math.round(etaSeconds / 60)} мин`;
     };
 
+    if (isMinimized) {
+        return (
+            <div className="fixed bottom-6 right-6 z-50 animate-in slide-in-from-bottom-5 fade-in duration-300">
+                <Button onClick={() => setIsMinimized(false)} variant="outline" className="rounded-full w-12 h-12 p-0 shadow-lg border-primary/20 bg-background relative flex items-center justify-center">
+                    <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                    <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground rounded-full w-5 h-5 text-[10px] flex items-center justify-center font-bold shadow-sm">
+                        {tasks.length}
+                    </span>
+                </Button>
+            </div>
+        );
+    }
+
     return (
         <div className="fixed bottom-6 right-6 z-50 w-80 space-y-3 animate-in slide-in-from-bottom-5 fade-in duration-300">
             <Card className="shadow-lg border-primary/20 overflow-hidden">
@@ -71,9 +85,14 @@ export default function ActiveTasksWidget({ token }) {
                         <Loader2 className="w-3 h-3 animate-spin" />
                         Фоновые задачи ({tasks.length})
                     </div>
-                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0 hover:bg-primary/20" onClick={() => setIsClosed(true)}>
-                        <X className="w-3 h-3" />
-                    </Button>
+                    <div className="flex gap-1">
+                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0 hover:bg-primary/20" onClick={() => setIsMinimized(true)}>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        </Button>
+                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0 hover:bg-primary/20" onClick={() => setIsClosed(true)}>
+                            <X className="w-3 h-3" />
+                        </Button>
+                    </div>
                 </div>
                 <CardContent className="p-4 space-y-4">
                     {tasks.map(task => {
