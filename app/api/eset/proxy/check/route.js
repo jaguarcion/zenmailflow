@@ -27,6 +27,9 @@ export async function POST(request) {
             proxyString = proxyString.replace(/\[.*?\]/, '');
         }
 
+        // Clean up trailing country tags like ":Latvia" which break the URL parser
+        proxyString = proxyString.replace(/:[a-zA-Z]+$/, '');
+
         const agent = proxyString.startsWith('socks') ? new SocksProxyAgent(proxyString) : new HttpsProxyAgent(proxyString);
 
         const startTime = Date.now();
