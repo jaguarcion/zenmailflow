@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -100,7 +100,7 @@ export default function EsetSettingsTab({ token }) {
             });
             const data = await res.json();
             if (data.status === 'success') {
-                toast.success(Автопостинг успешно выполнен! Отправлено ключей:  + data.keysCount);
+                toast.success(`Автопостинг успешно выполнен! Отправлено ключей: ${data.keysCount}`);
             } else {
                 toast.error("Ошибка автопостинга: " + data.error);
             }

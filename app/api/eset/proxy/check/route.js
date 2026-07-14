@@ -1,4 +1,4 @@
-﻿import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { isAuthenticated, checkFail2Ban } from '@/lib/auth';
 import { SocksProxyAgent } from 'socks-proxy-agent';
 import { HttpsProxyAgent } from 'https-proxy-agent';
@@ -45,7 +45,7 @@ export async function POST(request) {
             clearTimeout(timeout);
             
             if (!res.ok) {
-                throw new Error(HTTP error! status: );
+                throw new Error(`HTTP error! status: ${res.status}`);
             }
             
             const data = await res.json();
