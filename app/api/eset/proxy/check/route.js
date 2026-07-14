@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { isAuthenticated, checkFail2Ban } from '@/lib/auth';
 import { SocksProxyAgent } from 'socks-proxy-agent';
 import { HttpsProxyAgent } from 'https-proxy-agent';
+import axios from 'axios';
 
 export async function POST(request) {
     const authStatus = await checkFail2Ban(request);
@@ -40,17 +41,18 @@ export async function POST(request) {
         }, 15000); // 15s timeout
 
         try {
-            const res = await fetch('https://api.ipify.org?format=json', {
-                agent,
-                signal: controller.signal
+            const res = await axios.get('https://api.ipify.org?format=json', {
+                httpsAgent: agent,
+                signal: controller.signal,
+                validateStatus: () => true
             });
             clearTimeout(timeout);
             
-            if (!res.ok) {
+            if (res.status !== 200) {
                 throw new Error(`HTTP error! status: ${res.status}`);
             }
             
-            const data = await res.json();
+            const data = res.data;
             const timeTaken = Date.now() - startTime;
             
             return NextResponse.json({ 
