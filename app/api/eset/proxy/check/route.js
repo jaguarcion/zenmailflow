@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import { isAuthenticated, checkFail2Ban } from '@/lib/auth';
 import { SocksProxyAgent } from 'socks-proxy-agent';
 import { HttpsProxyAgent } from 'https-proxy-agent';
-import fetch from 'node-fetch';
 
 export async function POST(request) {
     const authStatus = await checkFail2Ban(request);
