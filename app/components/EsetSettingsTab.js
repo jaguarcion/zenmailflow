@@ -224,6 +224,7 @@ export default function EsetSettingsTab({ token }) {
                                     <SelectContent>
                                         <SelectItem value="migadu">Migadu (Рекомендуется)</SelectItem>
                                         <SelectItem value="mailtm">Mail.tm (Бесплатно, часто блокируют)</SelectItem>
+                                        <SelectItem value="pro100pochta">Pro100Pochta (Временная, без Cloudflare)</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
