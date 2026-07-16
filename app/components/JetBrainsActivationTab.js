@@ -119,7 +119,7 @@ export default function JetBrainsActivationTab({ token }) {
       try {
         // Step 0: Initialize JetBrains session
         addLog('0. Initializing JetBrains session (fetching CSRF token)...');
-        await jbApi.initSession();
+        await jbApi.initSession(token);
 
         // Step 1: Get disposable email
         addLog('1. Generating disposable pro100pochta email...');
@@ -128,7 +128,7 @@ export default function JetBrainsActivationTab({ token }) {
 
         // Step 2: Send Verify Email
         addLog('2. Sending Verify Email request to JetBrains...');
-        await jbApi.verifyEmail(personalEmail);
+        await jbApi.verifyEmail(personalEmail, token);
 
         // Step 3: Wait for OTP on pro100pochta
         addLog('3. Waiting for JetBrains OTP on pro100pochta...');
@@ -137,13 +137,13 @@ export default function JetBrainsActivationTab({ token }) {
 
         // Step 4: Verify OTP
         addLog('4. Verifying OTP...');
-        await jbApi.verifyOtp(personalEmail, otp);
+        await jbApi.verifyOtp(personalEmail, otp, token);
 
         // Step 5: Submit Registration
         addLog(`5. Submitting student details (University Email: ${outlookEmail})...`);
         let isAlreadyUsed = false;
         try {
-          await jbApi.submit(outlookEmail, personalEmail, otp, first, last);
+          await jbApi.submit(outlookEmail, personalEmail, otp, first, last, token);
         } catch (submitErr) {
           if (submitErr.message && submitErr.message.includes('AlreadyUsedForLicenseRequest')) {
             addLog(`ℹ️ Email ${outlookEmail} already used (license confirmed). Skipping to direct recovery...`);
