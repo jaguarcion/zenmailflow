@@ -198,6 +198,28 @@ export default function JetBrainsActivationTab({ token }) {
         }
         
         const setPassData = await setPassRes.json();
+        if (setPassData.success) {
+          addLog('✅ Password Set Successfully!');
+          
+          // Save to database
+          try {
+            await fetch('/api/jetbrains/accounts', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+              body: JSON.stringify({
+                email: personalEmail,
+                password: jetbrainsPass,
+                license_email: outlookEmail
+              })
+            });
+            addLog('💾 Account saved to database');
+          } catch (dbErr) {
+            console.error('Failed to save account to db', dbErr);
+          }
+
+          addLog(`\n🎉 DONE!`);
+        }
+        
         if (setPassData.error) throw new Error(setPassData.error);
 
         addLog(`✅ SUCCESS: Account ${outlookEmail} created and verified!`);
