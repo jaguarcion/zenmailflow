@@ -114,6 +114,27 @@ export default function JetBrainsStudentEmailsTab({ token }) {
     }
   };
 
+  const handleActivateSingle = async (acc, e) => {
+    if (e) e.stopPropagation();
+    
+    try {
+      const res = await fetch('/api/jetbrains/student-emails/activate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ items: [acc] })
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(`Аккаунт ${acc.email} отправлен в обработку`);
+        fetchTasks(); // refresh to show processing status
+      } else {
+        toast.error(data.error || 'Ошибка активации');
+      }
+    } catch (err) {
+      toast.error('Ошибка сети');
+    }
+  };
+
   const handleDeleteTask = async (id, e) => {
     if (e) e.stopPropagation();
     if (!confirm('Удалить эту партию и все связанные с ней аккаунты?')) return;
@@ -318,9 +339,16 @@ export default function JetBrainsStudentEmailsTab({ token }) {
                                               </div>
                                             </TableCell>
                                             <TableCell className="py-2 text-right">
-                                              <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:bg-destructive/10" onClick={(e) => handleDeleteEmail(acc.id, e)} title="Удалить">
-                                                <Trash2 className="h-3 w-3" />
-                                              </Button>
+                                              <div className="flex justify-end gap-1">
+                                                {(acc.status === 'pending' || acc.status === 'error') && (
+                                                  <Button variant="ghost" size="icon" className="h-6 w-6 text-blue-600 hover:text-blue-700 hover:bg-blue-100" onClick={(e) => handleActivateSingle(acc, e)} title="Активировать аккаунт">
+                                                    <Play className="h-3 w-3" />
+                                                  </Button>
+                                                )}
+                                                <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:bg-destructive/10" onClick={(e) => handleDeleteEmail(acc.id, e)} title="Удалить">
+                                                  <Trash2 className="h-3 w-3" />
+                                                </Button>
+                                              </div>
                                             </TableCell>
                                           </TableRow>
                                         ))}
