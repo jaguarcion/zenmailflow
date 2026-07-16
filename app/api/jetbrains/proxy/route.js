@@ -51,14 +51,19 @@ export async function POST(req) {
     const response = await fetch(targetUrl, options);
 
     let data;
-    const contentType = response.headers.get('content-type');
-    if (contentType && contentType.includes('application/json')) {
-      data = await response.json();
+    let res;
+    
+    if (response.status === 204) {
+      res = new NextResponse(null, { status: 204 });
     } else {
-      data = await response.text();
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        data = await response.json();
+      } else {
+        data = await response.text();
+      }
+      res = NextResponse.json(data, { status: response.status });
     }
-
-    const res = NextResponse.json(data, { status: response.status });
 
     // Forward Set-Cookie headers back to the client, modifying them
     // Fetch API Headers object combines multiple Set-Cookie into one string, which is annoying.
