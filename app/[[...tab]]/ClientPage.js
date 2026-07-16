@@ -20,6 +20,7 @@ import EsetTelegramTab from "../components/EsetTelegramTab";
 import BurpTab from "../components/BurpTab";
 import JetBrainsActivationTab from "../components/JetBrainsActivationTab";
 import JetBrainsAccountsTab from "../components/JetBrainsAccountsTab";
+import JetBrainsStudentEmailsTab from "../components/JetBrainsStudentEmailsTab";
 import GlobalSearch from "../components/GlobalSearch";
 import ActiveTasksWidget from "../components/ActiveTasksWidget";
 import { Button } from "@/components/ui/button";
@@ -351,7 +352,8 @@ export default function ClientPage({ initialTab }) {
       label: 'JetBrains',
       icon: Box,
       subItems: [
-        { id: 'jetbrains', label: 'Активация' },
+        { id: 'jetbrains-student', label: 'Пул почт (Student)' },
+        { id: 'jetbrains', label: 'Активация (Manual)' },
         { id: 'jetbrains-accounts', label: 'Аккаунты' }
       ]
     }
@@ -506,9 +508,10 @@ export default function ClientPage({ initialTab }) {
                 {activeTab === 'eset-telegram' && 'Статистика Telegram Бота ESET'}
                 {activeTab === 'eset-settings' && 'Настройки ESET'}
                 {activeTab === 'burp-mail' && 'Временные почты Burp'}
+                {activeTab === 'jetbrains-student' && 'Пул студенческих почт для JetBrains'}
                 {activeTab === 'jetbrains' && 'Массовая автоматизация JetBrains'}
                 {activeTab === 'jetbrains-accounts' && 'Управление аккаунтами JetBrains'}
-                {activeTab !== 'adobe-list' && activeTab !== 'adobe-upload' && activeTab !== 'audit-logs' && activeTab !== 'keys-checker' && !activeTab.startsWith('eset-') && activeTab !== 'burp-mail' && activeTab !== 'jetbrains' && activeTab !== 'jetbrains-accounts' && navItems.find(n => n.id === activeTab)?.label}
+                {activeTab !== 'adobe-list' && activeTab !== 'adobe-upload' && activeTab !== 'audit-logs' && activeTab !== 'keys-checker' && !activeTab.startsWith('eset-') && activeTab !== 'burp-mail' && activeTab !== 'jetbrains-student' && activeTab !== 'jetbrains' && activeTab !== 'jetbrains-accounts' && navItems.find(n => n.id === activeTab)?.label}
               </h1>
               <p className="text-muted-foreground">
                 {activeTab === 'dashboard' && 'Статистика и аналитика вашей платформы'}
@@ -529,6 +532,7 @@ export default function ClientPage({ initialTab }) {
                 {activeTab === 'eset-telegram' && 'Управление ботом бесплатной раздачи ESET'}
                 {activeTab === 'eset-settings' && 'Конфигурация прокси и почтового провайдера ESET'}
                 {activeTab === 'burp-mail' && 'Создание и управление временными почтовыми ящиками'}
+                {activeTab === 'jetbrains-student' && 'Загрузка и автоматическая активация JetBrains через фоновые задачи'}
                 {activeTab === 'jetbrains' && 'Скрапинг и автоматическая регистрация аккаунтов JetBrains'}
                 {activeTab === 'jetbrains-accounts' && 'Просмотр и редактирование списка аккаунтов JetBrains'}
               </p>
@@ -743,6 +747,7 @@ export default function ClientPage({ initialTab }) {
           {activeTab === 'eset-settings' && <EsetSettingsTab token={token} />}
           {activeTab === 'eset-telegram' && <EsetTelegramTab token={token} />}
           {activeTab === 'burp-mail' && <BurpTab token={token} />}
+          {activeTab === 'jetbrains-student' && <JetBrainsStudentEmailsTab token={token} />}
           {activeTab === 'jetbrains' && <JetBrainsActivationTab token={token} />}
           {activeTab === 'jetbrains-accounts' && <JetBrainsAccountsTab token={token} />}
         </div>
