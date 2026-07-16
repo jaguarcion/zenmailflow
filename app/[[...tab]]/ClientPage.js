@@ -18,6 +18,7 @@ import EsetHistoryTab from "../components/EsetHistoryTab";
 import EsetSettingsTab from "../components/EsetSettingsTab";
 import EsetTelegramTab from "../components/EsetTelegramTab";
 import BurpTab from "../components/BurpTab";
+import JetBrainsActivationTab from "../components/JetBrainsActivationTab";
 import GlobalSearch from "../components/GlobalSearch";
 import ActiveTasksWidget from "../components/ActiveTasksWidget";
 import { Button } from "@/components/ui/button";
@@ -343,6 +344,14 @@ export default function ClientPage({ initialTab }) {
       subItems: [
         { id: 'burp-mail', label: 'Почтовые ящики' }
       ]
+    },
+    {
+      id: 'jetbrains-group',
+      label: 'JetBrains',
+      icon: Box,
+      subItems: [
+        { id: 'jetbrains-activation', label: 'Активация' }
+      ]
     }
   ];
 
@@ -495,7 +504,8 @@ export default function ClientPage({ initialTab }) {
                 {activeTab === 'eset-telegram' && 'Статистика Telegram Бота ESET'}
                 {activeTab === 'eset-settings' && 'Настройки ESET'}
                 {activeTab === 'burp-mail' && 'Временные почты Burp'}
-                {activeTab !== 'adobe-list' && activeTab !== 'adobe-upload' && activeTab !== 'audit-logs' && activeTab !== 'keys-checker' && !activeTab.startsWith('eset-') && activeTab !== 'burp-mail' && navItems.find(n => n.id === activeTab)?.label}
+                {activeTab === 'jetbrains-activation' && 'Массовая автоматизация JetBrains'}
+                {activeTab !== 'adobe-list' && activeTab !== 'adobe-upload' && activeTab !== 'audit-logs' && activeTab !== 'keys-checker' && !activeTab.startsWith('eset-') && activeTab !== 'burp-mail' && activeTab !== 'jetbrains-activation' && navItems.find(n => n.id === activeTab)?.label}
               </h1>
               <p className="text-muted-foreground">
                 {activeTab === 'dashboard' && 'Статистика и аналитика вашей платформы'}
@@ -516,6 +526,7 @@ export default function ClientPage({ initialTab }) {
                 {activeTab === 'eset-telegram' && 'Управление ботом бесплатной раздачи ESET'}
                 {activeTab === 'eset-settings' && 'Конфигурация прокси и почтового провайдера ESET'}
                 {activeTab === 'burp-mail' && 'Создание и управление временными почтовыми ящиками'}
+                {activeTab === 'jetbrains-activation' && 'Скрапинг и автоматическая регистрация аккаунтов JetBrains'}
               </p>
             </div>
             
@@ -728,6 +739,7 @@ export default function ClientPage({ initialTab }) {
           {activeTab === 'eset-settings' && <EsetSettingsTab token={token} />}
           {activeTab === 'eset-telegram' && <EsetTelegramTab token={token} />}
           {activeTab === 'burp-mail' && <BurpTab token={token} />}
+          {activeTab === 'jetbrains-activation' && <JetBrainsActivationTab token={token} />}
         </div>
       </main>
         </div>
