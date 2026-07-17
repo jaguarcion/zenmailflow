@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -100,7 +100,24 @@ export default function JetBrainsAccountsTab({ token }) {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  accounts.map((acc) => (
+                  Object.entries(
+                    accounts.reduce((acc, curr) => {
+                      const key = curr.woo_order_id ? `Заказ #${curr.woo_order_id}` : 'Активация (Manual)';
+                      if (!acc[key]) acc[key] = [];
+                      acc[key].push(curr);
+                      return acc;
+                    }, {})
+                  ).map(([groupName, groupAccounts]) => (
+                    <React.Fragment key={groupName}>
+                      <TableRow className="bg-slate-100/50 hover:bg-slate-100/50">
+                        <TableCell colSpan={5} className="font-semibold text-slate-700 py-3">
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                            {groupName} <span className="text-muted-foreground font-normal text-xs ml-2">({groupAccounts.length} аккаунтов)</span>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                      {groupAccounts.map((acc) => (
                     <TableRow key={acc.id}>
                       <TableCell className="font-medium">
                         <div className="flex items-center gap-2">
@@ -142,6 +159,8 @@ export default function JetBrainsAccountsTab({ token }) {
                         </Badge>
                       </TableCell>
                     </TableRow>
+                  ))}
+                  </React.Fragment>
                   ))
                 )}
               </TableBody>
