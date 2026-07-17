@@ -1,11 +1,10 @@
 import { NextResponse } from 'next/server';
+import { authenticateWholesale } from '@/lib/wholesale-auth';
 import { getJetBrainsOrderById, getJetBrainsAccountsByOrderId } from '@/lib/db';
 
-const PASSWORD = process.env.WHOLESALE_PASSWORD || 'optovik';
-
 export async function GET(request, { params }) {
-  const auth = request.headers.get('x-wholesale-auth');
-  if (auth !== PASSWORD) {
+  const auth = authenticateWholesale(request);
+  if (!auth.authenticated) {
     return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
   }
 

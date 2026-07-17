@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
+import { authenticateWholesale } from '@/lib/wholesale-auth';
 import { insertJetBrainsOrder, getJetBrainsOrderByWooId } from '@/lib/db';
 
-const PASSWORD = process.env.WHOLESALE_PASSWORD || 'optovik';
-
 export async function POST(request) {
-  const auth = request.headers.get('x-wholesale-auth');
-  if (auth !== PASSWORD) {
+  // Auth check via JWT cookie
+  const auth = authenticateWholesale(request);
+  if (!auth.authenticated) {
     return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -17,16 +17,20 @@ export async function POST(request) {
     }
 
     let quantity = 0;
-    const orderNumber = wooOrderId.replace(/\D/g, ''); // Extract only numbers
+    const orderNumber = String(wooOrderId).replace(/\D/g, ''); // Extract only numbers
+
+    if (!orderNumber) {
+      return NextResponse.json({ success: false, error: 'Некорректный номер заказа' }, { status: 400 });
+    }
 
     try {
-      const wooStoreUrl = process.env.WOO_STORE_URL || 'https://keysoft.store';
+      const wooStoreUrl = process.env.WOO_STORE_URL;
       const wooKey = process.env.WOO_CONSUMER_KEY;
       const wooSecret = process.env.WOO_CONSUMER_SECRET;
-      const targetProductId = parseInt(process.env.WOO_JETBRAINS_PRODUCT_ID || '1613979');
+      const targetProductId = parseInt(process.env.WOO_JETBRAINS_PRODUCT_ID || '0');
 
-      if (!wooKey || !wooSecret) {
-        return NextResponse.json({ success: false, error: 'WooCommerce API keys not configured on server' }, { status: 500 });
+      if (!wooKey || !wooSecret || !wooStoreUrl) {
+        return NextResponse.json({ success: false, error: 'WooCommerce API not configured on server' }, { status: 500 });
       }
 
       const authHeader = 'Basic ' + Buffer.from(`${wooKey}:${wooSecret}`).toString('base64');
@@ -68,16 +72,18 @@ export async function POST(request) {
 
     orderId = insertJetBrainsOrder(orderNumber, quantity);
 
+    // Telegram notification — use sanitized orderNumber, not raw input
     const tgBotToken = process.env.ADMIN_TG_BOT_TOKEN;
     const tgChatId = process.env.ADMIN_TG_CHAT_ID;
     if (tgBotToken && tgChatId) {
-      const message = `📦 *Новый оптовый заказ JetBrains!*\n\nНомер Woo: #${wooOrderId}\nКоличество: ${quantity} шт.\nID заказа в системе: ${orderId}\n\nЗайдите в панель, чтобы запустить выполнение.`;
+      const safeOrderNumber = String(orderNumber).replace(/[^0-9]/g, '');
+      const message = `📦 *Новый оптовый заказ JetBrains\\!*\n\nНомер Woo: \\#${safeOrderNumber}\nКоличество: ${quantity} шт\\.\nID заказа в системе: ${orderId}\n\nЗайдите в панель, чтобы запустить выполнение\\.`;
       try {
         fetch(`https://api.telegram.org/bot${tgBotToken}/sendMessage`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ chat_id: tgChatId, text: message, parse_mode: 'Markdown' })
-        }).catch(() => {}); // silent fail for telegram
+          body: JSON.stringify({ chat_id: tgChatId, text: message, parse_mode: 'MarkdownV2' })
+        }).catch(() => {});
       } catch (e) {}
     }
 

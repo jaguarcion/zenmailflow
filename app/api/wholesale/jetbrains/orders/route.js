@@ -1,17 +1,15 @@
 import { NextResponse } from 'next/server';
+import { authenticateWholesale } from '@/lib/wholesale-auth';
 import { getAllJetBrainsOrders } from '@/lib/db';
 
-const PASSWORD = process.env.WHOLESALE_PASSWORD || 'optovik';
-
 export async function GET(request) {
-  const auth = request.headers.get('x-wholesale-auth');
-  if (auth !== PASSWORD) {
+  const auth = authenticateWholesale(request);
+  if (!auth.authenticated) {
     return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
     const orders = getAllJetBrainsOrders();
-    // Exclude sensitive data if necessary, but the wholesaler needs to see the status.
     return NextResponse.json({ success: true, orders });
   } catch (error) {
     console.error('[Wholesale Orders GET]', error);

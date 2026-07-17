@@ -41,5 +41,7 @@ yarn-error.log*
 next-env.d.ts
 
 # database
-emails.db
-emails.db-journal
+*.db
+*.db-journal
+*.db-wal
+*.db-shm

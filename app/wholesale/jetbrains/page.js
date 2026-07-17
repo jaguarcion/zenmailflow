@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from 'sonner';
-import { Lock, Package, ArrowRight, RefreshCw, List, Plus } from 'lucide-react';
+import { Lock, Package, ArrowRight, RefreshCw, List, Plus, LogOut } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +19,7 @@ export default function WholesaleOrderPage() {
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [activeTab, setActiveTab] = useState('create');
+  const [checkingAuth, setCheckingAuth] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
@@ -27,23 +28,40 @@ export default function WholesaleOrderPage() {
       setActiveTab('list');
     }
 
-    const savedToken = localStorage.getItem('wholesale_token');
-    if (savedToken) {
-      setPassword(savedToken);
-      setIsAuth(true);
-      fetchOrders(savedToken);
-    }
+    // Check if we have a valid session by trying to fetch orders
+    checkExistingSession();
   }, []);
 
-  const fetchOrders = async (token) => {
+  const checkExistingSession = async () => {
+    try {
+      const res = await fetch('/api/wholesale/jetbrains/orders', {
+        credentials: 'include'
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) {
+          setIsAuth(true);
+          setOrders(data.orders);
+        }
+      }
+    } catch (err) {
+      // Not authenticated — that's fine
+    } finally {
+      setCheckingAuth(false);
+    }
+  };
+
+  const fetchOrders = async () => {
     setLoadingOrders(true);
     try {
       const res = await fetch('/api/wholesale/jetbrains/orders', {
-        headers: { 'x-wholesale-auth': token }
+        credentials: 'include'
       });
       const data = await res.json();
       if (data.success) {
         setOrders(data.orders);
+      } else if (res.status === 401) {
+        handleSessionExpired();
       }
     } catch (err) {
       toast.error('Не удалось загрузить список заказов');
@@ -52,28 +70,45 @@ export default function WholesaleOrderPage() {
     }
   };
 
+  const handleSessionExpired = () => {
+    setIsAuth(false);
+    toast.error('Сессия истекла. Войдите снова.');
+  };
+
   const handleLogin = async (e) => {
     e.preventDefault();
-    if (password.length > 3) {
-      try {
-        const res = await fetch('/api/wholesale/jetbrains/auth', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ password })
-        });
-        const data = await res.json();
-        if (data.success) {
-          localStorage.setItem('wholesale_token', password);
-          setIsAuth(true);
-          toast.success('Успешный вход');
-          fetchOrders(password);
-        } else {
-          toast.error(data.error || 'Неверный пароль');
-        }
-      } catch (err) {
-        toast.error('Ошибка сети');
+    if (password.length < 1) return;
+    try {
+      const res = await fetch('/api/wholesale/jetbrains/auth', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setIsAuth(true);
+        setPassword(''); // Clear password from state
+        toast.success('Успешный вход');
+        fetchOrders();
+      } else {
+        toast.error(data.error || 'Неверный пароль');
       }
+    } catch (err) {
+      toast.error('Ошибка сети');
     }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/wholesale/jetbrains/logout', {
+        method: 'POST',
+        credentials: 'include'
+      });
+    } catch (e) {}
+    setIsAuth(false);
+    setOrders([]);
+    toast.success('Вы вышли из системы');
   };
 
   const handleSubmit = async (e) => {
@@ -84,10 +119,8 @@ export default function WholesaleOrderPage() {
     try {
       const res = await fetch('/api/wholesale/jetbrains/order', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-wholesale-auth': password
-        },
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ wooOrderId })
       });
       
@@ -97,8 +130,7 @@ export default function WholesaleOrderPage() {
         router.push(`/wholesale/jetbrains/${data.orderId}`);
       } else {
         if (res.status === 401) {
-          setIsAuth(false);
-          localStorage.removeItem('wholesale_token');
+          handleSessionExpired();
         }
         toast.error(data.error || 'Ошибка создания заказа');
       }
@@ -108,6 +140,14 @@ export default function WholesaleOrderPage() {
       setLoading(false);
     }
   };
+
+  if (checkingAuth) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <RefreshCw className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   if (!isAuth) {
     return (
@@ -129,6 +169,7 @@ export default function WholesaleOrderPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Введите пароль"
+                  autoComplete="current-password"
                 />
               </div>
               <Button type="submit" className="w-full">Войти</Button>
@@ -142,6 +183,11 @@ export default function WholesaleOrderPage() {
   return (
     <div className="min-h-screen bg-slate-50 p-4 py-12 flex justify-center">
       <div className="w-full max-w-4xl space-y-6 flex flex-col items-center">
+        <div className="w-full flex justify-end">
+          <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-destructive" onClick={handleLogout}>
+            <LogOut className="w-4 h-4 mr-2" /> Выйти
+          </Button>
+        </div>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex flex-col items-center">
           <TabsList className="grid w-full grid-cols-2 max-w-[400px] mb-6">
             <TabsTrigger value="create" className="flex items-center gap-2">
@@ -194,7 +240,7 @@ export default function WholesaleOrderPage() {
                   <CardTitle>Список заявок</CardTitle>
                   <CardDescription>Отслеживайте прогресс генерации аккаунтов</CardDescription>
                 </div>
-                <Button variant="outline" size="sm" onClick={() => fetchOrders(password)} disabled={loadingOrders}>
+                <Button variant="outline" size="sm" onClick={fetchOrders} disabled={loadingOrders}>
                   <RefreshCw className={`w-4 h-4 mr-2 ${loadingOrders ? 'animate-spin' : ''}`} /> Обновить
                 </Button>
               </CardHeader>

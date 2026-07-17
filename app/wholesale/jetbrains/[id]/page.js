@@ -20,21 +20,39 @@ export default function WholesaleOrderStatusPage() {
   const [order, setOrder] = useState(null);
   const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [checkingAuth, setCheckingAuth] = useState(true);
 
   useEffect(() => {
-    const savedToken = localStorage.getItem('wholesale_token');
-    if (savedToken) {
-      setPassword(savedToken);
-      setIsAuth(true);
-    }
+    // Check session via cookie by attempting to fetch the order
+    checkSession();
   }, []);
 
+  const checkSession = async () => {
+    try {
+      const res = await fetch(`/api/wholesale/jetbrains/order/${id}`, {
+        credentials: 'include'
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) {
+          setIsAuth(true);
+          setOrder(data.order);
+          setAccounts(data.accounts || []);
+        }
+      }
+    } catch (err) {
+      // Not authenticated
+    } finally {
+      setCheckingAuth(false);
+      setLoading(false);
+    }
+  };
+
   const fetchOrder = async (showLoading = true) => {
-    if (!isAuth) return;
     if (showLoading) setLoading(true);
     try {
       const res = await fetch(`/api/wholesale/jetbrains/order/${id}`, {
-        headers: { 'x-wholesale-auth': password }
+        credentials: 'include'
       });
       const data = await res.json();
       if (res.ok && data.success) {
@@ -43,9 +61,11 @@ export default function WholesaleOrderStatusPage() {
       } else {
         if (res.status === 401) {
           setIsAuth(false);
-          localStorage.removeItem('wholesale_token');
+          toast.error('Сессия истекла. Войдите снова.');
         }
-        toast.error(data.error || 'Ошибка загрузки заказа');
+        if (!data.success && data.error) {
+          toast.error(data.error);
+        }
       }
     } catch (err) {
       toast.error('Ошибка сети');
@@ -56,32 +76,32 @@ export default function WholesaleOrderStatusPage() {
 
   useEffect(() => {
     if (isAuth) {
-      fetchOrder();
-      const interval = setInterval(() => fetchOrder(false), 10000); // 10s auto refresh
+      const interval = setInterval(() => fetchOrder(false), 10000);
       return () => clearInterval(interval);
     }
   }, [isAuth, id]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    if (password.length > 3) {
-      try {
-        const res = await fetch('/api/wholesale/jetbrains/auth', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ password })
-        });
-        const data = await res.json();
-        if (data.success) {
-          localStorage.setItem('wholesale_token', password);
-          setIsAuth(true);
-          toast.success('Успешный вход');
-        } else {
-          toast.error(data.error || 'Неверный пароль');
-        }
-      } catch (err) {
-        toast.error('Ошибка сети');
+    if (password.length < 1) return;
+    try {
+      const res = await fetch('/api/wholesale/jetbrains/auth', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setPassword(''); // Clear from state
+        setIsAuth(true);
+        toast.success('Успешный вход');
+        fetchOrder();
+      } else {
+        toast.error(data.error || 'Неверный пароль');
       }
+    } catch (err) {
+      toast.error('Ошибка сети');
     }
   };
 
@@ -104,6 +124,10 @@ export default function WholesaleOrderStatusPage() {
     URL.revokeObjectURL(url);
   };
 
+  if (checkingAuth) {
+    return <div className="min-h-screen flex items-center justify-center"><RefreshCw className="w-8 h-8 animate-spin text-primary" /></div>;
+  }
+
   if (!isAuth) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
@@ -124,6 +148,7 @@ export default function WholesaleOrderStatusPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Введите пароль"
+                  autoComplete="current-password"
                 />
               </div>
               <Button type="submit" className="w-full">Войти</Button>
@@ -151,7 +176,7 @@ export default function WholesaleOrderStatusPage() {
           <ArrowLeft className="w-4 h-4 mr-2" />
           Назад к заказам
         </Link>
-        
+
         <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between bg-white p-6 rounded-xl border shadow-sm">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center shadow-sm border border-blue-100">
