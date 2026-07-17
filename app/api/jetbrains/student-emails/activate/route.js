@@ -33,7 +33,8 @@ export async function POST(request) {
         await jetbrainsQueue.add('activate', {
             id: item.id,
             email: item.email,
-            password: item.password
+            password: item.password,
+            order_id: item.order_id || null
         });
         enqueued++;
       }

@@ -32,7 +32,7 @@ esetWorker.on('failed', (job, err) => {
 const jetbrainsWorker = new Worker('jetbrains-activation', async job => {
     console.log(`[JetBrains Job] Processing job ${job.id} for email ${job.data.email}`);
     try {
-        await startJetBrainsActivation(job.data.id, job.data.email, job.data.password);
+        await startJetBrainsActivation(job.data.id, job.data.email, job.data.password, job.data.order_id);
         console.log(`[JetBrains Job] Job ${job.id} completed successfully`);
     } catch (err) {
         console.error(`[JetBrains Job] Job ${job.id} failed:`, err.message);
