@@ -135,8 +135,8 @@ export default function WholesaleOrderPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 p-4 py-12 flex justify-center">
-      <div className="w-full max-w-4xl space-y-6">
-        <Tabs defaultValue="create" className="w-full">
+      <div className="w-full max-w-4xl space-y-6 flex flex-col items-center">
+        <Tabs defaultValue="create" className="w-full flex flex-col items-center">
           <TabsList className="grid w-full grid-cols-2 max-w-[400px] mb-6">
             <TabsTrigger value="create" className="flex items-center gap-2">
               <Plus className="w-4 h-4" /> Добавить заказ
@@ -146,7 +146,7 @@ export default function WholesaleOrderPage() {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="create">
+          <TabsContent value="create" className="w-full flex justify-center">
             <Card className="w-full max-w-lg h-fit">
               <CardHeader>
                 <div className="flex items-center gap-3 mb-2">
@@ -181,7 +181,7 @@ export default function WholesaleOrderPage() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="list">
+          <TabsContent value="list" className="w-full">
             <Card className="shadow-sm border-slate-200">
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>
