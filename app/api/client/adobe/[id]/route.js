@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getAdobeAccountByAccessToken, updateAdobeAccountStatus } from '@/lib/db';
 import { checkAdobeAccount } from '@/lib/dongvanfb';
+import { checkRateLimit } from '@/lib/rateLimit';
 
 // [SECURITY] C-01+C-02: Use access_token for lookup instead of sequential ID.
 // No admin auth required — the UUID itself serves as the secret.
@@ -15,6 +16,14 @@ export async function GET(request, { params }) {
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   if (!uuidRegex.test(accessToken)) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
+
+  // Rate limiting based on IP and accessToken (10 requests per minute)
+  const ip = request.headers.get('x-forwarded-for') || request.ip || 'unknown-ip';
+  const limitKey = `${ip}:${accessToken}`;
+  const isAllowed = await checkRateLimit(limitKey, 10, 60);
+  if (!isAllowed) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
   }
 
   try {

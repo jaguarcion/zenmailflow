@@ -1,7 +1,12 @@
 import { NextResponse } from 'next/server';
+import { checkFail2Ban } from '@/lib/auth';
 
 export async function GET(req) {
   try {
+    const authStatus = await checkFail2Ban(req);
+    if (authStatus.banned) return NextResponse.json({ error: 'Banned for 24h' }, { status: 429 });
+    if (!authStatus.isAuth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     const { searchParams } = new URL(req.url);
     const path = searchParams.get('path');
 

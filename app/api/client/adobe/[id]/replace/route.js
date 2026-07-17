@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getAdobeAccountByAccessToken, getActiveUnassignedAdobeAccount, updateAdobeAccountClient, updateClientAdobeAccount, getClientById } from '@/lib/db';
+import { checkRateLimit } from '@/lib/rateLimit';
 
 // [SECURITY] C-01+C-02: Use access_token for lookup instead of sequential ID.
 export async function POST(request, { params }) {
@@ -15,10 +16,23 @@ export async function POST(request, { params }) {
     return NextResponse.json({ success: false, error: 'Not found' }, { status: 404 });
   }
 
+  // Strict rate limit: 1 replacement attempt per 5 minutes per UUID
+  const ip = request.headers.get('x-forwarded-for') || request.ip || 'unknown-ip';
+  const limitKey = `replace:${ip}:${accessToken}`;
+  const isAllowed = await checkRateLimit(limitKey, 1, 300);
+  if (!isAllowed) {
+    return NextResponse.json({ success: false, error: 'Too many requests. Please wait 5 minutes.' }, { status: 429 });
+  }
+
   try {
     const oldAccount = getAdobeAccountByAccessToken(accessToken);
     if (!oldAccount) return NextResponse.json({ success: false, error: 'Not found' }, { status: 404 });
     
+    // Only allow replacement if the account is actually banned
+    if (oldAccount.status !== 'banned') {
+      return NextResponse.json({ success: false, error: 'Аккаунт не заблокирован, замена не требуется' }, { status: 400 });
+    }
+
     const clientId = oldAccount.assigned_client_id;
     if (!clientId) return NextResponse.json({ success: false, error: 'Account not assigned to any client' }, { status: 400 });
     
