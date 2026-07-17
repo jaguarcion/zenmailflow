@@ -18,9 +18,15 @@ export default function WholesaleOrderPage() {
   const [loading, setLoading] = useState(false);
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
+  const [activeTab, setActiveTab] = useState('create');
   const router = useRouter();
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('tab') === 'list') {
+      setActiveTab('list');
+    }
+
     const savedToken = localStorage.getItem('wholesale_token');
     if (savedToken) {
       setPassword(savedToken);
@@ -136,7 +142,7 @@ export default function WholesaleOrderPage() {
   return (
     <div className="min-h-screen bg-slate-50 p-4 py-12 flex justify-center">
       <div className="w-full max-w-4xl space-y-6 flex flex-col items-center">
-        <Tabs defaultValue="create" className="w-full flex flex-col items-center">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex flex-col items-center">
           <TabsList className="grid w-full grid-cols-2 max-w-[400px] mb-6">
             <TabsTrigger value="create" className="flex items-center gap-2">
               <Plus className="w-4 h-4" /> Добавить заказ

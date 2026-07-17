@@ -147,7 +147,7 @@ export default function WholesaleOrderStatusPage() {
   return (
     <div className="min-h-screen bg-slate-50 p-4 py-12 flex justify-center">
       <div className="w-full max-w-4xl space-y-6">
-        <Link href="/wholesale/jetbrains" className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
+        <Link href="/wholesale/jetbrains?tab=list" className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
           <ArrowLeft className="w-4 h-4 mr-2" />
           Назад к заказам
         </Link>
