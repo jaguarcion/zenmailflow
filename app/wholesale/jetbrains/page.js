@@ -23,11 +23,26 @@ export default function WholesaleOrderPage() {
     }
   }, []);
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     if (password.length > 3) {
-      localStorage.setItem('wholesale_token', password);
-      setIsAuth(true);
+      try {
+        const res = await fetch('/api/wholesale/jetbrains/auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password })
+        });
+        const data = await res.json();
+        if (data.success) {
+          localStorage.setItem('wholesale_token', password);
+          setIsAuth(true);
+          toast.success('Успешный вход');
+        } else {
+          toast.error(data.error || 'Неверный пароль');
+        }
+      } catch (err) {
+        toast.error('Ошибка сети');
+      }
     }
   };
 
