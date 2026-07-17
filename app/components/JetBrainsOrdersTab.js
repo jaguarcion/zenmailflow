@@ -61,6 +61,28 @@ export default function JetBrainsOrdersTab({ token }) {
     }
   };
 
+  const handleDeleteOrder = async (orderId) => {
+    if (!window.confirm('Вы уверены, что хотите удалить этот заказ? Связанные аккаунты останутся в базе (как ручные).')) return;
+    setActionLoading(orderId);
+    try {
+      const res = await fetch(`/api/jetbrains/orders/${orderId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success('Заказ удален');
+        fetchOrders();
+      } else {
+        toast.error(data.error || 'Ошибка при удалении');
+      }
+    } catch (err) {
+      toast.error('Ошибка сети');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const handleDownload = async (orderId, wooId) => {
     try {
       const res = await fetch(`/api/jetbrains/orders/${orderId}/download`, {
@@ -190,6 +212,16 @@ export default function JetBrainsOrdersTab({ token }) {
                               title="Скачать TXT с аккаунтами"
                             >
                               <Download className="w-4 h-4" />
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="h-8 text-destructive border-destructive/20 hover:bg-destructive/10 hover:text-destructive" 
+                              onClick={() => handleDeleteOrder(order.id)}
+                              title="Удалить заказ"
+                              disabled={actionLoading === order.id}
+                            >
+                              <Trash2 className="w-4 h-4" />
                             </Button>
                           </div>
                         </TableCell>
