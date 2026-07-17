@@ -16,7 +16,7 @@ export async function POST(request, { params }) {
   if (!authStatus.isAuth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
-    const id = params.id;
+    const { id } = await params;
     const order = getJetBrainsOrderById(id);
     
     if (!order) {

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { insertJetBrainsOrder } from '@/lib/db';
+import { insertJetBrainsOrder, getJetBrainsOrderByWooId } from '@/lib/db';
 
 const PASSWORD = process.env.WHOLESALE_PASSWORD || 'optovik';
 
@@ -59,7 +59,14 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: 'Ошибка связи с магазином' }, { status: 500 });
     }
 
-    const orderId = insertJetBrainsOrder(orderNumber, quantity);
+    let orderId;
+    const existingOrder = getJetBrainsOrderByWooId(orderNumber);
+    if (existingOrder) {
+      orderId = existingOrder.id;
+      return NextResponse.json({ success: true, orderId });
+    }
+
+    orderId = insertJetBrainsOrder(orderNumber, quantity);
 
     const tgBotToken = process.env.ADMIN_TG_BOT_TOKEN;
     const tgChatId = process.env.ADMIN_TG_CHAT_ID;

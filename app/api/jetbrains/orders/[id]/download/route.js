@@ -8,7 +8,7 @@ export async function GET(request, { params }) {
   if (!authStatus.isAuth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
-    const id = params.id;
+    const { id } = await params;
     const accounts = getJetBrainsAccountsByOrderId(id);
     return NextResponse.json({ success: true, accounts });
   } catch (error) {

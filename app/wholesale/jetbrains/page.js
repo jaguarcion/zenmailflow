@@ -63,7 +63,7 @@ export default function WholesaleOrderPage() {
       
       const data = await res.json();
       if (res.ok && data.success) {
-        toast.success('Заказ успешно создан!');
+        toast.success('Открытие заказа...');
         router.push(`/wholesale/jetbrains/${data.orderId}`);
       } else {
         if (res.status === 401) {

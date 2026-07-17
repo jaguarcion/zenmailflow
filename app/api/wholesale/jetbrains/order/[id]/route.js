@@ -10,7 +10,7 @@ export async function GET(request, { params }) {
   }
 
   try {
-    const id = params.id;
+    const { id } = await params;
     const order = getJetBrainsOrderById(id);
     
     if (!order) {
