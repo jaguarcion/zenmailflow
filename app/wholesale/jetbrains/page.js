@@ -12,7 +12,6 @@ export default function WholesaleOrderPage() {
   const [password, setPassword] = useState('');
   const [isAuth, setIsAuth] = useState(false);
   const [wooOrderId, setWooOrderId] = useState('');
-  const [quantity, setQuantity] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
@@ -34,7 +33,7 @@ export default function WholesaleOrderPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!wooOrderId || !quantity) return toast.error('Заполните все поля');
+    if (!wooOrderId) return toast.error('Укажите номер заказа');
 
     setLoading(true);
     try {
@@ -44,7 +43,7 @@ export default function WholesaleOrderPage() {
           'Content-Type': 'application/json',
           'x-wholesale-auth': password
         },
-        body: JSON.stringify({ wooOrderId, quantity: parseInt(quantity) })
+        body: JSON.stringify({ wooOrderId })
       });
       
       const data = await res.json();
@@ -119,21 +118,7 @@ export default function WholesaleOrderPage() {
                 placeholder="Например: #10452"
                 required
               />
-              <p className="text-xs text-muted-foreground">Укажите номер оплаченного заказа с основного сайта.</p>
-            </div>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-medium leading-none">Количество подписок</label>
-              <Input 
-                type="number"
-                min="1"
-                max="10000"
-                value={quantity}
-                onChange={(e) => setQuantity(e.target.value)}
-                placeholder="800"
-                required
-              />
-              <p className="text-xs text-muted-foreground">Требуемое количество аккаунтов JetBrains.</p>
+              <p className="text-xs text-muted-foreground">Система автоматически проверит статус оплаты и количество подписок в этом заказе.</p>
             </div>
 
             <Button type="submit" className="w-full" disabled={loading}>
