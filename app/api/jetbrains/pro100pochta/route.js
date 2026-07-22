@@ -16,22 +16,32 @@ export async function GET(req) {
 
     const targetUrl = 'https://pro100pochta.com' + path;
 
-    const headers = new Headers();
-    headers.set('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36');
-    headers.set('Accept', 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8');
+    const headersObj = {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8'
+    };
 
-    // Forward cookies if needed (pro100pochta uses cookies)
     const incomingCookies = req.headers.get('cookie');
     if (incomingCookies) {
-      headers.set('Cookie', incomingCookies);
+      headersObj['Cookie'] = incomingCookies;
     }
 
-    const response = await fetch(targetUrl, {
+    const { ofetch } = await import('ofetch');
+    const { Agent } = await import('undici');
+    const { buildSocksProxyConnector } = await import('@jsr/undicijs__proxy');
+    
+    const PROXY_URL = 'socks5://4w99sxjb5s-corp.mobile.res-country-LV-hold-session-session-6a45848ec8ed4:ohh401aJwRYe8xuN@82.27.118.182:443';
+    const dispatcher = new Agent({ connect: buildSocksProxyConnector(PROXY_URL) });
+
+    const response = await ofetch.raw(targetUrl, {
       method: 'GET',
-      headers,
+      headers: headersObj,
+      dispatcher,
+      responseType: 'text',
+      ignoreResponseError: true,
     });
 
-    const text = await response.text();
+    const text = response._data;
     const res = new NextResponse(text, { status: response.status });
 
     // Forward Set-Cookie headers
