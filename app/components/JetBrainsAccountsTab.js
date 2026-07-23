@@ -75,9 +75,9 @@ export default function JetBrainsAccountsTab({ token }) {
             <Table>
               <TableHeader className="sticky top-0 bg-background z-10 shadow-sm">
                 <TableRow>
-                  <TableHead>Почта (Login)</TableHead>
+                  <TableHead>Студ. почта (Login)</TableHead>
                   <TableHead>Пароль</TableHead>
-                  <TableHead>Студ. почта (Origin)</TableHead>
+                  <TableHead>Доп. почта (Pro100)</TableHead>
                   <TableHead>Дата создания</TableHead>
                   <TableHead>Истекает</TableHead>
                 </TableRow>
@@ -87,7 +87,7 @@ export default function JetBrainsAccountsTab({ token }) {
                   [...Array(5)].map((_, i) => (
                     <TableRow key={i}>
                       <TableCell><Skeleton className="h-4 w-[180px]" /></TableCell>
-                      <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
+                      <TableCell><Skeleton className="h-4 w-[150px]" /></TableCell>
                       <TableCell><Skeleton className="h-4 w-[180px]" /></TableCell>
                       <TableCell><Skeleton className="h-4 w-[120px]" /></TableCell>
                       <TableCell><Skeleton className="h-5 w-[80px] rounded-full" /></TableCell>
@@ -121,34 +121,25 @@ export default function JetBrainsAccountsTab({ token }) {
                     <TableRow key={acc.id}>
                       <TableCell className="font-medium">
                         <div className="flex items-center gap-2">
-                          {acc.email}
                           <Button 
                             variant="ghost" 
                             size="icon" 
-                            className="h-6 w-6 text-muted-foreground hover:text-foreground"
-                            onClick={() => copyToClipboard(acc.email, 'Email')}
-                            title="Копировать почту"
+                            className="h-6 w-6 text-muted-foreground hover:text-foreground shrink-0"
+                            onClick={() => copyToClipboard(`${acc.license_email}:${acc.password}`, 'Логин:Пароль')}
+                            title="Копировать логин:пароль"
                           >
                             <Copy className="h-3 w-3" />
                           </Button>
+                          {acc.license_email}
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <span className="font-mono text-xs bg-muted px-2 py-1 rounded">{acc.password}</span>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-6 w-6 text-muted-foreground hover:text-foreground"
-                            onClick={() => copyToClipboard(acc.password, 'Пароль')}
-                            title="Копировать пароль"
-                          >
-                            <Copy className="h-3 w-3" />
-                          </Button>
                         </div>
                       </TableCell>
                       <TableCell className="text-muted-foreground text-xs">
-                        {acc.license_email}
+                        {acc.email}
                       </TableCell>
                       <TableCell className="text-muted-foreground text-xs whitespace-nowrap">
                         {new Date(acc.created_at).toLocaleString('ru-RU')}
