@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Loader2, Users, MonitorSmartphone, Ban, CheckCircle2 } from "lucide-react";
+import { Loader2, Users, MonitorSmartphone, Ban, CheckCircle2, ShieldCheck, Code, Smartphone, Mail, ShoppingCart } from "lucide-react";
 import { 
   PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, 
   AreaChart, Area, XAxis, YAxis, CartesianGrid 
@@ -76,7 +76,7 @@ export default function DashboardTab({ token }) {
 
   if (!stats) return null;
 
-  const { accounts, totalClients, clientsGrowth } = stats;
+  const { accounts, totalClients, clientsGrowth, eset, jetbrains, apple, burp } = stats;
 
   const statusData = [
     { name: 'Активные', value: accounts.active_accounts || 0, color: '#22c55e' },
@@ -100,17 +100,80 @@ export default function DashboardTab({ token }) {
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       
-      {/* Metrics Row */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
+      {/* Global Services Row */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+        <Card className="bg-gradient-to-br from-blue-50 to-white dark:from-blue-950/20 dark:to-transparent border-blue-100 dark:border-blue-900/50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Всего клиентов</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Пользователи</CardTitle>
+            <Users className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalClients}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Активных регистраций в боте
+            </p>
           </CardContent>
         </Card>
+
+        <Card className="bg-gradient-to-br from-green-50 to-white dark:from-green-950/20 dark:to-transparent border-green-100 dark:border-green-900/50">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">ESET Antivirus</CardTitle>
+            <ShieldCheck className="h-4 w-4 text-green-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{eset?.totalKeys || 0}</div>
+            <p className="text-xs text-muted-foreground mt-1 flex justify-between">
+              <span>Использовано: {eset?.usedKeys || 0}</span>
+              <span>TG Юзеров: {eset?.tgUsers || 0}</span>
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-purple-50 to-white dark:from-purple-950/20 dark:to-transparent border-purple-100 dark:border-purple-900/50">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">JetBrains</CardTitle>
+            <Code className="h-4 w-4 text-purple-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{jetbrains?.totalAccounts || 0}</div>
+            <p className="text-xs text-muted-foreground mt-1 flex justify-between">
+              <span className="flex items-center gap-1"><ShoppingCart className="w-3 h-3" /> Заказов: {jetbrains?.totalOrders || 0}</span>
+              <span className="text-purple-600 dark:text-purple-400">Готово: {jetbrains?.completedOrders || 0}</span>
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-gray-100 to-white dark:from-gray-900/40 dark:to-transparent border-gray-200 dark:border-gray-800">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Apple ID</CardTitle>
+            <Smartphone className="h-4 w-4 text-gray-700 dark:text-gray-300" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{apple?.totalAccounts || 0}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Аккаунтов зарегистрировано
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-orange-50 to-white dark:from-orange-950/20 dark:to-transparent border-orange-100 dark:border-orange-900/50">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Randmail / Burp</CardTitle>
+            <Mail className="h-4 w-4 text-orange-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{burp?.totalAddresses || 0}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Временных адресов в пуле
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <h3 className="text-lg font-medium tracking-tight">Статистика пула Adobe</h3>
+      
+      {/* Adobe Row */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Аккаунтов в пуле</CardTitle>
@@ -122,20 +185,29 @@ export default function DashboardTab({ token }) {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Забанено</CardTitle>
-            <Ban className="h-4 w-4 text-destructive" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-destructive">{accounts.banned_accounts}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Свободно для выдачи</CardTitle>
             <CheckCircle2 className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">{accounts.free_accounts}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Занято клиентами</CardTitle>
+            <Users className="h-4 w-4 text-amber-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-amber-600">{accounts.busy_accounts}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Забанено</CardTitle>
+            <Ban className="h-4 w-4 text-destructive" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-destructive">{accounts.banned_accounts}</div>
           </CardContent>
         </Card>
       </div>
