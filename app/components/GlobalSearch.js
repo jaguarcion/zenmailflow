@@ -66,7 +66,7 @@ export default function GlobalSearch({ token, onSelectResult }) {
     <>
       <Button
         variant="outline"
-        className="w-full md:w-[300px] justify-start text-sm text-muted-foreground"
+        className="relative w-full md:w-[300px] justify-start text-sm text-muted-foreground"
         onClick={() => setOpen(true)}
       >
         <Search className="mr-2 h-4 w-4" />
