@@ -33,7 +33,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { LogOut, Download, Trash2, Mail, Users, Monitor, Zap, History, Menu, LayoutDashboard, ScrollText, Key, KeyRound, Box, ShieldCheck, Smartphone } from "lucide-react";
+import { LogOut, Download, Trash2, Mail, Users, Monitor, Zap, History, Menu, LayoutDashboard, ScrollText, Key, KeyRound, Box, ShieldCheck, Smartphone, ChevronDown, ChevronRight } from "lucide-react";
 
 export default function ClientPage({ initialTab }) {
   const [token, setToken] = useState("");
@@ -41,6 +41,7 @@ export default function ClientPage({ initialTab }) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState(initialTab || "dashboard");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [openMenus, setOpenMenus] = useState({});
 
   const [count, setCount] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -61,6 +62,26 @@ export default function ClientPage({ initialTab }) {
       setActiveTab(initialTab);
     }
   }, [initialTab]);
+
+  useEffect(() => {
+    // When activeTab changes, auto-open its group
+    const groups = {
+      'adobe-group': ['adobe-list', 'adobe-upload', 'clients', 'keys-checker', 'audit-logs'],
+      'email-group': ['generator', 'history'],
+      'autodesk-group': ['autodesk-list', 'autodesk-groups', 'autodesk-upload', 'autodesk-history', 'autodesk-yopmail'],
+      'eset-group': ['eset-generator', 'eset-history', 'eset-telegram', 'eset-settings'],
+      'burp-group': ['burp-mail'],
+      'jetbrains-group': ['jetbrains-student', 'jetbrains', 'jetbrains-orders', 'jetbrains-accounts'],
+      'apple-group': ['apple-registration', 'apple-accounts']
+    };
+    
+    for (const [groupId, tabs] of Object.entries(groups)) {
+      if (tabs.includes(activeTab)) {
+        setOpenMenus(prev => ({ ...prev, [groupId]: true }));
+        break;
+      }
+    }
+  }, [activeTab]);
 
   useEffect(() => {
     const handlePopState = () => {
@@ -372,6 +393,10 @@ export default function ClientPage({ initialTab }) {
     }
   ];
 
+  const toggleMenu = (groupId) => {
+    setOpenMenus(prev => ({ ...prev, [groupId]: !prev[groupId] }));
+  };
+
   const renderNav = () => (
     <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-1.5">
       <div className="px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">
@@ -381,38 +406,48 @@ export default function ClientPage({ initialTab }) {
         const Icon = item.icon;
         
         if (item.subItems) {
+          const isOpen = openMenus[item.id];
           return (
             <div key={item.id} className="mb-2">
-              <div className="w-full flex items-center px-3 py-2 text-sm font-semibold text-foreground">
-                <Icon className="w-4 h-4 mr-3 text-primary" />
-                {item.label}
-              </div>
-              <div className="ml-7 space-y-1 mt-1 border-l pl-2">
-                {item.subItems.map(sub => {
-                  const isSubActive = activeTab === sub.id;
-                  return (
-                    <button
-                      key={sub.id}
-                      onClick={() => {
-                        changeTab(sub.id);
-                        setIsMobileMenuOpen(false);
-                      }}
-                      className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                        isSubActive 
-                          ? "bg-primary text-primary-foreground shadow-sm" 
-                          : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                      }`}
-                    >
-                      {sub.label}
-                      {sub.badge !== undefined && (
-                        <span className={`ml-auto text-xs py-0.5 px-2 rounded-full ${isSubActive ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-muted-foreground/20 text-muted-foreground'}`}>
-                          {sub.badge}
-                        </span>
-                      )}
-                    </button>
-                  )
-                })}
-              </div>
+              <button 
+                onClick={() => toggleMenu(item.id)}
+                className="w-full flex items-center justify-between px-3 py-2 text-sm font-semibold text-foreground hover:bg-muted/50 rounded-md transition-colors"
+              >
+                <div className="flex items-center">
+                  <Icon className="w-4 h-4 mr-3 text-primary" />
+                  {item.label}
+                </div>
+                {isOpen ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
+              </button>
+              
+              {isOpen && (
+                <div className="ml-7 space-y-1 mt-1 border-l pl-2 animate-in slide-in-from-top-2 fade-in duration-200">
+                  {item.subItems.map(sub => {
+                    const isSubActive = activeTab === sub.id;
+                    return (
+                      <button
+                        key={sub.id}
+                        onClick={() => {
+                          changeTab(sub.id);
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                          isSubActive 
+                            ? "bg-primary text-primary-foreground shadow-sm" 
+                            : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                        }`}
+                      >
+                        {sub.label}
+                        {sub.badge !== undefined && (
+                          <span className={`ml-auto text-xs py-0.5 px-2 rounded-full ${isSubActive ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-muted-foreground/20 text-muted-foreground'}`}>
+                            {sub.badge}
+                          </span>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
             </div>
           );
         }
