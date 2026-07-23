@@ -122,6 +122,22 @@ export default function AppleRegistrationTab({ token }) {
     }
   };
 
+  const handleCancel = async () => {
+    try {
+      const res = await fetch("/api/apple/cancel", { method: "POST" });
+      const data = await res.json();
+      if (data.success) {
+        toast.success("Регистрация отменена");
+        setLoading(false);
+        setCaptchaWaiting(false);
+      } else {
+        toast.error(data.error || "Ошибка отмены");
+      }
+    } catch (err) {
+      toast.error("Ошибка отмены");
+    }
+  };
+
   const progressPercent = status && status.total > 0 
     ? Math.round((status.current / status.total) * 100) 
     : 0;
@@ -151,10 +167,17 @@ export default function AppleRegistrationTab({ token }) {
                 disabled={loading} 
               />
             </div>
-            <Button type="submit" disabled={loading} className="w-full sm:w-auto">
-              {loading ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Zap className="w-4 h-4 mr-2" />}
-              {loading ? "Выполняется..." : "Запустить"}
-            </Button>
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Button type="submit" disabled={loading} className="flex-1 sm:flex-none">
+                {loading ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Zap className="w-4 h-4 mr-2" />}
+                {loading ? "Выполняется..." : "Запустить"}
+              </Button>
+              {loading && (
+                <Button type="button" variant="destructive" onClick={handleCancel} className="flex-1 sm:flex-none">
+                  <XCircle className="w-4 h-4 mr-2" /> Отменить
+                </Button>
+              )}
+            </div>
           </form>
         </CardContent>
       </Card>
