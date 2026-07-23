@@ -22,6 +22,8 @@ import JetBrainsActivationTab from "../components/JetBrainsActivationTab";
 import JetBrainsAccountsTab from "../components/JetBrainsAccountsTab";
 import JetBrainsStudentEmailsTab from "../components/JetBrainsStudentEmailsTab";
 import JetBrainsOrdersTab from "../components/JetBrainsOrdersTab";
+import AppleRegistrationTab from "../components/AppleRegistrationTab";
+import AppleAccountsTab from "../components/AppleAccountsTab";
 import GlobalSearch from "../components/GlobalSearch";
 import ActiveTasksWidget from "../components/ActiveTasksWidget";
 import { Button } from "@/components/ui/button";
@@ -31,7 +33,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { LogOut, Download, Trash2, Mail, Users, Monitor, Zap, History, Menu, LayoutDashboard, ScrollText, Key, KeyRound, Box, ShieldCheck } from "lucide-react";
+import { LogOut, Download, Trash2, Mail, Users, Monitor, Zap, History, Menu, LayoutDashboard, ScrollText, Key, KeyRound, Box, ShieldCheck, Smartphone } from "lucide-react";
 
 export default function ClientPage({ initialTab }) {
   const [token, setToken] = useState("");
@@ -358,6 +360,15 @@ export default function ClientPage({ initialTab }) {
         { id: 'jetbrains-orders', label: 'Оптовые заказы' },
         { id: 'jetbrains-accounts', label: 'Аккаунты' }
       ]
+    },
+    {
+      id: 'apple-group',
+      label: 'Apple',
+      icon: Smartphone,
+      subItems: [
+        { id: 'apple-registration', label: 'Регистрация' },
+        { id: 'apple-accounts', label: 'Аккаунты' }
+      ]
     }
   ];
 
@@ -514,7 +525,9 @@ export default function ClientPage({ initialTab }) {
                 {activeTab === 'jetbrains' && 'Массовая автоматизация JetBrains'}
                 {activeTab === 'jetbrains-orders' && 'Оптовые заказы JetBrains'}
                 {activeTab === 'jetbrains-accounts' && 'Управление аккаунтами JetBrains'}
-                {activeTab !== 'adobe-list' && activeTab !== 'adobe-upload' && activeTab !== 'audit-logs' && activeTab !== 'keys-checker' && !activeTab.startsWith('eset-') && activeTab !== 'burp-mail' && activeTab !== 'jetbrains-student' && activeTab !== 'jetbrains' && activeTab !== 'jetbrains-orders' && activeTab !== 'jetbrains-accounts' && navItems.find(n => n.id === activeTab)?.label}
+                {activeTab === 'apple-registration' && 'Регистрация Apple ID'}
+                {activeTab === 'apple-accounts' && 'Аккаунты Apple ID'}
+                {activeTab !== 'adobe-list' && activeTab !== 'adobe-upload' && activeTab !== 'audit-logs' && activeTab !== 'keys-checker' && !activeTab.startsWith('eset-') && activeTab !== 'burp-mail' && activeTab !== 'jetbrains-student' && activeTab !== 'jetbrains' && activeTab !== 'jetbrains-orders' && activeTab !== 'jetbrains-accounts' && activeTab !== 'apple-registration' && activeTab !== 'apple-accounts' && navItems.find(n => n.id === activeTab)?.label}
               </h1>
               <p className="text-muted-foreground">
                 {activeTab === 'dashboard' && 'Статистика и аналитика вашей платформы'}
@@ -539,6 +552,8 @@ export default function ClientPage({ initialTab }) {
                 {activeTab === 'jetbrains' && 'Скрапинг и автоматическая регистрация аккаунтов JetBrains'}
                 {activeTab === 'jetbrains-orders' && 'Выполнение заявок от оптовых клиентов'}
                 {activeTab === 'jetbrains-accounts' && 'Просмотр и редактирование списка аккаунтов JetBrains'}
+                {activeTab === 'apple-registration' && 'Массовая регистрация аккаунтов Apple ID'}
+                {activeTab === 'apple-accounts' && 'База данных зарегистрированных Apple ID'}
               </p>
             </div>
             
@@ -755,6 +770,8 @@ export default function ClientPage({ initialTab }) {
           {activeTab === 'jetbrains' && <JetBrainsActivationTab token={token} />}
           {activeTab === 'jetbrains-orders' && <JetBrainsOrdersTab token={token} />}
           {activeTab === 'jetbrains-accounts' && <JetBrainsAccountsTab token={token} />}
+          {activeTab === 'apple-registration' && <AppleRegistrationTab token={token} />}
+          {activeTab === 'apple-accounts' && <AppleAccountsTab token={token} />}
         </div>
       </main>
         </div>
