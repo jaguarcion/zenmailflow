@@ -209,6 +209,10 @@ export default function AppleRegistrationTab({ token }) {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            <div className="mb-4 flex justify-center bg-white p-2 rounded-md border">
+              {/* Add timestamp to prevent browser caching of the captcha image */}
+              <img src={`/captcha.jpg?t=${Date.now()}`} alt="Apple Captcha" className="max-h-[100px] object-contain" />
+            </div>
             <div className="flex gap-2">
               <Input 
                 value={captchaSolution} 
