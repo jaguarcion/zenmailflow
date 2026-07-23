@@ -29,21 +29,14 @@ export default function AppleRegistrationTab({ token }) {
         const data = await res.json();
         setStatus(data);
 
+        if (data.logs && data.logs.length > 0) {
+          setLogs(data.logs);
+        }
+
         if (data.running) {
           setLoading(true);
-          // Update logs with progress
-          const logMsg = `[${new Date().toLocaleTimeString('ru-RU')}] Прогресс: ${data.current}/${data.total} (Успешно: ${data.success}, Ошибки: ${data.failed})`;
-          setLogs(prev => {
-            // Avoid duplicating the same progress line
-            const last = prev[prev.length - 1];
-            if (last && last.startsWith(logMsg.substring(0, 20))) {
-              return [...prev.slice(0, -1), logMsg];
-            }
-            return [...prev, logMsg];
-          });
         } else if (data.total > 0 && !data.running && loading) {
           setLoading(false);
-          setLogs(prev => [...prev, `[${new Date().toLocaleTimeString('ru-RU')}] ✅ Регистрация завершена! Успешно: ${data.success}, Ошибки: ${data.failed}`]);
           toast.success(`Регистрация завершена! Успешно: ${data.success}`);
         }
       } catch (err) {
